@@ -44,14 +44,14 @@
 
 * P20 : Cassette interface output
 * P21 : Cassette interface input
-* P22 : 500 kHz clock input
+* P22 :  500 kHz clock input
 * P23 : MIDI In
 * P24 : MIDI Out
 * P25 : SW1 (Cursor)
 * P26 : SW2 (Master volume up)
 * P27 : SW3 (Master volume down)
 
-*  P50 : IRQ1 (from YM2414 OPZ chip)
+* P50 : IRQ1 (from YM2414 OPZ chip)
 * P51 : SW11 (Store / EQ Copy)
 * P52 : MRDY input (clock stretch for LCD?)
 * P53 : unused (tied to VCC)
@@ -60,12 +60,11 @@
 * P56 : SW6 (PARAM+)
 * P57 : SW7 (PARAM-)
 
-* P60 : SW8 (Play / Perform)
-* P61 : SW9 (Edit / Compare)
+* P60 : SW8 (Play / Perform)
+* P61 : SW9 (Edit / Compare)
 * P62 : SW10 (Utility)
 * P63 : ROM bank switch
 * P64 : LED 1 (Cursor)
 * P65 : LED 2 (Play / Perform)
 * P66 : LED 3 (Edit / Compare)
 * P67 : LED 4 (Utility)
-
