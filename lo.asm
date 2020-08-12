@@ -185,15 +185,15 @@ M7FE0			EQU	$7FE0
 
 			ORG	$8000
 
-hdlr_RST		OIM	#$08,PORT6
+hdlr_RST		OIM	#$08,PORT6		; attempt to select HI ROM
 			LDAA	#$F8
-			STAA	DDR6
-			OIM	#$08,PORT6
+			STAA	DDR6			; set P63 - P67 as outputs
+			OIM	#$08,PORT6		; attempt to select HI ROM (again)
 			NOP
 			NOP
 			RTS
 hdlr_SWI2		NOP
-			OIM	#$08,PORT6
+			OIM	#$08,PORT6		; select HI ROM
 			NOP
 			NOP
 			NOP
@@ -202,7 +202,7 @@ hdlr_SWI2		NOP
 			NOP
 			RTI
 hdlr_CMI		NOP
-			OIM	#$08,PORT6
+			OIM	#$08,PORT6		; select HI ROM
 			NOP
 			NOP
 			NOP
@@ -211,7 +211,7 @@ hdlr_CMI		NOP
 			NOP
 			RTI
 hdlr_DIV0		NOP
-			OIM	#$08,PORT6
+			OIM	#$08,PORT6		; select HI ROM
 			NOP
 			NOP
 			NOP
@@ -220,7 +220,7 @@ hdlr_DIV0		NOP
 			NOP
 			RTI
 hdlr_IRQ		NOP
-			OIM	#$08,PORT6
+			OIM	#$08,PORT6		; select HI ROM
 			NOP
 			NOP
 			NOP
@@ -228,8 +228,21 @@ hdlr_IRQ		NOP
 			NOP
 			NOP
 			RTI
-XROM_CALL1		OIM	#$08,PORT6
-			LDX	#M8202
+
+;
+; Entry point for cross-bank function calls.
+;
+; This function exists at the same place in both banks, with the
+; effect that as soon as the first instruction is executed the
+; code then continues from the -other- bank, until the point at
+; which the bank select port gets restored to its original value
+;
+; The implementations differ only in whether they set or reset
+; pin P63
+;
+
+XROM_CALL		OIM	#$08,PORT6		; select HI ROM
+			LDX	#M8202			; reached via call made within HI ROM
 			PSHB
 			LDAB	XROM
 			ABX
@@ -237,24 +250,31 @@ XROM_CALL1		OIM	#$08,PORT6
 			PULB
 			LDX	,X
 			JSR	,X
-			OIM	#$08,PORT6
+			OIM	#$08,PORT6		; (re-)select HI ROM
 			RTS
+
+; unused
 XROM_CALL2		OIM	#$08,PORT6
 			BSR	XROM_LOOKUP
 			LDAA	,X
 			OIM	#$08,PORT6
 			RTS
+
+; unused
 XROM_CALL3		OIM	#$08,PORT6
 			BSR	XROM_LOOKUP
 			LDAB	,X
 			OIM	#$08,PORT6
 			RTS
+
+; unused
 XROM_CALL4		OIM	#$08,PORT6
 			BSR	XROM_LOOKUP
 			ABX
 			LDD	,X
 			OIM	#$08,PORT6
 			RTS
+; unused
 XROM_CALL5		OIM	#$08,PORT6
 			BSR	XROM_LOOKUP
 			ABX
@@ -262,6 +282,8 @@ XROM_CALL5		OIM	#$08,PORT6
 			LDX	,X
 			OIM	#$08,PORT6
 			RTS
+
+; unused
 XROM_LOOKUP		LDX	#M8200
 			ABX
 			ABX
@@ -269,6 +291,7 @@ XROM_LOOKUP		LDX	#M8200
 			TAB
 			ABX
 			RTS
+
 INIT_VOICE		FCB	$1F,$1F,$00,$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00
 			FCB	$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00,$0F,$0F,$00
 			FCB	$00,$00,$04,$03,$1F,$1F,$00,$0F,$0F,$00,$00,$5A,$04
@@ -3119,7 +3142,7 @@ HI_CALL_1D		PSHB
 			LDAB	#$1D
 Z9AC6			STAB	XROM
 			PULB
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 Z9ACD			CLRB
 Z9ACE			PSHB

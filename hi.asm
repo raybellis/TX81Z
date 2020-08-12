@@ -345,8 +345,21 @@ hdlr_IRQ		JSR	Z8FF6
 			JSR	Z8FF6
 			AIM	#$F7,PORT6
 			RTI
-XROM_CALL1		AIM	#$F7,PORT6
-			LDX	#M8264
+
+;
+; Entry point for cross-bank function calls.
+;
+; This function exists at the same place in both banks, with the
+; effect that as soon as the first instruction is executed the
+; code then continues from the -other- bank, until the point at
+; which the bank select port gets restored to its original value
+;
+; The implementations differ only in whether they set or reset
+; pin P63
+;
+
+XROM_CALL		AIM	#$F7,PORT6		; select LO ROM
+			LDX	#M8264			; reached via call made within LO ROM
 			PSHB
 			LDAB	XROM
 			ABX
@@ -354,24 +367,32 @@ XROM_CALL1		AIM	#$F7,PORT6
 			PULB
 			LDX	,X
 			JSR	,X
-			AIM	#$F7,PORT6
+			AIM	#$F7,PORT6		; (re-)select LO ROM
 			RTS
+
+; unused
 XROM_CALL2		AIM	#$F7,PORT6
 			BSR	XROM_LOOKUP
 			LDAA	,X
 			AIM	#$F7,PORT6
 			RTS
+
+; unused
 XROM_CALL3		AIM	#$F7,PORT6
 			BSR	XROM_LOOKUP
 			LDAB	,X
 			AIM	#$F7,PORT6
 			RTS
+
+; unused
 XROM_CALL4		AIM	#$F7,PORT6
 			BSR	XROM_LOOKUP
 			ABX
 			LDD	,X
 			AIM	#$F7,PORT6
 			RTS
+
+; unused
 XROM_CALL5		AIM	#$F7,PORT6
 			BSR	XROM_LOOKUP
 			ABX
@@ -379,6 +400,8 @@ XROM_CALL5		AIM	#$F7,PORT6
 			LDX	,X
 			AIM	#$F7,PORT6
 			RTS
+
+; unused
 XROM_LOOKUP		LDX	#M82A0
 			ABX
 			ABX
@@ -386,6 +409,7 @@ XROM_LOOKUP		LDX	#M82A0
 			TAB
 			ABX
 			RTS
+
 INIT_VOICE		FCB	$1F,$1F,$00,$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00
 			FCB	$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00,$0F,$0F,$00
 			FCB	$00,$00,$04,$03,$1F,$1F,$00,$0F,$0F,$00,$00,$5A,$04
@@ -5115,34 +5139,34 @@ ZAE8C			LDX	M00A9
 LO_CALL_06		STX	M00A7
 			LDAB	#$06
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 LO_CALL_00		STX	M00A7
 			CLRB
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 LO_CALL_08		LDAB	#$08
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 LO_CALL_0A		LDAB	#$0A
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 LO_CALL_09		LDAB	#$09
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 LO_CALL_07		STX	M00A7
 			LDAB	#$07
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 ZAED3			STX	M00A7
 			LDAB	#$05
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 ZAEDD			LDAB	M7773
 ZAEE0			CMPB	#$A0
@@ -6343,7 +6367,7 @@ ZBADB			SEC
 			BNE	ZBAEA
 			LDAB	#$01
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			BRA	ZBB10
 ZBAEA			LDAA	M7789
 			BEQ	ZBB01
@@ -6434,7 +6458,7 @@ ZBBB1			CMPA	#$01
 			BNE	ZBBBC
 			LDAB	#$02
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 ZBBBC			CLR	>M00A6
 			LDX	#M80EF
 			STX	M00A9
@@ -6476,7 +6500,7 @@ ZBC18			TST	M777E
 			BEQ	ZBC26
 			LDAB	#$03
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			BRA	ZBC29
 ZBC26			JSR	ZE11D
 ZBC29			RTS
@@ -7216,7 +7240,7 @@ HI_CALL_1B		LDAB	M7773
 			RTS
 ZC33D			LDAB	#$04
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 ZC345			LDAA	M778F
 HI_CALL_02		LDAB	M778A
@@ -7971,7 +7995,7 @@ ZC95A			AIM	#$BF,TCSR3
 			JSR	ZC8E9
 			LDAB	#$0B
 			STAB	>XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			RTS
 ZC972			TST	>M009A
 			BNE	ZC9DF
@@ -8790,7 +8814,7 @@ ZD06A			PSHB
 			STAB	M009F
 			LDAB	#$0C
 			STAB	XROM
-			JSR	XROM_CALL1
+			JSR	XROM_CALL
 			JSR	Z94C9
 			OIM	#$08,TCSR1
 			OIM	#$40,TCSR3
