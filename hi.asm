@@ -315,44 +315,56 @@ M7FB2			EQU	$7FB2
 M7FFF			EQU	$7FFF
 
 ;****************************************************
+;* ROM Bank manipulation macros			    *
+;****************************************************
+
+BANK_HI			MACRO
+&0			OIM	#$08,PORT6
+			ENDM
+
+BANK_SW			MACRO
+&0			AIM	#$F7,PORT6
+			ENDM
+
+;****************************************************
 ;* Program Code / Data Areas			    *
 ;****************************************************
 
 			ORG	$8000
 
-hdlr_RST		OIM	#$08,PORT6
+hdlr_RST		BANK_HI			; ensure we're in the HI bank
 			LDAA	#$F8
-			STAA	DDR6
-			OIM	#$08,PORT6
-			JMP	Z8200
-hdlr_SWI2		JSR	Z8F8B
+			STAA	DDR6		; set P63 - P67 as outputs
+			BANK_HI			; make sure we're really in the HI bank
+			JMP	RESET		; jump to real reset routine
+
+hdlr_SWI2		JSR	SWI2
 			RTI
-			JSR	Z8F8B
+			JSR	SWI2		; entry point from LO bank
 			AIM	#$F7,PORT6
 			RTI
-hdlr_CMI		JSR	Z8F1F
+
+hdlr_CMI		JSR	CMI
 			RTI
-			JSR	Z8F1F
+			JSR	CMI		; entry point from LO bank
 			AIM	#$F7,PORT6
 			RTI
-hdlr_DIV0		JSR	ZE014
+
+hdlr_DIV0		JSR	DIV0
 			RTI
-			JSR	ZE014
+			JSR	DIV0		; entry point from LO bank
 			AIM	#$F7,PORT6
 			RTI
-hdlr_IRQ		JSR	Z8FF6
+
+hdlr_IRQ		JSR	IRQ
 			RTI
-			JSR	Z8FF6
+			JSR	IRQ		; entry point from LO bank
 			AIM	#$F7,PORT6
 			RTI
 
 ;
 ; Entry point for cross-bank function calls.
 ;
-
-BANK_SW			MACRO
-&0			AIM	#$F7,PORT6
-			ENDM
 
 			INCLUDE	"inc/xrom.asm"
 
@@ -374,7 +386,7 @@ M80EF			FCC	"<Good morning!!>"
 
 			ORG	$8200
 
-Z8200			SEI
+RESET			SEI
 			LDAA	#$44
 			STAA	RP5CR
 			CLRA
@@ -2051,7 +2063,7 @@ Z8F10			LDAA	#$01
 			JSR	Z8CA9
 			STAA	M0059
 			RTS
-Z8F1F			LDAA	#$12
+CMI			LDAA	#$12
 			STAA	TCSR3
 			LDAA	TCSR1
 			PSHA
@@ -2101,7 +2113,8 @@ Z8F79			BRN	Z8F79
 			STAA	TCSR1
 			OIM	#$40,TCSR3
 			RTS
-Z8F8B			LDAA	RP5CR
+
+SWI2			LDAA	RP5CR
 			PSHA
 			AIM	#$FE,RP5CR
 			LDAA	TCSR3
@@ -2163,7 +2176,8 @@ Z8FED			BRN	Z8FED
 			PULA
 			STAA	RP5CR
 			RTS
-Z8FF6			LDAA	TCSR3
+
+IRQ			LDAA	TCSR3
 			PSHA
 			AIM	#$BF,TCSR3
 			AIM	#$FE,RP5CR
@@ -2239,9 +2253,11 @@ Z9074			BRN	Z9074
 			RTS
 Z9081			LDAB	#$30
 			BRA	Z9067
-Z9085			TST	OPZ_R1
+
+Z9085		TST	OPZ_R1
 			BMI	Z9085
 			RTS
+
 Z908B			LDAB	#$A5
 			MUL
 			ASLD
@@ -10464,7 +10480,8 @@ MDF94			FCB	$FE,$C0,$B4,$AE,$A8,$A2,$9E,$98,$94,$90,$8D,$8A,$86
 			FCB	$16,$16,$15,$14,$13,$12,$12,$11,$10,$10,$0F,$0E,$0E
 			FCB	$0D,$0C,$0C,$0B,$0B,$0A,$09,$09,$08,$07,$07,$06,$06
 			FCB	$05,$05,$04,$04,$03,$03,$02,$02,$01,$01,$00
-ZE014			LDAA	XROM
+
+DIV0			LDAA	XROM
 			PSHA
 			LDAA	TRSCR
 			ASLA

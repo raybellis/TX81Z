@@ -180,66 +180,74 @@ M7F99			EQU	$7F99
 M7FE0			EQU	$7FE0
 
 ;****************************************************
-;* Program Code / Data Areas			    *
+;* ROM Bank manipulation macros			    *
 ;****************************************************
-
-			ORG	$8000
-
-hdlr_RST		OIM	#$08,PORT6		; attempt to select HI ROM
-			LDAA	#$F8
-			STAA	DDR6			; set P63 - P67 as outputs
-			OIM	#$08,PORT6		; attempt to select HI ROM (again)
-			NOP
-			NOP
-			RTS
-hdlr_SWI2		NOP
-			OIM	#$08,PORT6		; select HI ROM
-			NOP
-			NOP
-			NOP
-			NOP
-			NOP
-			NOP
-			RTI
-hdlr_CMI		NOP
-			OIM	#$08,PORT6		; select HI ROM
-			NOP
-			NOP
-			NOP
-			NOP
-			NOP
-			NOP
-			RTI
-hdlr_DIV0		NOP
-			OIM	#$08,PORT6		; select HI ROM
-			NOP
-			NOP
-			NOP
-			NOP
-			NOP
-			NOP
-			RTI
-hdlr_IRQ		NOP
-			OIM	#$08,PORT6		; select HI ROM
-			NOP
-			NOP
-			NOP
-			NOP
-			NOP
-			NOP
-			RTI
 
 BANK_HI			MACRO
 &0			OIM	#$08,PORT6
 			ENDM
 
-;
-; Entry point for cross-bank function calls.
-;
-
 BANK_SW			MACRO
 &0			OIM	#$08,PORT6
 			ENDM
+
+;****************************************************
+;* Program Code / Data Areas			    *
+;****************************************************
+
+			ORG	$8000
+
+hdlr_RST		OIM	#$08,PORT6		; attempt to select HI bank
+			LDAA	#$F8
+			STAA	DDR6			; set P63 - P67 as outputs
+			OIM	#$08,PORT6		; attempt to select HI bank (again)
+			NOP
+			NOP
+			RTS
+
+hdlr_SWI2		NOP
+			OIM	#$08,PORT6		; select HI bank
+			NOP				;
+			NOP
+			NOP
+			NOP
+			NOP
+			NOP
+			RTI
+
+hdlr_CMI		NOP
+			OIM	#$08,PORT6		; select HI bank
+			NOP
+			NOP
+			NOP
+			NOP
+			NOP
+			NOP
+			RTI
+
+hdlr_DIV0		NOP
+			OIM	#$08,PORT6		; select HI bank
+			NOP
+			NOP
+			NOP
+			NOP
+			NOP
+			NOP
+			RTI
+
+hdlr_IRQ		NOP
+			OIM	#$08,PORT6		; select HI bank
+			NOP
+			NOP
+			NOP
+			NOP
+			NOP
+			NOP
+			RTI
+
+;
+; Entry point for cross-bank function calls.
+;
 
 			INCLUDE	"inc/xrom.asm"
 
