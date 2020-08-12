@@ -1,12 +1,14 @@
-; f9dasm: M6800/1/2/3/8/9 / H6309 Binary/OS9/FLEX9 Disassembler V1.79
-; Loaded binary file lo.bin
+;****************************************************
+;* A09 Assembler options			    *
+;****************************************************
+
+			OPT	H03,NCL,NOW	       
+FILCHR			TEXT	$FF		       
 
 ;****************************************************
 ;* Used Labels					    *
 ;****************************************************
 
-			OPT	H03,NCL,NOW	       
-FILCHR			TEXT	$FF		       
 M0000			EQU	$0000		       
 PORT2			EQU	$0003		       
 M0004			EQU	$0004		       
