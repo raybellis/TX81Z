@@ -3819,17 +3819,19 @@ ZA11B			ABX
 			STD	M7DC9
 ZA121			CLRB
 			BRA	ZA174
-MA124			LDS	$E5,X
-			LDS	$EB,X
-			LDS	$F7,X
-			STS	$03,X
-			STS	$0D,X
-			STS	$19,X
-			STS	$26,X
-			STS	$31,X
-			STS	$40,X
-			STS	$4E,X
-			STS	$57,X
+
+MA124			FDB     MAEE5
+			FDB     MAEEB
+			FDB     MAEF7
+			FDB     MAF03
+			FDB     MAF0D
+			FDB     MAF19
+			FDB     MAF26
+			FDB     MAF31
+			FDB     MAF40
+			FDB     MAF4E
+			FDB     MAF57
+
 ZA13A			LDX	#MAE37
 			JSR	Z9B5E
 			LDAA	M778A
@@ -4127,9 +4129,12 @@ MA390			LDAB	#$3A
 			ABX
 			LDX	,X
 			BRA	ZA3BC
-MA39F			CPX	$26,X
-			CPX	$2B,X
-			CPX	$30,X
+
+; string vector table
+MA39F			FDB	MAC26
+			FDB	MAC2B
+			FDB	MAC30
+
 MA3A5			LDX	#M7DC1
 			STX	M00A7
 			JSR	ZAFD8
@@ -4474,10 +4479,13 @@ ZA687			ASLB
 			ABX
 			LDX	,X
 			JMP	Z9BC4
-MA691			CPX	$F3,X
-			CPX	$35,X
-			CPX	$3B,X
-			CPX	$3F,X
+
+; string vector table
+MA691			FDB	MACF3
+			FDB	MAC35
+			FDB	MAC3B
+			FDB	MAC3F
+
 MA699			JSR	ZA1C2
 			TSTA
 			BNE	ZA6A7
@@ -4556,9 +4564,12 @@ ZA733			CLRB
 			LDAB	#$49
 			JSR	Z9B77
 ZA741			JMP	M9B87
-MA744			CPX	$45,X
-			CPX	$49,X
-			CPX	$52,X
+
+; string vector table
+MA744			FDB	MAC45
+			FDB	MAC49
+			FDB	MAC52
+
 MA74A			LDX	#M7DC8
 			STX	M00A7
 			LDAB	M7789
@@ -4861,23 +4872,23 @@ MAC17_via_dvec_a77a	FCC	"triangl"
 			FCB	$00
 MAC1F_via_dvec_a77c	FCC	"S/Hold"
 			FCB	$00
-			FCC	"all "
+MAC26			FCC	"all "
 			FCB	$00
-			FCC	"odd "
+MAC2B			FCC	"odd "
 			FCB	$00
-			FCC	"even"
+MAC30			FCC	"even"
 			FCB	$00
-			FCC	"delay"
+MAC35			FCC	"delay"
 			FCB	$00
-			FCC	"pan"
+MAC3B			FCC	"pan"
 			FCB	$00
-			FCC	"chord"
+MAC3F			FCC	"chord"
 			FCB	$00
-			FCC	"LFO"
+MAC45			FCC	"LFO"
 			FCB	$00
-			FCC	"velocity"
+MAC49			FCC	"velocity"
 			FCB	$00
-			FCC	"note"
+MAC52			FCC	"note"
 			FCB	$00
 MAC57_via_dvec_a76c	FCC	"(AL)"
 			FCB	$00
@@ -4985,31 +4996,34 @@ MADC9			FCC	"RECALL "
 			FCB	$E3,$00
 MADD2			FCC	"INIT "
 			FCB	$E8,$00
-			FCC	"MIDI CONTROL"
+MADD9			FCC	"MIDI CONTROL"
 			FCB	$00
-			FCC	"CASS CONTROL"
-			FCB	$00,$E3
+MADE6			FCC	"CASS CONTROL"
+			FCB	$00
+MADF3			FCB	$E3
 			FCC	" "
 			FCB	$EE
 			FCC	"1"
-			FCB	$00,$E3
+			FCB	$00
+MADF8			FCB	$E3
 			FCC	" "
 			FCB	$EE
 			FCC	"2"
-			FCB	$00,$E3
+			FCB	$00
+MADFD			FCB	$E3
 			FCC	" "
 			FCB	$EE
 			FCC	"3"
 			FCB	$00
-			FCC	"Chord"
+MAE02			FCC	"Chord"
 			FCB	$02
-			FCC	"MICRO TUNE"
+MAE08			FCC	"MICRO TUNE"
 			FCB	$00
-			FCC	"MICRO	 OCT."
+MAE13			FCC	"MICRO	 OCT."
 			FCB	$00
-			FCC	"MICRO	 FULL"
+MAE20			FCC	"MICRO	 FULL"
 			FCB	$00
-			FCC	"Init?"
+MAE2D			FCC	"Init?"
 			FCB	$03
 MAE33			FCC	"Key"
 			FCB	$00
@@ -5017,8 +5031,9 @@ MAE37			FCC	" PGM"
 			FCB	$00
 MAE3C			FCC	" = "
 			FCB	$00
-			FCC	"INIT P.CNG"
-			FCB	$00,$F5
+MAE40			FCC	"INIT P.CNG"
+			FCB	$00
+MAE4B			FCB	$F5
 			FCC	" "
 			FCB	$E3,$00
 MAE4F			FCB	$E8
@@ -5028,58 +5043,57 @@ MAE4F			FCB	$E8
 			FCB	$00
 MAE54			FCC	"INIT  "
 			FCB	$00
-			FCC	"MAX NOTES"
+MAE5B			FCC	"MAX NOTES"
 			FCB	$00
-			FCC	"RECEIVE CH"
+MAE65			FCC	"RECEIVE CH"
 			FCB	$00
-			FCC	"LIMIT/L"
+MAE70			FCC	"LIMIT/L"
 			FCB	$00
-			FCC	"LIMIT/H"
+MAE78			FCC	"LIMIT/H"
 			FCB	$00
-			FCC	"INST DETUNE"
+MAE80			FCC	"INST DETUNE"
 			FCB	$00
-			FCC	"NOTE SHIFT"
+MAE8C			FCC	"NOTE SHIFT"
 			FCB	$00
-			FCC	"OUT ASSIGN"
+MAE97			FCC	"OUT ASSIGN"
 			FCB	$00
-			FCC	"LFO SELECT"
+MAEA2			FCC	"LFO SELECT"
 			FCB	$00
-			FCC	"MICTUN="
+MAEAD			FCC	"MICTUN="
 			FCB	$01
 MAEB5			FCC	" CC# DD# E FF# GG# AA# B"
-MAECD			FCC	" CDb DEb E FGb GAb ABb BEqual"
+MAECD			FCC	" CDb DEb E FGb GAb ABb B"
+MAEE5			FCC	"Equal"
 			FCB	$00
-			FCC	"Pure(major)"
+MAEEB			FCC	"Pure(major)"
 			FCB	$01
-			FCC	"Pure(minor)"
+MAEF7			FCC	"Pure(minor)"
 			FCB	$01
-			FCC	"Mean tone"
+MAF03			FCC	"Mean tone"
 			FCB	$01
-			FCC	"Pythagorean"
+MAF0D			FCC	"Pythagorean"
 			FCB	$01
-			FCC	"Werckmeister"
+MAF19			FCC	"Werckmeister"
 			FCB	$00
-			FCC	"Kirnberger"
+MAF26			FCC	"Kirnberger"
 			FCB	$00
-			FCC	"Vallotti"
-			FCB	$26
-			FCC	"young"
+MAF31			FCC	"Vallotti&young"
 			FCB	$00
-			FCC	"1/4 Shift eql"
+MAF40			FCC	"1/4 Shift eql"
 			FCB	$00
-			FCC	"1/4 Tone"
+MAF4E			FCC	"1/4 Tone"
 			FCB	$00
-			FCC	"1/8 Tone"
+MAF57			FCC	"1/8 Tone"
 			FCB	$00
-			FCC	"singl"
+MAF60			FCC	"singl"
 			FCB	$00
-			FCC	"dual"
+MAF66			FCC	"dual"
 			FCB	$00
-			FCC	"split"
+MAF6B			FCC	"split"
 			FCB	$00
-			FCC	"mono8"
+MAF71			FCC	"mono8"
 			FCB	$00
-			FCC	"poly4"
+MAF77			FCC	"poly4"
 			FCB	$00
 ZAF7D			LDAB	M7772
 			ANDB	#$04
@@ -5277,17 +5291,20 @@ ZB138			LDAB	M7789
 ZB147			BRA	ZB0E2
 ZB149			LDAB	#$09
 			BRA	ZB0E2
-MB14D			JSR	$D9,X
-			JSR	$E6,X
-			JSR	$F3,X
-			JSR	$F8,X
-			JSR	$FD,X
-			LDS	$08,X
-			LDS	$02,X
-			LDS	$13,X
-			LDS	$20,X
-			LDS	$2D,X
-			LDS	$40,X
+
+; string vector table
+MB14D 			FDB     MADD9
+			FDB     MADE6
+			FDB     MADF3
+			FDB     MADF8
+			FDB     MADFD
+			FDB     MAE08
+			FDB     MAE02
+			FDB     MAE13
+			FDB     MAE20
+			FDB     MAE2D
+			FDB     MAE40
+
 ZB163			LDAB	#$50
 			JSR	Z9CD0
 			JSR	Z9B77
@@ -5319,16 +5336,19 @@ ZB1B1			JSR	ZB4E2
 			LDAB	#$4D
 			JSR	ZAFDD
 			RTS
-MB1BA			LDS	$4B,X
-			LDS	$5B,X
-			LDS	$65,X
-			LDS	$70,X
-			LDS	$78,X
-			LDS	$80,X
-			LDS	$8C,X
-			LDS	$97,X
-			LDS	$A2,X
-			LDS	$AD,X
+
+; string vector table
+MB1BA			FDB     MAE4B
+			FDB     MAE5B
+			FDB     MAE65
+			FDB     MAE70
+			FDB     MAE78
+			FDB     MAE80
+			FDB     MAE8C
+			FDB     MAE97
+			FDB     MAEA2
+			FDB     MAEAD
+
 ZB1CE			LDX	#MAD50
 			JSR	Z9B5E
 			LDX	#M7DB0
@@ -5364,11 +5384,14 @@ ZB217			LDX	#M7DAD
 			LDX	#MAD89
 			BRA	ZB212
 ZB221			RTS
-MB222			STS	$60,X
-			STS	$66,X
-			STS	$6B,X
-			STS	$71,X
-			STS	$77,X
+
+; string vector table
+MB222			FDB	MAF60
+			FDB	MAF66
+			FDB	MAF6B
+			FDB	MAF71
+			FDB	MAF77
+
 ZB22C			PSHA
 			LDAB	#$40
 			LDX	#MB2E0
