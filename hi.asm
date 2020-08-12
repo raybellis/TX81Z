@@ -10,10 +10,10 @@ FILCHR                  TEXT    $FF
 ;****************************************************
 
 			INCLUDE	"inc/hw.asm"
+			INCLUDE	"INC/ram.asm"
 
 ; CPU RAM
 
-XROM			EQU	$0040
 M0041			EQU	$0041
 M0045			EQU	$0045
 M0048			EQU	$0048
@@ -31,7 +31,6 @@ M0059			EQU	$0059
 M005A			EQU	$005A
 M005B			EQU	$005B
 M0060			EQU	$0060
-M0069			EQU	$0069
 M006B			EQU	$006B
 M006C			EQU	$006C
 M006D			EQU	$006D
