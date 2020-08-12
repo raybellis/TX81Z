@@ -1,7 +1,8 @@
-This is a (currently unannotated) disassembly of the firmware
+This is a (currently mostly unannotated) disassembly of the firmware
 of the Yamaha TX81Z synthesizer.
 
-I believe I've identified and separated all code and data blocks.
+I believe I've identified and separated most of the code and data
+blocks.
 
 The files are designed to be assembled using the A09 assembler
 maintained by Hermann Sieb.
