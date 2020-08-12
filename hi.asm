@@ -9,7 +9,7 @@ FILCHR                  TEXT    $FF
 ;* Used Labels					    *
 ;****************************************************
 
-			INCLUDE	"hw.inc"
+			INCLUDE	"inc/hw.asm"
 
 ; CPU RAM
 
