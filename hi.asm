@@ -2,7 +2,7 @@
 ;* A09 Assembler options			    *
 ;****************************************************
 
-                        OPT     H03,NCL,NOW
+                        OPT     H03,NCL,NOW,EXP
 FILCHR                  TEXT    $FF
 
 ;****************************************************
@@ -349,66 +349,12 @@ hdlr_IRQ		JSR	Z8FF6
 ;
 ; Entry point for cross-bank function calls.
 ;
-; This function exists at the same place in both banks, with the
-; effect that as soon as the first instruction is executed the
-; code then continues from the -other- bank, until the point at
-; which the bank select port gets restored to its original value
-;
-; The implementations differ only in whether they set or reset
-; pin P63
-;
 
-XROM_CALL		AIM	#$F7,PORT6		; select LO ROM
-			LDX	#M8264			; reached via call made within LO ROM
-			PSHB
-			LDAB	XROM
-			ABX
-			ABX
-			PULB
-			LDX	,X
-			JSR	,X
-			AIM	#$F7,PORT6		; (re-)select LO ROM
-			RTS
+BANK_SW			MACRO
+&0			AIM	#$F7,PORT6
+			ENDM
 
-; unused
-XROM_CALL2		AIM	#$F7,PORT6
-			BSR	XROM_LOOKUP
-			LDAA	,X
-			AIM	#$F7,PORT6
-			RTS
-
-; unused
-XROM_CALL3		AIM	#$F7,PORT6
-			BSR	XROM_LOOKUP
-			LDAB	,X
-			AIM	#$F7,PORT6
-			RTS
-
-; unused
-XROM_CALL4		AIM	#$F7,PORT6
-			BSR	XROM_LOOKUP
-			ABX
-			LDD	,X
-			AIM	#$F7,PORT6
-			RTS
-
-; unused
-XROM_CALL5		AIM	#$F7,PORT6
-			BSR	XROM_LOOKUP
-			ABX
-			ABX
-			LDX	,X
-			AIM	#$F7,PORT6
-			RTS
-
-; unused
-XROM_LOOKUP		LDX	#M82A0
-			ABX
-			ABX
-			LDX	,X
-			TAB
-			ABX
-			RTS
+			INCLUDE	"inc/xrom.asm"
 
 INIT_VOICE		FCB	$1F,$1F,$00,$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00
 			FCB	$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00,$0F,$0F,$00
@@ -475,7 +421,7 @@ Z8248			JSR	HI_CALL_00
 			TAP
 			BRA	Z82A2
 ; jump table
-M8264			FDB	HI_CALL_00,HI_CALL_01,HI_CALL_02,HI_CALL_03
+XROM_VEC		FDB	HI_CALL_00,HI_CALL_01,HI_CALL_02,HI_CALL_03
 			FDB	HI_CALL_04,HI_CALL_05,HI_CALL_06,HI_CALL_07
 			FDB	HI_CALL_08,HI_CALL_09,HI_CALL_0A,HI_CALL_0B
 			FDB	HI_CALL_0C,HI_CALL_0D,HI_CALL_0E,HI_CALL_0F
@@ -483,7 +429,8 @@ M8264			FDB	HI_CALL_00,HI_CALL_01,HI_CALL_02,HI_CALL_03
 			FDB	HI_CALL_14,HI_CALL_15,HI_CALL_16,HI_CALL_17
 			FDB	HI_CALL_18,HI_CALL_19,HI_CALL_1A,HI_CALL_1B
 			FDB	HI_CALL_1C,HI_CALL_1D
-M82A0			FDB	hdlr_RST
+XROM_VEC2		FDB	hdlr_RST
+
 Z82A2			OIM	#$40,TCSR3
 			LDAA	M0055
 			INCA

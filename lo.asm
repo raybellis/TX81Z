@@ -2,7 +2,7 @@
 ;* A09 Assembler options			    *
 ;****************************************************
 
-			OPT	H03,NCL,NOW
+			OPT	H03,NCL,NOW,EXP
 FILCHR			TEXT	$FF
 
 ;****************************************************
@@ -229,68 +229,19 @@ hdlr_IRQ		NOP
 			NOP
 			RTI
 
+BANK_HI			MACRO
+&0			OIM	#$08,PORT6
+			ENDM
+
 ;
 ; Entry point for cross-bank function calls.
 ;
-; This function exists at the same place in both banks, with the
-; effect that as soon as the first instruction is executed the
-; code then continues from the -other- bank, until the point at
-; which the bank select port gets restored to its original value
-;
-; The implementations differ only in whether they set or reset
-; pin P63
-;
 
-XROM_CALL		OIM	#$08,PORT6		; select HI ROM
-			LDX	#M8202			; reached via call made within HI ROM
-			PSHB
-			LDAB	XROM
-			ABX
-			ABX
-			PULB
-			LDX	,X
-			JSR	,X
-			OIM	#$08,PORT6		; (re-)select HI ROM
-			RTS
+BANK_SW			MACRO
+&0			OIM	#$08,PORT6
+			ENDM
 
-; unused
-XROM_CALL2		OIM	#$08,PORT6
-			BSR	XROM_LOOKUP
-			LDAA	,X
-			OIM	#$08,PORT6
-			RTS
-
-; unused
-XROM_CALL3		OIM	#$08,PORT6
-			BSR	XROM_LOOKUP
-			LDAB	,X
-			OIM	#$08,PORT6
-			RTS
-
-; unused
-XROM_CALL4		OIM	#$08,PORT6
-			BSR	XROM_LOOKUP
-			ABX
-			LDD	,X
-			OIM	#$08,PORT6
-			RTS
-; unused
-XROM_CALL5		OIM	#$08,PORT6
-			BSR	XROM_LOOKUP
-			ABX
-			ABX
-			LDX	,X
-			OIM	#$08,PORT6
-			RTS
-
-; unused
-XROM_LOOKUP		LDX	#M8200
-			ABX
-			ABX
-			LDX	,X
-			TAB
-			ABX
-			RTS
+			INCLUDE	"inc/xrom.asm"
 
 INIT_VOICE		FCB	$1F,$1F,$00,$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00
 			FCB	$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00,$0F,$0F,$00
@@ -310,12 +261,16 @@ M80EF			FCC	"<Good morning!!>"
 
 			ORG	$8200
 
+XROM_VEC2
 M8200			FDB	hdlr_RST
-; jump table
-M8202			FDB	LO_CALL_00,LO_CALL_01,LO_CALL_02,LO_CALL_03
+
+; XROM jump table
+
+XROM_VEC		FDB	LO_CALL_00,LO_CALL_01,LO_CALL_02,LO_CALL_03
 			FDB	LO_CALL_04,LO_CALL_05,LO_CALL_06,LO_CALL_08
 			FDB	LO_CALL_09,LO_CALL_0A,LO_CALL_0B,LO_CALL_0C
 			FDB	LO_CALL_0D
+
 LO_CALL_00		LDAB	#$04
 Z821E			PSHB
 			LDAB	#$06
