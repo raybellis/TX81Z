@@ -1097,7 +1097,7 @@ Z895B			STAB	M00D7
 			JSR	F_8EF2
 			JSR	F_9B4A
 			STX	M00A7
-			LDX	#M8F2E
+			LDX	#S_SAVE
 			JSR	F_9B5E
 			JSR	F_8EB0
 Z896E			JSR	HI_CALL_17
@@ -1115,7 +1115,7 @@ Z8986			ASLB
 			ABX
 			LDX	,X
 			JSR	F_9B5E
-			LDX	#M8FDC
+			LDX	#S_TO_TAPE
 			JSR	F_9BC4
 			LDAB	#$04
 			LDX	#$0000
@@ -1218,14 +1218,14 @@ Z8A63			LDAA	M777E
 Z8A69			STAA	M777E
 			BRA	Z8A4F
 
-M8A6E			FDB	M8F34_via_dvec_8a6e
-			FDB	M8F34_via_dvec_8a6e
-			FDB	M8FD3_via_dvec_8a72
-			FDB	M8FEE_via_dvec_8a74
-			FDB	M8FF7_via_dvec_8a76
-			FDB	M8FEE_via_dvec_8a74
-			FDB	M9000_via_dvec_8a7a
-			FDB	M9009_via_dvec_8a7c
+M8A6E			FDB	S_INT
+			FDB	S_INT
+			FDB	S_PFM_2
+			FDB	S_PGM_CNG
+			FDB	S_SYSTEM
+			FDB	S_PGM_CNG
+			FDB	S_EFFECT
+			FDB	S_MICROTUN
 
 F_8A7E			LDAA	M00CD
 			LDAB	M00D7
@@ -1256,7 +1256,7 @@ J8AB6			STAA	M6A0A
 			RTS
 Z8ABD			JSR	F_9B4A
 			STX	M00A7
-			LDX	#M8F26
+			LDX	#S_VERIFY
 			JSR	F_9B5E
 			JSR	F_8EB0
 Z8ACB			JSR	HI_CALL_17
@@ -1267,7 +1267,7 @@ Z8ACB			JSR	HI_CALL_17
 			CLR	M6A15
 			JSR	F_9B4A
 			STX	M00A7
-			LDX	#M8F42
+			LDX	#S_VERIFY_TAPE
 			JSR	F_9B5E
 			LDAB	M7789
 			ANDB	#$0C
@@ -1298,7 +1298,7 @@ Z8B19			INCA
 			BCC	Z8AF8
 			LDX	#M7DBB
 			STX	M00A7
-			LDX	#M8F5C
+			LDX	#S_VERIFY_COMPLETED
 			JSR	F_9BC4
 			JSR	HI_CALL_0D
 			CLI
@@ -1322,9 +1322,9 @@ Z8B52			LDX	#M7DBB
 			LDAB	M7789
 			CMPB	#$0A
 			BNE	Z8B63
-			LDX	#M8F7E
+			LDX	#S_LOAD_READY
 			BRA	Z8B66
-Z8B63			LDX	#M8F6D
+Z8B63			LDX	#S_LOAD_ALL_READY
 Z8B66			JSR	F_9BC4
 Z8B69			JSR	HI_CALL_17
 			CMPB	#$02
@@ -1340,13 +1340,13 @@ Z8B73			CMPB	#$01
 			BEQ	Z8B9A
 			CMPB	#$04
 			BEQ	Z8B95
-			LDX	#M8FE4
+			LDX	#S_TAPE_TO
 			JSR	F_9B5E
 			JSR	F_8C1C
 			BRA	Z8BA0
-Z8B95			LDX	#M8FC6
+Z8B95			LDX	#S_TAPE_TO_PFM
 			BRA	Z8B9D
-Z8B9A			LDX	#M8F4F
+Z8B9A			LDX	#S_TAPE_TO_INT
 Z8B9D			JSR	F_9BC4
 Z8BA0			CLR	>M00D3
 			CLRA
@@ -1370,7 +1370,7 @@ Z8BC4			INCA
 			BCC	Z8BA6
 			LDX	#M7DBB
 			STX	M00A7
-			LDX	#M8FAF
+			LDX	#S_LOAD_COMPLETED
 			JSR	F_9BC4
 			CLI
 			LDAB	M00D7
@@ -1407,11 +1407,11 @@ F_8C1C			LDAB	M777E
 			JSR	F_9BC4
 			RTS
 
-M8C2A			FDB	M9012_via_dvec_8c2a
-			FDB	M9016_via_dvec_8c2c
-			FDB	M901A_via_dvec_8c2e
-			FDB	M901E_via_dvec_8c30
-			FDB	M9022_via_dvec_8c32
+M8C2A			FDB	S_ALL
+			FDB	S_SYS
+			FDB	S_PC
+			FDB	S_EF
+			FDB	S_MC
 
 F_8C34			LDAB	M00D7
 			JSR	JMPOFFB
@@ -1501,7 +1501,7 @@ Z8CE7			SEC
 			RTS
 Z8CE9			LDX	#M7DC7
 			STX	M00A7
-			LDX	#M8F3D
+			LDX	#S_ERR
 			JSR	F_9BC4
 			CLI
 Z8CF5			LDAA	#$01
@@ -1545,7 +1545,7 @@ Z8D3D			RTS
 
 Z8D3E			JSR	F_9B4A
 			STX	M00A7
-			LDX	#M8F8F
+			LDX	#S_TAPE_TO_BUFF
 			JSR	F_9BC4
 Z8D49			JSR	HI_CALL_17
 			CMPB	#$02
@@ -1604,7 +1604,7 @@ Z8DC1			BRA	Z8D5F
 Z8DC3			CLR	>M00D3
 			JSR	F_9B4A
 			STX	M00A7
-			LDX	#M8FA0
+			LDX	#S_SEARCH_TAPE
 			JSR	F_9BC4
 			LDX	#M7DC8
 			STX	M00A7
@@ -1680,7 +1680,7 @@ Z8E6E			JSR	LO_CALL_09
 			OIM	#$40,TCSR3
 Z8E88			LDX	#M7DBB
 			STX	M00A7
-			LDX	#M8FAF
+			LDX	#S_LOAD_COMPLETED
 			JSR	F_9BC4
 			JSR	HI_CALL_0A
 			CLI
@@ -1701,7 +1701,7 @@ Z8EAD			JMP	Z8CE9
 F_8EB0			CLR	>M00D3
 			LDX	#M7DC4
 			STX	M00A7
-			LDX	#M8F1E
+			LDX	#S_READY
 			JMP	F_9BC4
 
 F_8EBE			JSR	HI_CALL_00
@@ -1742,80 +1742,81 @@ F_8EF2			LDX	#M7DB4
 			JSR	F_9BC4
 			RTS
 
+; string vector table
 M8F0E			FDB	S_DX
 			FDB	S_TX
-			FDB	M8FC0_via_dvec_8f12
-			FDB	M9026_via_dvec_8f14
-			FDB	M902B_via_dvec_8f16
-			FDB	M9030_via_dvec_8f18
-			FDB	M9035_via_dvec_8f1a
-			FDB	M903A_via_dvec_8f1c
+			FDB	S_PFM
+			FDB	S_AL_2
+			FDB	S_SY_2
+			FDB	S_PC_2
+			FDB	S_EF_2
+			FDB	S_MC_2
 
-M8F1E			FCC	"ready? "
+S_READY			FCC	"ready? "
 			FCB	$00
-M8F26			FCC	" Verify"
+S_VERIFY		FCC	" Verify"
 			FCB	$00
-M8F2E			FCC	" Save"
+S_SAVE			FCC	" Save"
 			FCB	$00
-M8F34_via_dvec_8a6e	FCC	" INT	 "
+S_INT			FCC	" INT	 "
 			FCB	$00
-M8F3D			FCC	" ERR"
+S_ERR			FCC	" ERR"
 			FCB	$00
-M8F42			FCC	" Verify Tape"
+S_VERIFY_TAPE		FCC	" Verify Tape"
 			FCB	$00
-M8F4F			FCC	" Tape to INT"
+S_TAPE_TO_INT		FCC	" Tape to INT"
 			FCB	$00
-M8F5C			FCC	"Verify Completed"
+S_VERIFY_COMPLETED	FCC	"Verify Completed"
 			FCB	$00
-M8F6D			FCC	"Load all  ready?"
+S_LOAD_ALL_READY	FCC	"Load all  ready?"
 			FCB	$00
-M8F7E			FCC	"Load	 ready?  "
+S_LOAD_READY		FCC	"Load	 ready?  "
 			FCB	$00
-M8F8F			FCC	"Tape ?? to BUFF?"
+S_TAPE_TO_BUFF		FCC	"Tape ?? to BUFF?"
 			FCB	$00
-M8FA0			FCC	" Search Tape  "
+S_SEARCH_TAPE		FCC	" Search Tape  "
 			FCB	$00
-M8FAF			FCC	" Load Completed "
+S_LOAD_COMPLETED	FCC	" Load Completed "
 			FCB	$00
-M8FC0_via_dvec_8f12	FCC	"(PFM)"
+S_PFM			FCC	"(PFM)"
 			FCB	$00
-M8FC6			FCC	" Tape to PFM"
+S_TAPE_TO_PFM		FCC	" Tape to PFM"
 			FCB	$00
-M8FD3_via_dvec_8a72	FCC	" PFM	 "
+S_PFM_2			FCC	" PFM	 "
 			FCB	$00
-M8FDC			FCC	"to Tape"
+S_TO_TAPE		FCC	"to Tape"
 			FCB	$00
-M8FE4			FCC	" Tape to "
+S_TAPE_TO		FCC	" Tape to "
 			FCB	$00
-M8FEE_via_dvec_8a74	FCC	" PGMCNG "
+S_PGM_CNG		FCC	" PGMCNG "
 			FCB	$00
-M8FF7_via_dvec_8a76	FCC	" S"
-Z8FF9			FCC	"YS"
-Z8FFB			FCC	"TEM "
+S_SYSTEM		FCC	" SYSTEM "
 			FCB	$00
-M9000_via_dvec_8a7a	FCC	" EFFECT "
+S_EFFECT		FCC	" EFFECT "
 			FCB	$00
-M9009_via_dvec_8a7c	FCC	" MICTUN "
+S_MICROTUN		FCC	" MICTUN "
 			FCB	$00
-M9012_via_dvec_8c2a	FCC	"ALL"
+
+S_ALL			FCC	"ALL"
 			FCB	$00
-M9016_via_dvec_8c2c	FCC	"SYS"
+S_SYS			FCC	"SYS"
 			FCB	$00
-M901A_via_dvec_8c2e	FCC	"PC "
+S_PC			FCC	"PC "
 			FCB	$00
-M901E_via_dvec_8c30	FCC	"EF "
+S_EF			FCC	"EF "
 			FCB	$00
-M9022_via_dvec_8c32	FCC	"MC "
+S_MC			FCC	"MC "
 			FCB	$00
-M9026_via_dvec_8f14	FCC	"(AL)"
+
+S_AL_2			FCC	"(AL)"
 			FCB	$00
-M902B_via_dvec_8f16	FCC	"(SY)"
+S_SY_2			FCC	"(SY)"
 			FCB	$00
-M9030_via_dvec_8f18	FCC	"(PC)"
+S_PC_2			FCC	"(PC)"
 			FCB	$00
-M9035_via_dvec_8f1a	FCC	"(EF)"
+S_EF_2			FCC	"(EF)"
 			FCB	$00
-M903A_via_dvec_8f1c	FCC	"(MC)"
+S_MC_2			FCC	"(MC)"
 			FCB	$00
 
 F_903F			LDX	#M69C1
@@ -2557,16 +2558,16 @@ Z9583			LDX	#M7DAB
 			LDAB	#$30
 			BSR	F_961F
 			CLRA
-			LDX	#M9632
+			LDX	#S_1L
 			BSR	F_9604
 			LDAA	#$80
-			LDX	#M9637
+			LDX	#S_2R
 			BSR	F_9604
 			CLRA
-			LDX	#M963C
+			LDX	#S_HP_L
 			BSR	F_9604
 			LDAA	#$80
-			LDX	#Z9642
+			LDX	#S_HP_R
 			BSR	F_9604
 			AIM	#$BF,TCSR3
 			AIM	#$F7,TCSR1
@@ -2607,14 +2608,16 @@ Z962A			BRN	Z962A
 			STAA	OPZ_R1
 			CLI
 			RTS
-M9632			FCC	"1(L)"
+
+S_1L			FCC	"1(L)"
 			FCB	$00
-M9637			FCC	"2(R)"
+S_2R			FCC	"2(R)"
 			FCB	$00
-M963C			FCC	"HP(L)"
+S_HP_L			FCC	"HP(L)"
 			FCB	$00
-Z9642			FCC	"HP(R)"
+S_HP_R			FCC	"HP(R)"
 			FCB	$00
+
 Z9648			JSR	F_9B4E
 			SEI
 Z964C			BRN	Z964C
@@ -4735,6 +4738,7 @@ MA7B8			FDB	MA894_via_dvec_a7b8,MA89B_via_dvec_a7ba
 			FDB	MAB14_via_dvec_a840,MAB2E_via_dvec_a842
 			FDB	MAB38_via_dvec_a844,MAB46_via_dvec_a846
 			FDB	MAB49_via_dvec_a848
+
 MA84A			FCC	"Mem Str	?"
 			FCB	$00
 MA85B			FCC	"EG Copy OP  OP ?"
@@ -5567,6 +5571,7 @@ MB2E0			FCB	%00000000,%00000000,%00010000,%00001001,%00000101
 ; CGCHAR
 			FCB	%00000000,%00000000,%00000001,%00010010,%00010100
 			FCB	%00010000,%00011110,%00000000
+
 MB2F0			FCC	"4~3~2~1~"
 			FCB	$00
 MB2F9			FCC	"4~2~1~"
@@ -5583,6 +5588,7 @@ MB315			FCC	"1 2 3"
 			FCB	$00
 MB31B			FCC	"+-+-+-+"
 			FCB	$00
+
 SET_CGCHAR_SET		LDAB	#$40
 			LDX	#MB33F
 ZB328			BSR	SET_CGCHAR
@@ -5789,11 +5795,11 @@ ZB474			JSR	F_9B77
 
 F_B47B			LDAA	M6E37
 			BNE	ZB485
-			LDX	#MB4CC
+			LDX	#S_OCT
 			BRA	ZB48C
 ZB485			CMPA	#$02
 			BCC	ZB491
-			LDX	#MB4D1
+			LDX	#S_FULL
 ZB48C			JSR	F_9B5E
 			BRA	ZB4CB
 ZB491			DECA
@@ -5827,9 +5833,9 @@ ZB4C7			CLRB
 			JSR	F_9BD1
 ZB4CB			RTS
 
-MB4CC			FCC	"Oct."
+S_OCT			FCC	"Oct."
 			FCB	$00
-MB4D1			FCC	"Full"
+S_FULL			FCC	"Full"
 			FCB	$00
 
 F_B4D6			LDAB	#200
