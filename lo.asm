@@ -979,7 +979,7 @@ LO_CALL_04		LDAA	#$01
 			LDAA	M777E
 			LDAB	#$4C
 			MUL
-			ADDD	#MODE_TABLE
+			ADDD	#STANDARD_PFM
 			XGDX
 			STX	M00A9
 			AIM	#$BF,TCSR3
@@ -1036,8 +1036,8 @@ Z8791			PSHB
 			BNE	Z8791
 			RTS
 
-; Mode table  - 5 x 76 bytes per mode
-MODE_TABLE		FCB	$68,$00,$20,$00,$7F,$07,$18,$63,$60,$00,$41,$00,$7F
+; Standard performance settings  - 5 x 76 bytes per mode
+STANDARD_PFM		FCB	$68,$00,$20,$00,$7F,$07,$18,$63,$60,$00,$41,$00,$7F
 			FCB	$07,$18,$63,$60,$00,$62,$00,$7F,$07,$18,$63,$60,$00
 			FCB	$63,$00,$7F,$07,$18,$63,$60,$00,$64,$00,$7F,$07,$18
 			FCB	$63,$60,$00,$65,$00,$7F,$07,$18,$63,$60,$00,$66,$00
@@ -3495,7 +3495,7 @@ J9D28			JMP	Z9E61
 			BEQ	Z9D46
 			LDX	#M7DBB
 			STX	M00A7
-			LDX	#MA86C
+			LDX	#S_ARE_YOU_SURE
 			JMP	F_9BC4
 Z9D46			JMP	Z9F07
 			JSR	F_B163
@@ -3504,7 +3504,7 @@ Z9D46			JMP	Z9F07
 			LDAB	M7774
 			CMPB	#$35
 			BNE	Z9D64
-			LDX	#MAD27_via_dvec_a800
+			LDX	#S_NAME
 			JSR	F_9B5E
 			JSR	F_AFC9
 			JMP	F_9B87
@@ -3533,7 +3533,7 @@ Z9D94			LDAB	#$50
 			JSR	F_9B5E
 			LDX	#M7DBB
 			STX	M00A7
-			LDX	#MAD6B
+			LDX	#S_PFM_STORE
 			JSR	F_9B5E
 			LDAA	M777A
 			LDX	#M7DC5
@@ -3559,11 +3559,11 @@ Z9DCE			BRA	Z9E13
 Z9DDD			LDAB	#$50
 			JSR	F_9CBF
 			JSR	F_9B77
-			LDX	#MAD59
+			LDX	#S_LAY_SINGLE
 			JSR	F_9B5E
 			LDX	#M7DBB
 			STX	M00A7
-			LDX	#MA84A
+			LDX	#S_MEM_STR
 			JSR	F_9B5E
 			LDAA	M777F
 			LDX	#M7DC3
@@ -3580,7 +3580,7 @@ Z9E13			JMP	F_9B87
 			LDAB	#$50
 			JSR	F_9CBF
 			JSR	F_9B77
-			LDX	#MAD59
+			LDX	#S_LAY_SINGLE
 Z9E21			JSR	F_9B5E
 			LDX	#M7DBB
 			STX	M00A7
@@ -3589,7 +3589,7 @@ Z9E21			JSR	F_9B5E
 Z9E2F			JSR	F_AFB0
 			LDX	#M7DBB
 			STX	M00A7
-			LDX	#MA85B
+			LDX	#S_EG_COPY_OP_OP
 			JSR	F_9B5E
 			LDX	#M7DC5
 			STX	M00A7
@@ -3627,12 +3627,12 @@ Z9E82			LDAB	,X
 			JMP	F_9B87
 Z9E90			TST	>M00A5
 			BEQ	Z9E9B
-			LDX	#MA86C
+			LDX	#S_ARE_YOU_SURE
 			JMP	F_9BC4
 Z9E9B			JMP	Z9F0C
 Z9E9E			LDX	#M7DAC
 			STX	M00A7
-			LDX	#MAD91
+			LDX	#S_MASTER_VOLUME
 			JSR	F_9B5E
 			JSR	F_B3B5
 			LDX	#M7DC9
@@ -3650,7 +3650,7 @@ Z9EC0			TST	M7795
 Z9EC8			LDAB	#$50
 			JSR	F_9CBF
 			JSR	F_9B77
-			LDX	#MAD59
+			LDX	#S_LAY_SINGLE
 			JSR	F_9B5E
 			LDX	#M7DBB
 			STX	M00A7
@@ -3885,7 +3885,7 @@ ZA0E5			LDAB	#$3A
 			JSR	F_9B77
 			LDAB	M778A
 			ASLB
-			LDX	#MA124
+			LDX	#DVEC_SCALE_NAMES
 			ABX
 			LDX	,X
 			JSR	F_9B5E
@@ -3913,17 +3913,17 @@ ZA11B			ABX
 ZA121			CLRB
 			BRA	ZA174
 
-MA124			FDB     MAEE5
-			FDB     MAEEB
-			FDB     MAEF7
-			FDB     MAF03
-			FDB     MAF0D
-			FDB     MAF19
-			FDB     MAF26
-			FDB     MAF31
-			FDB     MAF40
-			FDB     MAF4E
-			FDB     MAF57
+DVEC_SCALE_NAMES	FDB     S_EQUAL
+			FDB     S_PURE_MAJOR
+			FDB     S_PURE_MINOR
+			FDB     S_MEAN_TONE
+			FDB     S_PYTHAGOREAN
+			FDB     S_WERCKMEISTER
+			FDB     S_KIRNBERGER
+			FDB     S_VALLOTTI_YOUNG
+			FDB     S_1_4_SHIFT_EQUAL
+			FDB     S_1_4_TONE
+			FDB     S_1_8_TONE
 
 ZA13A			LDX	#MAE37
 			JSR	F_9B5E
@@ -4013,7 +4013,7 @@ MA1E0			LDAB	M777B
 			BEQ	ZA1EF
 			JMP	ZA26F
 ZA1EF			PSHX
-			LDX	#MAD1B
+			LDX	#S_RATIO
 			JSR	F_9B5E
 			LDAB	#$3D
 			JSR	F_9B77
@@ -4079,7 +4079,7 @@ ZA268			INX
 ZA269			JSR	F_9C86
 ZA26C			JMP	F_9B87
 ZA26F			PSHX
-			LDX	#MAD22
+			LDX	#S_FIX
 			JSR	F_9B5E
 			LDAB	#$3D
 			JSR	F_9B77
@@ -4226,27 +4226,27 @@ MA390			LDAB	#$3A
 			BRA	ZA3BC
 
 ; string vector table
-MA39F			FDB	MAC26
-			FDB	MAC2B
-			FDB	MAC30
+MA39F			FDB	S_NOTE_ALL
+			FDB	S_NOTE_ODD
+			FDB	S_NOTE_EVEN
 
 MA3A5			LDX	#M7DC1
 			STX	M00A7
 			JSR	F_AFD8
 			JMP	F_9B87
 MA3B0			JSR	F_A1C7
-			LDX	#MAB65
+			LDX	#S_MONO
 			TSTA
 			BNE	ZA3BC
-			LDX	#MAB5D
+			LDX	#S_POLY
 ZA3BC			JMP	F_9BC4
 MA3BF			TST	M6AA6
 			BEQ	ZA3CD
 			JSR	F_A1C7
-			LDX	#MAB87
+			LDX	#S_FINGERED
 			TSTA
 			BNE	ZA3BC
-ZA3CD			LDX	#MAB7B
+ZA3CD			LDX	#S_FULL_TIME
 			BRA	ZA3BC
 MA3D2			JSR	F_A1C2
 			CMPA	#$04
@@ -4681,301 +4681,363 @@ MA75A			LDX	#M7DC7
 			ABX
 			LDX	,X
 			JMP	F_9BC4
-MA76C			FDB	MAC57_via_dvec_a76c,MAC5C_via_dvec_a76e
-			FDB	MAC61_via_dvec_a770,MAC66_via_dvec_a772
-			FDB	MAC6B_via_dvec_a774
-MA776			FDB	MAC09_via_dvec_a776,MAC10_via_dvec_a778
-			FDB	MAC17_via_dvec_a77a,MAC1F_via_dvec_a77c
-MA77E			FDB	MA87B_via_dvec_a77e,MA87F_via_dvec_a780
-			FDB	MA88D_via_dvec_a782,MA8C7_via_dvec_a784
-			FDB	MA8EE_via_dvec_a786,MA90F_via_dvec_a788
-			FDB	MA913_via_dvec_a78a,MA917_via_dvec_a78c
-			FDB	MA935_via_dvec_a78e,MA939_via_dvec_a790
-			FDB	MAB50_via_dvec_a792,MA958_via_dvec_a794
-			FDB	MA965_via_dvec_a796,MAAA0_via_dvec_a798
-			FDB	MAAAC_via_dvec_a79a,MA9FD_via_dvec_a79c
-			FDB	MAAB7_via_dvec_a79e,MAAE7_via_dvec_a7a0
-			FDB	MAB0D_via_dvec_a7a2,MAB21_via_dvec_a7a4
-			FDB	MAA1A_via_dvec_a7a6,MAA0D_via_dvec_a7a8
-			FDB	MABE5_via_dvec_a7aa,MAD2E_via_dvec_a7ac
-			FDB	MAD3F_via_dvec_a7ae,MABED_via_dvec_a7b0
-			FDB	MABF1_via_dvec_a7b2,MABF6_via_dvec_a7b4
-			FDB	MABFD_via_dvec_a7b6
-MA7B8			FDB	MA894_via_dvec_a7b8,MA89B_via_dvec_a7ba
-			FDB	MA8A2_via_dvec_a7bc,MA8A9_via_dvec_a7be
-			FDB	MA8B5_via_dvec_a7c0,MA8C1_via_dvec_a7c2
-			FDB	MA8D5_via_dvec_a7c4,MA8E2_via_dvec_a7c6
-			FDB	MA8E6_via_dvec_a7c8,MA8EA_via_dvec_a7ca
-			FDB	MA8FA_via_dvec_a7cc,MA905_via_dvec_a7ce
-			FDB	MA90A_via_dvec_a7d0,MA91C_via_dvec_a7d2
-			FDB	MA920_via_dvec_a7d4,MA924_via_dvec_a7d6
-			FDB	MA928_via_dvec_a7d8,MA92C_via_dvec_a7da
-			FDB	MA930_via_dvec_a7dc,MA943_via_dvec_a7de
-			FDB	MA947_via_dvec_a7e0,MAB5C_via_dvec_a7e2
-			FDB	MAB6D_via_dvec_a7e4,MAB7A_via_dvec_a7e6
-			FDB	MAB92_via_dvec_a7e8,MAB9B_via_dvec_a7ea
-			FDB	MABA8_via_dvec_a7ec,MABAD_via_dvec_a7ee
-			FDB	MABB2_via_dvec_a7f0,MABB7_via_dvec_a7f2
-			FDB	MABBC_via_dvec_a7f4,MABBF_via_dvec_a7f6
-			FDB	MABC2_via_dvec_a7f8,MABCD_via_dvec_a7fa
-			FDB	MA94B_via_dvec_a7fc,MABD8_via_dvec_a7fe
-			FDB	MAD27_via_dvec_a800,MA98C_via_dvec_a802
-			FDB	MA999_via_dvec_a804,MA99E_via_dvec_a806
-			FDB	MA973_via_dvec_a808,MA97F_via_dvec_a80a
-			FDB	MA9A9_via_dvec_a80c,MA9B5_via_dvec_a80e
-			FDB	MA9C1_via_dvec_a810,MA9CC_via_dvec_a812
-			FDB	MA9DC_via_dvec_a814,MA9E6_via_dvec_a816
-			FDB	MA9F3_via_dvec_a818,MA9FA_via_dvec_a81a
-			FDB	MAA26_via_dvec_a81c,MAA33_via_dvec_a81e
-			FDB	MAA3C_via_dvec_a820,MAA43_via_dvec_a822
-			FDB	MAA51_via_dvec_a824,MAA5B_via_dvec_a826
-			FDB	MAA66_via_dvec_a828,MAA70_via_dvec_a82a
-			FDB	MAA79_via_dvec_a82c,MAA86_via_dvec_a82e
-			FDB	MAA93_via_dvec_a830,MAABE_via_dvec_a832
-			FDB	MAAC9_via_dvec_a834,MAADD_via_dvec_a836
-			FDB	MAAD5_via_dvec_a838,MAAF9_via_dvec_a83a
-			FDB	MAAEE_via_dvec_a83c,MAB01_via_dvec_a83e
-			FDB	MAB14_via_dvec_a840,MAB2E_via_dvec_a842
-			FDB	MAB38_via_dvec_a844,MAB46_via_dvec_a846
-			FDB	MAB49_via_dvec_a848
 
-MA84A			FCC	"Mem Str	?"
+MA76C			FDB	MAC57_via_dvec_a76c
+			FDB	MAC5C_via_dvec_a76e
+			FDB	MAC61_via_dvec_a770
+			FDB	MAC66_via_dvec_a772
+			FDB	MAC6B_via_dvec_a774
+
+MA776			FDB	S_SAW_UP
+			FDB	S_SQUARE
+			FDB	S_TRIANGL
+			FDB	S_S_HOLD
+
+MA77E			FDB	S_ALG
+			FDB	S_FEEDBACK_OP4
+			FDB	S_LFO
+			FDB	S_SENSITIVITY
+			FDB	S_FREQUENCY
+			FDB	S_OSW
+			FDB	S_DET
+			FDB	S_EG
+			FDB	S_OUT
+			FDB	S_SCALING
+			FDB	S_FUNCTION
+			FDB	S_MASTER_TUNE
+			FDB	S_MIDI_CONTROL
+			FDB	S_MEM_PROTECT
+			FDB	S_COMBINE
+			FDB	S_CASS_CONTROL
+			FDB	MAAB7_via_dvec_a79e
+			FDB	MAAE7_via_dvec_a7a0
+			FDB	MAB0D_via_dvec_a7a2
+			FDB	S_MICRO_TUNE
+			FDB	S_INIT_VOICE
+			FDB	S_RECALL_EDIT
+			FDB	S_ASSIGN
+			FDB	MAD2E_via_dvec_a7ac
+			FDB	MAD3F_via_dvec_a7ae
+			FDB	S_VOL
+			FDB	S_SEL
+			FDB	S_INIT_3
+			FDB	S_TEST_ENTRY
+MA7B8			FDB	S_WAVE
+			FDB	S_SPEED
+			FDB	S_DELAY
+			FDB	S_P_MOD_DEPTH
+			FDB	S_A_MOD_DEPTH
+			FDB	S_SYNC
+			FDB	S_P_MOD_SENS
+			FDB	S_AMS
+			FDB	S_EBS
+			FDB	S_KVS
+			FDB	S_FIX_RANGE
+			FDB	S_CRS
+			FDB	S_FIN
+			FDB	S_AR
+			FDB	S_D1R
+			FDB	S_D1L
+			FDB	S_D2R
+			FDB	S_RR
+			FDB	S_SHFT
+			FDB	S_RS
+			FDB	S_LS
+			FDB	MAB5C_via_dvec_a7e2
+			FDB	S_P_BEND_RANGE
+			FDB	MAB7A_via_dvec_a7e6
+			FDB	S_TIME
+			FDB	S_FC_VOLUME
+			FDB	S_FC_1
+			FDB	S_FC_2
+			FDB	S_MW_1
+			FDB	S_MW_2
+			FDB	MABBC_via_dvec_a7f4
+			FDB	MABBF_via_dvec_a7f6
+			FDB	S_P_BIAS
+			FDB	S_EG_BIAS
+			FDB	S_MIDDLE_C
+			FDB	S_REVERB_RATE
+			FDB	S_NAME
+			FDB	S_BASIC_RECV_CH
+			FDB	S_CH
+			FDB	S_P_CHANGE
+			FDB	S_CONT_CHANGE
+			FDB	S_ATOUCH_BC
+			FDB	S_PITCHBEND
+			FDB	S_NOTE_ON_OFF
+			FDB	S_EXCLUSIVE
+			FDB	S_VOICE_TRANS
+			FDB	S_PERFRM
+			FDB	S_SETUP_TRANS
+			FDB	S_INIT
+			FDB	MA9FA_via_dvec_a81a
+			FDB	S_SAVE_32_VOICE
+			FDB	S_VERIFY_2
+			FDB	S_LOAD
+			FDB	S_LOAD_1_VOICE
+			FDB	S_SAVE_24
+			FDB	S_VERIFY_24
+			FDB	S_LOAD_24
+			FDB	S_LOAD_1
+			FDB	S_SAVE_SETUP
+			FDB	S_VERIFY_SETUP
+			FDB	S_LOAD_SETUP
+			FDB	S_DELAY_TIME
+			FDB	S_PITCH_SHIFT
+			FDB	S_FEEDBACK
+			FDB	S_LEVEL
+			FDB	S_SELECT
+			FDB	S_DIRECTION
+			FDB	S_PAN_RANGE
+			FDB	S_KEY_ON_NOTE
+			FDB	S_OCTAVE
+			FDB	S_INIT_OCTAVE
+			FDB	MAB46_via_dvec_a846
+			FDB	S_INIT_2
+
+S_MEM_STR		FCC	"Mem Str	?"
 			FCB	$00
-MA85B			FCC	"EG Copy OP  OP ?"
+S_EG_COPY_OP_OP		FCC	"EG Copy OP  OP ?"
 			FCB	$00
-MA86C			FCC	" Are you sure?"
+S_ARE_YOU_SURE		FCC	" Are you sure?"
 			FCB	$00
-MA87B_via_dvec_a77e	FCC	"ALG"
+S_ALG			FCC	"ALG"
 			FCB	$10
-MA87F_via_dvec_a780	FCC	"Feedback(OP4)"
+S_FEEDBACK_OP4		FCC	"Feedback(OP4)"
 			FCB	$01
-MA88D_via_dvec_a782	FCC	" "
+S_LFO			FCC	" "
 			FCB	$AE
 			FCC	"LFO?"
 			FCB	$00
-MA894_via_dvec_a7b8	FCC	" Wave "
+S_WAVE			FCC	" Wave "
 			FCB	$09
-MA89B_via_dvec_a7ba	FCC	" Speed"
+S_SPEED			FCC	" Speed"
 			FCB	$01
-MA8A2_via_dvec_a7bc	FCC	" Delay"
+S_DELAY			FCC	" Delay"
 			FCB	$01
-MA8A9_via_dvec_a7be	FCC	"P Mod Depth"
+S_P_MOD_DEPTH		FCC	"P Mod Depth"
 			FCB	$01
-MA8B5_via_dvec_a7c0	FCC	"A Mod Depth"
+S_A_MOD_DEPTH		FCC	"A Mod Depth"
 			FCB	$01
-MA8C1_via_dvec_a7c2	FCC	" Sync"
+S_SYNC			FCC	" Sync"
 			FCB	$02
-MA8C7_via_dvec_a784	FCC	" Sensitivity?"
+S_SENSITIVITY		FCC	" Sensitivity?"
 			FCB	$00
-MA8D5_via_dvec_a7c4	FCC	"P Mod Sens. "
+S_P_MOD_SENS		FCC	"P Mod Sens. "
 			FCB	$10
-MA8E2_via_dvec_a7c6	FCC	"AMS"
+S_AMS			FCC	"AMS"
 			FCB	$0A
-MA8E6_via_dvec_a7c8	FCC	"EBS"
+S_EBS			FCC	"EBS"
 			FCB	$04
-MA8EA_via_dvec_a7ca	FCC	"KVS"
+S_KVS			FCC	"KVS"
 			FCB	$04
-MA8EE_via_dvec_a786	FCB	$AE
+S_FREQUENCY		FCB	$AE
 			FCC	"Frequency?"
 			FCB	$00
-MA8FA_via_dvec_a7cc	FCC	"Fix Range "
+S_FIX_RANGE		FCC	"Fix Range "
 			FCB	$12
-MA905_via_dvec_a7ce	FCC	"CRS("
+S_CRS			FCC	"CRS("
 			FCB	$03
-MA90A_via_dvec_a7d0	FCC	"FIN("
+S_FIN			FCC	"FIN("
 			FCB	$03
-MA90F_via_dvec_a788	FCC	"OSW"
+S_OSW			FCC	"OSW"
 			FCB	$04
-MA913_via_dvec_a78a	FCC	"DET"
+S_DET			FCC	"DET"
 			FCB	$04
-MA917_via_dvec_a78c	FCB	$AE
+S_EG			FCB	$AE
 			FCC	"EG?"
 			FCB	$00
-MA91C_via_dvec_a7d2	FCC	"AR "
+S_AR			FCC	"AR "
 			FCB	$04
-MA920_via_dvec_a7d4	FCC	"D1R"
+S_D1R			FCC	"D1R"
 			FCB	$04
-MA924_via_dvec_a7d6	FCC	"D1L"
+S_D1L			FCC	"D1L"
 			FCB	$04
-MA928_via_dvec_a7d8	FCC	"D2R"
+S_D2R			FCC	"D2R"
 			FCB	$04
-MA92C_via_dvec_a7da	FCC	"RR "
+S_RR			FCC	"RR "
 			FCB	$04
-MA930_via_dvec_a7dc	FCC	"SHFT"
+S_SHFT			FCC	"SHFT"
 			FCB	$04
-MA935_via_dvec_a78e	FCC	"OUT"
+S_OUT			FCC	"OUT"
 			FCB	$04
-MA939_via_dvec_a790	FCC	" Scaling?"
+S_SCALING		FCC	" Scaling?"
 			FCB	$00
-MA943_via_dvec_a7de	FCC	"RS "
+S_RS			FCC	"RS "
 			FCB	$04
-MA947_via_dvec_a7e0	FCC	"LS "
+S_LS			FCC	"LS "
 			FCB	$04
-MA94B_via_dvec_a7fc	FCC	"Middle C    "
+S_MIDDLE_C		FCC	"Middle C    "
 			FCB	$05
-MA958_via_dvec_a794	FCC	"Master Tune "
+S_MASTER_TUNE		FCC	"Master Tune "
 			FCB	$06
-MA965_via_dvec_a796	FCC	"Midi Control?"
+S_MIDI_CONTROL		FCC	"Midi Control?"
 			FCB	$00
-MA973_via_dvec_a808	FCC	"Cont.Change"
+S_CONT_CHANGE		FCC	"Cont.Change"
 			FCB	$1C
-MA97F_via_dvec_a80a	FCC	"A.Touch ~ BC"
+S_ATOUCH_BC		FCC	"A.Touch ~ BC"
 			FCB	$02
-MA98C_via_dvec_a802	FCC	"Basic Rcv.Ch"
+S_BASIC_RECV_CH		FCC	"Basic Rcv.Ch"
 			FCB	$11
-MA999_via_dvec_a804	FCB	$BC
+S_CH			FCB	$BC
 			FCC	" Ch"
 			FCB	$0B
-MA99E_via_dvec_a806	FCC	" P.Change "
+S_P_CHANGE		FCC	" P.Change "
 			FCB	$19
-MA9A9_via_dvec_a80c	FCC	" Pitch Bend"
+S_PITCHBEND		FCC	" Pitch Bend"
 			FCB	$1C
-MA9B5_via_dvec_a80e	FCC	"Note on/off"
+S_NOTE_ON_OFF		FCC	"Note on/off"
 			FCB	$0D
-MA9C1_via_dvec_a810	FCC	" Exclusive"
+S_EXCLUSIVE		FCC	" Exclusive"
 			FCB	$02
-MA9CC_via_dvec_a812	FCC	"Voice Trans?( )"
+S_VOICE_TRANS		FCC	"Voice Trans?( )"
 			FCB	$0F
-MA9DC_via_dvec_a814	FCC	"Perfrm "
+S_PERFRM		FCC	"Perfrm "
 			FCB	$BC
 			FCC	"?"
 			FCB	$00
-MA9E6_via_dvec_a816	FCC	"Setup Trans?"
+S_SETUP_TRANS		FCC	"Setup Trans?"
 			FCB	$1F
-MA9F3_via_dvec_a818	FCC	"Init "
+S_INIT			FCC	"Init "
 			FCB	$C5,$00
-MA9FA_via_dvec_a81a	FCB	$AE,$C5,$00
-MA9FD_via_dvec_a79c	FCC	"Cass. Control ?"
+MA9FA_via_dvec_a81a	FCB	$AE,$C5
 			FCB	$00
-MAA0D_via_dvec_a7a8	FCC	"Recall Edit?"
+S_CASS_CONTROL		FCC	"Cass. Control ?"
 			FCB	$00
-MAA1A_via_dvec_a7a6	FCC	"Init Voice?"
+S_RECALL_EDIT		FCC	"Recall Edit?"
 			FCB	$00
-MAA26_via_dvec_a81c	FCC	"Save32Voice?"
+S_INIT_VOICE		FCC	"Init Voice?"
+			FCB	$00
+S_SAVE_32_VOICE		FCC	"Save32Voice?"
 			FCB	$0F
-MAA33_via_dvec_a81e	FCC	"Verify "
+S_VERIFY_2		FCC	"Verify "
 			FCB	$80,$00
-MAA3C_via_dvec_a820	FCC	"Load "
+S_LOAD			FCC	"Load "
 			FCB	$80,$00
-MAA43_via_dvec_a822	FCC	"Load 1 Voice?"
+S_LOAD_1_VOICE		FCC	"Load 1 Voice?"
 			FCB	$00
-MAA51_via_dvec_a824	FCC	"Save 24 "
+S_SAVE_24		FCC	"Save 24 "
 			FCB	$B4,$00
-MAA5B_via_dvec_a826	FCC	"Verify 24"
+S_VERIFY_24		FCC	"Verify 24"
 			FCB	$B4,$00
-MAA66_via_dvec_a828	FCC	"Load 24 "
+S_LOAD_24		FCC	"Load 24 "
 			FCB	$B4,$00
-MAA70_via_dvec_a82a	FCC	"Load 1 "
+S_LOAD_1		FCC	"Load 1 "
 			FCB	$B4,$00
-MAA79_via_dvec_a82c	FCC	"Save Setup? "
+S_SAVE_SETUP		FCC	"Save Setup? "
 			FCB	$1F
-MAA86_via_dvec_a82e	FCC	"VerifySetup?"
+S_VERIFY_SETUP		FCC	"VerifySetup?"
 			FCB	$1F
-MAA93_via_dvec_a830	FCC	"Load Setup? "
+S_LOAD_SETUP		FCC	"Load Setup? "
 			FCB	$1F
-MAAA0_via_dvec_a798	FCC	"Mem Protect"
+S_MEM_PROTECT		FCC	"Mem Protect"
 			FCB	$02
-MAAAC_via_dvec_a79a	FCC	" Combine  "
+S_COMBINE		FCC	" Combine  "
 			FCB	$02
 MAAB7_via_dvec_a79e	FCB	$AE,$D0
 			FCC	" 1 ?"
 			FCB	$00
-MAABE_via_dvec_a832	FCC	"Delay Time"
+S_DELAY_TIME		FCC	"Delay Time"
 			FCB	$1B
-MAAC9_via_dvec_a834	FCC	"Pitch Shift"
+S_PITCH_SHIFT		FCC	"Pitch Shift"
 			FCB	$0C
-MAAD5_via_dvec_a838	FCB	$D0
+S_LEVEL			FCB	$D0
 			FCC	"Level "
 			FCB	$01
-MAADD_via_dvec_a836	FCC	" Feedback"
+S_FEEDBACK		FCC	" Feedback"
 			FCB	$01
 MAAE7_via_dvec_a7a0	FCB	$AE,$D0
 			FCC	" 2 ?"
 			FCB	$00
-MAAEE_via_dvec_a83c	FCC	"Direction "
+S_DIRECTION		FCC	"Direction "
 			FCB	$1D
-MAAF9_via_dvec_a83a	FCC	"Select "
+S_SELECT		FCC	"Select "
 			FCB	$1D
-MAB01_via_dvec_a83e	FCC	" Pan Range "
+S_PAN_RANGE		FCC	" Pan Range "
 			FCB	$01
 MAB0D_via_dvec_a7a2	FCB	$AE,$D0
 			FCC	" 3 ?"
 			FCB	$00
-MAB14_via_dvec_a840	FCC	"Key on note?"
+S_KEY_ON_NOTE		FCC	"Key on note?"
 			FCB	$1E
-MAB21_via_dvec_a7a4	FCB	$AE
+S_MICRO_TUNE		FCB	$AE
 			FCC	"Micro Tune?"
 			FCB	$00
-MAB2E_via_dvec_a842	FCB	$AE
+S_OCTAVE		FCB	$AE
 			FCC	"Octave ?"
 			FCB	$00
-MAB38_via_dvec_a844	FCC	"Init Octave ?"
+S_INIT_OCTAVE		FCC	"Init Octave ?"
 			FCB	$00
-MAB46_via_dvec_a846	FCB	$AE,$D8,$00
-MAB49_via_dvec_a848	FCC	"Init "
+MAB46_via_dvec_a846	FCB	$AE,$D8
+			FCB	$00
+S_INIT_2		FCC	"Init "
 			FCB	$D8,$00
-MAB50_via_dvec_a792	FCC	"  Function?"
+S_FUNCTION		FCC	"  Function?"
 			FCB	$00
 MAB5C_via_dvec_a7e2	FCB	$07
-MAB5D			FCC	"  Poly"
+S_POLY			FCC	"  Poly"
 			FCB	$8A,$00
-MAB65			FCC	"  Mono"
+S_MONO			FCC	"  Mono"
 			FCB	$8A,$00
-MAB6D_via_dvec_a7e4	FCC	"P Bend Range"
+S_P_BEND_RANGE		FCC	"P Bend Range"
 			FCB	$01
 MAB7A_via_dvec_a7e6	FCB	$08
-MAB7B			FCC	"Full Time "
+S_FULL_TIME		FCC	"Full Time "
 			FCB	$90,$00
-MAB87			FCC	"Fingered "
+S_FINGERED		FCC	"Fingered "
 			FCB	$90,$00
-MAB92_via_dvec_a7e8	FCB	$90
+S_TIME			FCB	$90
 			FCC	" Time	"
 			FCB	$01
-MAB9B_via_dvec_a7ea	FCC	"FC Volume   "
+S_FC_VOLUME		FCC	"FC Volume   "
 			FCB	$01
-MABA8_via_dvec_a7ec	FCC	"FC "
+S_FC_1			FCC	"FC "
 			FCB	$A4,$01
-MABAD_via_dvec_a7ee	FCC	"FC "
+S_FC_2			FCC	"FC "
 			FCB	$9A,$01
-MABB2_via_dvec_a7f0	FCC	"MW "
+S_MW_1			FCC	"MW "
 			FCB	$A4,$01
-MABB7_via_dvec_a7f2	FCC	"MW "
+S_MW_2			FCC	"MW "
 			FCB	$9A,$01
 MABBC_via_dvec_a7f4	FCB	$96,$A4,$01
 MABBF_via_dvec_a7f6	FCB	$96,$9A,$01
-MABC2_via_dvec_a7f8	FCB	$96
+S_P_BIAS		FCB	$96
 			FCC	"P. Bias  "
 			FCB	$1A
-MABCD_via_dvec_a7fa	FCB	$96
+S_EG_BIAS		FCB	$96
 			FCC	"EG Bias  "
 			FCB	$01
-MABD8_via_dvec_a7fe	FCC	"Reverb Rate "
+S_REVERB_RATE		FCC	"Reverb Rate "
 			FCB	$18
-MABE5_via_dvec_a7aa	FCC	"Assign"
+S_ASSIGN		FCC	"Assign"
 			FCB	$8A,$16
-MABED_via_dvec_a7b0	FCC	"VOL"
+S_VOL			FCC	"VOL"
 MABF0			FCB	$15
-MABF1_via_dvec_a7b2	FCB	$D0
+S_SEL			FCB	$D0
 			FCC	"Sel"
 			FCB	$17
-MABF6_via_dvec_a7b4	FCC	"Init "
+S_INIT_3		FCC	"Init "
 			FCB	$B4,$00
-MABFD_via_dvec_a7b6	FCC	"Test entry?"
+S_TEST_ENTRY		FCC	"Test entry?"
 			FCB	$00
-MAC09_via_dvec_a776	FCC	"saw up"
+
+S_SAW_UP		FCC	"saw up"
 			FCB	$00
-MAC10_via_dvec_a778	FCC	"square"
+S_SQUARE		FCC	"square"
 			FCB	$00
-MAC17_via_dvec_a77a	FCC	"triangl"
+S_TRIANGL		FCC	"triangl"
 			FCB	$00
-MAC1F_via_dvec_a77c	FCC	"S/Hold"
+S_S_HOLD		FCC	"S/Hold"
 			FCB	$00
-MAC26			FCC	"all "
+
+S_NOTE_ALL		FCC	"all "
 			FCB	$00
-MAC2B			FCC	"odd "
+S_NOTE_ODD		FCC	"odd "
 			FCB	$00
-MAC30			FCC	"even"
+S_NOTE_EVEN		FCC	"even"
 			FCB	$00
+
 MAC35			FCC	"delay"
 			FCB	$00
 MAC3B			FCC	"pan"
@@ -5050,11 +5112,11 @@ MAD13			FCC	"omn"
 			FCB	$00
 MAD17			FCC	"vib"
 			FCB	$00
-MAD1B			FCC	"RATIO)"
+S_RATIO			FCC	"RATIO)"
 			FCB	$00
-MAD22			FCC	"FIX)"
+S_FIX			FCC	"FIX)"
 			FCB	$00
-MAD27_via_dvec_a800	FCC	"Name :"
+S_NAME			FCC	"Name :"
 			FCB	$0E
 MAD2E_via_dvec_a7ac	FCC	"   /	/   /	~"
 			FCB	$13
@@ -5065,18 +5127,18 @@ MAD50			FCC	"P.UT"
 			FCB	$00
 MAD55			FCC	".ED"
 			FCB	$00
-MAD59			FCC	"LAY SINGLE"
+S_LAY_SINGLE		FCC	"LAY SINGLE"
 			FCB	$00
 MAD64			FCB	$F5
 			FCC	" MODE"
 			FCB	$00
-MAD6B			FCC	"PFM Store	?"
+S_PFM_STORE		FCC	"PFM Store	?"
 			FCB	$00
-MAD7C			FCC	"UTILITY MODE"
+S_UTILITY_MODE		FCC	"UTILITY MODE"
 			FCB	$00
-MAD89			FCC	"UTILITY"
+S_UTILITY		FCC	"UTILITY"
 			FCB	$00
-MAD91			FCC	"Master Volume"
+S_MASTER_VOLUME		FCC	"Master Volume"
 			FCB	$00
 MAD9F			FCC	"1  2  3  4"
 			FCB	$00
@@ -5129,7 +5191,7 @@ MAE37			FCC	" PGM"
 			FCB	$00
 MAE3C			FCC	" = "
 			FCB	$00
-MAE40			FCC	"INIT P.CNG"
+S_INIT_P_CNG		FCC	"INIT P.CNG"
 			FCB	$00
 MAE4B			FCB	$F5
 			FCC	" "
@@ -5141,57 +5203,60 @@ MAE4F			FCB	$E8
 			FCB	$00
 MAE54			FCC	"INIT  "
 			FCB	$00
-MAE5B			FCC	"MAX NOTES"
+S_MAX_NOTES		FCC	"MAX NOTES"
 			FCB	$00
-MAE65			FCC	"RECEIVE CH"
+S_RECEIVE_CH		FCC	"RECEIVE CH"
 			FCB	$00
-MAE70			FCC	"LIMIT/L"
+S_LIMIT_L		FCC	"LIMIT/L"
 			FCB	$00
-MAE78			FCC	"LIMIT/H"
+S_LIMIT_H		FCC	"LIMIT/H"
 			FCB	$00
-MAE80			FCC	"INST DETUNE"
+S_INST_DETUNE		FCC	"INST DETUNE"
 			FCB	$00
-MAE8C			FCC	"NOTE SHIFT"
+S_NOTE_SHIFT		FCC	"NOTE SHIFT"
 			FCB	$00
-MAE97			FCC	"OUT ASSIGN"
+S_OUT_ASSIGN		FCC	"OUT ASSIGN"
 			FCB	$00
-MAEA2			FCC	"LFO SELECT"
+S_LFO_SELECT		FCC	"LFO SELECT"
 			FCB	$00
-MAEAD			FCC	"MICTUN="
+S_MICTUN		FCC	"MICTUN="
 			FCB	$01
+
 MAEB5			FCC	" CC# DD# E FF# GG# AA# B"
 MAECD			FCC	" CDb DEb E FGb GAb ABb B"
-MAEE5			FCC	"Equal"
+
+S_EQUAL			FCC	"Equal"
 			FCB	$00
-MAEEB			FCC	"Pure(major)"
+S_PURE_MAJOR		FCC	"Pure(major)"
 			FCB	$01
-MAEF7			FCC	"Pure(minor)"
+S_PURE_MINOR		FCC	"Pure(minor)"
 			FCB	$01
-MAF03			FCC	"Mean tone"
+S_MEAN_TONE		FCC	"Mean tone"
 			FCB	$01
-MAF0D			FCC	"Pythagorean"
+S_PYTHAGOREAN		FCC	"Pythagorean"
 			FCB	$01
-MAF19			FCC	"Werckmeister"
+S_WERCKMEISTER		FCC	"Werckmeister"
 			FCB	$00
-MAF26			FCC	"Kirnberger"
+S_KIRNBERGER		FCC	"Kirnberger"
 			FCB	$00
-MAF31			FCC	"Vallotti&young"
+S_VALLOTTI_YOUNG		FCC	"Vallotti&young"
 			FCB	$00
-MAF40			FCC	"1/4 Shift eql"
+S_1_4_SHIFT_EQUAL	FCC	"1/4 Shift eql"
 			FCB	$00
-MAF4E			FCC	"1/4 Tone"
+S_1_4_TONE		FCC	"1/4 Tone"
 			FCB	$00
-MAF57			FCC	"1/8 Tone"
+S_1_8_TONE		FCC	"1/8 Tone"
 			FCB	$00
-MAF60			FCC	"singl"
+
+S_PFM_SINGLE		FCC	"singl"
 			FCB	$00
-MAF66			FCC	"dual"
+S_PFM_DUAL		FCC	"dual"
 			FCB	$00
-MAF6B			FCC	"split"
+S_PFM_SPLIT		FCC	"split"
 			FCB	$00
-MAF71			FCC	"mono8"
+S_PFM_MONO8		FCC	"mono8"
 			FCB	$00
-MAF77			FCC	"poly4"
+S_PFM_POLY4		FCC	"poly4"
 			FCB	$00
 
 F_AF7D			LDAB	M7772
@@ -5273,7 +5338,7 @@ ZB006			LDX	#M7DB1
 			BRA	ZB079
 ZB013			LDX	#M7DB2
 			STX	M00A7
-			LDX	#MA87B_via_dvec_a77e
+			LDX	#S_ALG
 			JSR	F_9B5E
 			JSR	F_B53E
 			LDAA	$34,X
@@ -5324,7 +5389,7 @@ F_B07A			TST	M7788
 			BRA	ZB0A7
 ZB09F			LDX	#MADD2
 			BRA	ZB0A7
-ZB0A4			LDX	#MAD7C
+ZB0A4			LDX	#S_UTILITY_MODE
 ZB0A7			JSR	F_9B5E
 			BRA	ZB122
 ZB0AC			LDX	#MADC6
@@ -5407,7 +5472,7 @@ MB14D 			FDB     MADD9
 			FDB     MAE13
 			FDB     MAE20
 			FDB     MAE2D
-			FDB     MAE40
+			FDB     S_INIT_P_CNG
 
 F_B163			LDAB	#$50
 			JSR	F_9CD0
@@ -5444,15 +5509,15 @@ ZB1B1			JSR	F_B4E2
 
 ; string vector table
 MB1BA			FDB     MAE4B
-			FDB     MAE5B
-			FDB     MAE65
-			FDB     MAE70
-			FDB     MAE78
-			FDB     MAE80
-			FDB     MAE8C
-			FDB     MAE97
-			FDB     MAEA2
-			FDB     MAEAD
+			FDB     S_MAX_NOTES
+			FDB     S_RECEIVE_CH
+			FDB     S_LIMIT_L
+			FDB     S_LIMIT_H
+			FDB     S_INST_DETUNE
+			FDB     S_NOTE_SHIFT
+			FDB     S_OUT_ASSIGN
+			FDB     S_LFO_SELECT
+			FDB     S_MICTUN
 
 F_B1CE			LDX	#MAD50
 			JSR	F_9B5E
@@ -5471,13 +5536,13 @@ ZB1E5			CMPB	#$3D
 			JSR	F_9B5E
 ZB1F4			LDAB	M777E
 			ASLB
-			LDX	#MB222
+			LDX	#DVEC_STD_PFM_NAMES
 			ABX
 			LDX	,X
 			BRA	ZB212
 ZB200			LDX	#M7DAD
 			STX	M00A7
-			LDX	#MAD89
+			LDX	#S_UTILITY
 			JSR	F_9B5E
 			LDX	#M7DB6
 			STX	M00A7
@@ -5486,16 +5551,15 @@ ZB212			JSR	F_9B5E
 			BRA	ZB221
 ZB217			LDX	#M7DAD
 			STX	M00A7
-			LDX	#MAD89
+			LDX	#S_UTILITY
 			BRA	ZB212
 ZB221			RTS
 
-; string vector table
-MB222			FDB	MAF60
-			FDB	MAF66
-			FDB	MAF6B
-			FDB	MAF71
-			FDB	MAF77
+DVEC_STD_PFM_NAMES	FDB	S_PFM_SINGLE
+			FDB	S_PFM_DUAL
+			FDB	S_PFM_SPLIT
+			FDB	S_PFM_MONO8
+			FDB	S_PFM_POLY4
 
 F_B22C			PSHA
 			LDAB	#$40
