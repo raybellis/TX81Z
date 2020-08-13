@@ -231,27 +231,8 @@ hdlr_IRQ		NOP
 			NOP
 			RTI
 
-;
-; Entry point for cross-bank function calls.
-;
-
 			INCLUDE	"inc/xrom.asm"
-
-INIT_VOICE		FCB	$1F,$1F,$00,$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00
-			FCB	$0F,$0F,$00,$00,$00,$04,$03,$1F,$1F,$00,$0F,$0F,$00
-			FCB	$00,$00,$04,$03,$1F,$1F,$00,$0F,$0F,$00,$00,$5A,$04
-			FCB	$03,$00,$23,$00,$00,$00,$62,$18,$04,$04,$00,$28,$32
-			FCB	$00,$00,$00,$32,$00
-			FCC	"INIT VOICE"
-			FCB	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-M80D4_via_dvec_8f10	FCC	"(TX)"
-			FCB	$00
-M80D9_via_dvec_8f0e	FCC	"(DX)"
-			FCB	$00
-Z80DE			FCC	"Memory Protected"
-			FCB	$00
-M80EF			FCC	"<Good morning!!>"
-			FCB	$00
+			INCLUDE	"inc/init.asm"
 
 			ORG	$8200
 
@@ -1413,7 +1394,7 @@ Z8C01			JSR	HI_CALL_1B
 Z8C0A			JMP	Z8D03
 Z8C0D			JSR	F_9B4A
 			STX	M00A7
-			LDX	#Z80DE
+			LDX	#S_MEM_PROTECTED
 			JSR	F_9BC4
 			CLI
 			JMP	Z8CF5
@@ -1761,8 +1742,8 @@ F_8EF2			LDX	#M7DB4
 			JSR	F_9BC4
 			RTS
 
-M8F0E			FDB	M80D9_via_dvec_8f0e
-			FDB	M80D4_via_dvec_8f10
+M8F0E			FDB	S_DX
+			FDB	S_TX
 			FDB	M8FC0_via_dvec_8f12
 			FDB	M9026_via_dvec_8f14
 			FDB	M902B_via_dvec_8f16
@@ -3057,7 +3038,7 @@ Z99AF			STAB	,X
 			INX
 			CPX	#M75F1
 			BNE	Z99AF
-			LDX	#M80EF
+			LDX	#S_GOOD_MORNING
 			STX	M00A9
 			LDAB	#$10
 			LDX	#M7740
@@ -3600,7 +3581,7 @@ Z9E13			JMP	F_9B87
 Z9E21			JSR	F_9B5E
 			LDX	#M7DBB
 			STX	M00A7
-			LDX	#Z80DE
+			LDX	#S_MEM_PROTECTED
 			JMP	F_9BC4
 Z9E2F			JSR	F_AFB0
 			LDX	#M7DBB
@@ -4343,9 +4324,9 @@ ZA470			LDX	#M7DC7
 			STX	M00A7
 			TST	M777E
 			BNE	ZA47F
-			LDX	#M80D4_via_dvec_8f10
+			LDX	#S_TX
 			BRA	ZA482
-ZA47F			LDX	#M80D9_via_dvec_8f0e
+ZA47F			LDX	#S_DX
 ZA482			JMP	F_9BC4
 MA485			JSR	F_A1C2
 			CMPA	#$10
