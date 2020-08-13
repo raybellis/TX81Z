@@ -409,14 +409,36 @@ Z8248			JSR	HI_CALL_00
 			TAP
 			BRA	Z82A2
 ; jump table
-XROM_VEC		FDB	HI_CALL_00,HI_CALL_01,HI_CALL_02,HI_CALL_03
-			FDB	HI_CALL_04,HI_CALL_05,HI_CALL_06,HI_CALL_07
-			FDB	HI_CALL_08,HI_CALL_09,HI_CALL_0A,HI_CALL_0B
-			FDB	HI_CALL_0C,HI_CALL_0D,HI_CALL_0E,HI_CALL_0F
-			FDB	HI_CALL_10,HI_CALL_11,HI_CALL_12,HI_CALL_13
-			FDB	HI_CALL_14,HI_CALL_15,HI_CALL_16,HI_CALL_17
-			FDB	HI_CALL_18,HI_CALL_19,HI_CALL_1A,HI_CALL_1B
-			FDB	HI_CALL_1C,HI_CALL_1D
+XROM_VEC		FDB	HI_CALL_00
+			FDB	HI_CALL_01
+			FDB	HI_CALL_02
+			FDB	HI_CALL_03
+			FDB	HI_CALL_04
+			FDB	HI_CALL_05
+			FDB	HI_CALL_06
+			FDB	HI_CALL_07
+			FDB	HI_CALL_08
+			FDB	HI_CALL_09
+			FDB	HI_CALL_0A
+			FDB	HI_CALL_0B
+			FDB	HI_CALL_0C
+			FDB	HI_CALL_0D
+			FDB	HI_CALL_0E
+			FDB	HI_CALL_0F
+			FDB	HI_CALL_10
+			FDB	HI_CALL_11
+			FDB	HI_CALL_12
+			FDB	HI_CALL_13
+			FDB	HI_CALL_14
+			FDB	HI_CALL_15
+			FDB	HI_CALL_16
+			FDB	HI_CALL_17
+			FDB	HI_CALL_18
+			FDB	HI_CALL_19
+			FDB	HI_CALL_1A
+			FDB	HI_CALL_1B
+			FDB	HI_CALL_1C
+			FDB	HI_CALL_1D
 XROM_VEC2		FDB	hdlr_RST
 
 Z82A2			OIM	#$40,TCSR3
@@ -1475,6 +1497,7 @@ Z8A1C			LDAA	M7772
 			JSR	JMPOFF1
 			FCB	$BB,$01,$15,$03,$9C,$08,$A2,$0A,$06,$0C,$07,$0D,$02
 			FCB	$00
+
 			JMP	Z8B9E
 			JMP	Z8BB3
 Z8A36			JMP	Z8BBB
@@ -1483,6 +1506,7 @@ Z8A36			JMP	Z8BBB
 			JSR	JMPOFFA
 			FCB	$46,$45,$27,$9A,$42,$41,$0C,$96,$95,$6A,$6E,$92,$91
 			FCB	$90,$6F,$8E,$8D,$62
+
 			DECB
 			TST	M7795
 			BMI	Z8A60
@@ -1543,6 +1567,7 @@ Z8AC7			JMP	Z8BBB
 			CLR	>M00A4
 			JSR	JMPOFFA
 			FCB	$10,$0F,$98,$7E,$06,$08,$01
+
 Z8ADD			JMP	Z8BC1
 			JMP	Z8B8D
 			JMP	Z8B79
@@ -1931,6 +1956,7 @@ Z8DD8			CMPA	#$07
 			BCC	Z8DE6
 			JSR	JMPOFFA
 			FCB	$0B,$58,$05,$04,$4B,$D7,$02
+
 Z8DE6			RTS
 			JMP	Z8EF6
 			LDAA	M776B
@@ -2595,6 +2621,7 @@ Z92F0			PSHX
 			STD	M006F
 			RTS
 Z9306			FCB	$7F,$00,$73,$CC,$00,$00,$DD,$74,$7F,$00,$76
+
 Z9311			LDX	#M00F6
 			LDAB	M0073
 			CMPB	#$08
@@ -3042,7 +3069,7 @@ Z967F			PSHB
 			BNE	Z967F
 			JMP	Z9676
 
-F_969B			LDX	#M9703
+F_969B			LDX	#DVEC_9703
 			ABX
 			ABX
 			LDX	,X
@@ -3106,34 +3133,52 @@ Z96F6			STD	,X
 			DECB
 			BNE	Z96D1
 Z9702			RTS
-M9703			FDB	M9719_via_dvec_9703,M9731_via_dvec_9705
-			FDB	M9749_via_dvec_9707,M9761_via_dvec_9709
-			FDB	M9779_via_dvec_970b,M9791_via_dvec_970d
-			FDB	M97A9_via_dvec_970f,M97C1_via_dvec_9711
-			FDB	M97D9_via_dvec_9713,M97F1_via_dvec_9715
+
+DVEC_9703		FDB	M9719_via_dvec_9703
+			FDB	M9731_via_dvec_9705
+			FDB	M9749_via_dvec_9707
+			FDB	M9761_via_dvec_9709
+			FDB	M9779_via_dvec_970b
+			FDB	M9791_via_dvec_970d
+			FDB	M97A9_via_dvec_970f
+			FDB	M97C1_via_dvec_9711
+			FDB	M97D9_via_dvec_9713
+			FDB	M97F1_via_dvec_9715
 			FDB	M9809_via_dvec_9717
-M9719_via_dvec_9703	FDB	$3C00,$3D00,$3E00,$3F00,LCD_CMD,$4100,$4200,$4300
+
+M9719_via_dvec_9703	FDB	$3C00,$3D00,$3E00,$3F00,$4000,$4100,$4200,$4300
 			FDB	$4400,$4500,$4600,$4700
-M9731_via_dvec_9705	FDB	$3C0A,$3C37,$3E0D,$3F14,LCD_DATA,$4109,$4136,$430B
+
+M9731_via_dvec_9705	FDB	$3C0A,$3C37,$3E0D,$3F14,$4001,$4109,$4136,$430B
 			FDB	$4338,$4500,$4615,$4703
-M9749_via_dvec_9707	FDB	$3C0A,$3C37,$3D3F,$3F14,LCD_DATA,$4109,$4136,$430B
+
+M9749_via_dvec_9707	FDB	$3C0A,$3C37,$3D3F,$3F14,$4001,$4109,$4136,$430B
 			FDB	$4338,$4500,$4615,$4703
+
 M9761_via_dvec_9709	FDB	$3C07,$3C37,$3E02,$3F0D,$3F3E,$4109,$4139,$4304
 			FDB	$4335,$4500,$460B,$463C
+
 M9779_via_dvec_970b	FDB	$3B3C,$3D05,$3D3F,$3E38,$4001,$403B,$4204,$423D
 			FDB	$4406,$4500,$453A,$4703
+
 M9791_via_dvec_970d	FDB	$3C08,$3D01,$3E03,$3F04,$4001,$4106,$4200,$4305
 			FDB	$4403,$4500,$4605,$4703
+
 M97A9_via_dvec_970f	FDB	$3C07,$3D00,$3E02,$3F03,$3F3E,$4105,$4200,$4304
 			FDB	$4402,$4500,$4604,$463F
+
 M97C1_via_dvec_9711	FDB	$3C04,$3D00,$3E01,$3F03,$3F3F,$4105,$413F,$4303
 			FDB	$4401,$4500,$4604,$463D
+
 M97D9_via_dvec_9713	FDB	$3C20,$3D20,$3E20,$3F20,$4020,$4120,$4220,$4320
 			FDB	$4420,$4520,$4620,$4720
+
 M97F1_via_dvec_9715	FDB	$4200,$4220,$4300,$4320,$4400,$4420,$4500,$4520
 			FDB	$4600,$4620,$4700,$4720
+
 M9809_via_dvec_9717	FDB	$3F00,$3F10,$3F20,$3F30,$4000,$4010,$4020,$4030
 			FDB	$4100,$4110,$4120,$4130
+
 M9821			FDB	$0000,$0048,$0075,$00CA,$00F7,$013F,$016C,$01B3
 			FDB	$0209,$0236,$027D,$02AB,$0000,$0048,$0075,$00CA
 			FDB	$00F7,$013F,$016C,$01C1,$0209,$0236,$027D,$02AB
@@ -3384,6 +3429,7 @@ F_9A2F			LDAB	#$6E
 			ADDD	#M6A67
 			XGDX
 			RTS
+
 HI_CALL_11		LDAA	M75F7
 			JSR	F_908B
 			STAA	M7750
@@ -3424,10 +3470,10 @@ Z9ABA			BRN	Z9ABA
 			STAA	OPZ_R1
 			CLI
 			RTS
-M9AC2			FCB	$BD,$A1,$20,$BD,$9A,$E2,$A6,$3A,$CE
-			ASL	$2EDF
-			STAA	$7E,X
-			ORAA	$00D2
+
+M9AC2			FCB	$BD,$A1,$20,$BD,$9A,$E2,$A6,$3A
+			FCB	$CE,$78,$2E,$DF,$A7,$7E,$9A,$D2
+
 Z9AD2			LDX	M00A7
 			LDAB	M0076
 			ABX
@@ -3455,6 +3501,7 @@ Z9AD2			LDX	M00A7
 			BRA	Z9B01
 Z9B00			PULX
 Z9B01			RTS
+
 M9B02			FCB	$C6,$36,$BD,$A1,$21,$3C,$CE,$78,$46,$D6,$76,$3A,$E6
 			FCB	$00,$C4,$03,$27,$3B,$C1,$03,$27,$37,$37,$E6,$00,$54
 			FCB	$54,$C4,$07,$17,$BD,$9A,$2F,$A6,$36,$BD,$90,$8B,$E6
@@ -3479,6 +3526,7 @@ M9B02			FCB	$C6,$36,$BD,$A1,$21,$3C,$CE,$78,$46,$D6,$76,$3A,$E6
 			FCB	$68,$87,$6D,$0D,$71,$9B,$71,$9B,$76,$28,$76,$28,$7A
 			FCB	$B6,$7A,$B6,$7F,$3C,$7F,$3C,$83,$CA,$83,$CA,$83,$CA
 			FCB	$88,$57,$8C,$DE,$8C,$DE,$8C,$DE
+
 M9C35			FCB	$C6,$37,$BD,$A1,$21,$3C,$CE,$78,$46,$D6,$76,$3A,$E6
 			FCB	$00,$C4,$03,$27,$17,$C1,$03,$27,$13,$E6,$00,$54,$54
 			FCB	$C4,$07,$17,$BD,$9A,$2F,$C6,$37,$3A,$BD,$9C,$F5,$38
@@ -3578,16 +3626,19 @@ M9D12			FCB	$BD,$A1,$20,$BD,$9A,$E2,$A6,$38,$BD,$90,$8B,$CE,$7D
 			FCB	$C5,$20,$27,$13,$16,$C0,$C0,$CE,$77,$EE,$20,$06,$16
 			FCB	$C0,$E0,$CE,$77,$CE,$3A,$D6,$72,$E7,$00,$33,$4C,$7C
 			FCB	$00,$76,$7A,$00,$7B,$26,$C8,$39
+
 M9D68			FCB	$BD,$99,$EF,$E6,$07,$CE,$9D,$89,$3A,$A6,$00,$CE,$78
 			FCB	$53,$D6,$6F,$58,$58,$58,$DB,$76,$3A,$A7,$00,$7C,$00
 			FCB	$76,$7A,$00,$7B,$26,$EB,$39,$00,$25,$49,$6E,$92,$B7
 			FCB	$DB,$FF
+
 M9D91			FCB	$CE,$78,$46,$D6,$76,$3A,$E6,$00,$C4,$03,$27,$1A,$C1
 			FCB	$03,$27,$16,$37,$C6,$3C,$BD,$A1,$21,$48,$48,$48,$48
 			FCB	$E6,$01,$1B,$33,$C1,$02,$26,$05,$8A,$84,$20,$01,$4F
 			FCB	$16,$86,$38,$9B,$76,$8D,$09,$7C,$00,$76,$7A,$00,$7B
 			FCB	$26,$F2,$39,$0F,$BD,$90,$85,$B7,$20,$00,$21,$FE,$01
 			FCB	$F7,$20,$01,$0E,$39
+
 M9DD7			FCB	$BD,$99,$EF,$3C,$BD,$99,$F9,$6D,$00,$26,$03,$5F,$20
 			FCB	$07,$C6,$01,$A6,$01,$38,$20,$0C,$38,$A6,$0C,$81,$03
 			FCB	$24,$03,$43,$20,$02,$80,$03,$48,$48,$48,$48,$5D,$27
@@ -3598,22 +3649,30 @@ M9DD7			FCB	$BD,$99,$EF,$3C,$BD,$99,$F9,$6D,$00,$26,$03,$5F,$20
 			FCB	$19,$17,$24,$1A,$1D,$28,$1B,$1E,$2C,$21,$30,$1F,$22
 			FCB	$25,$34,$23,$38,$29,$26,$3C,$2D,$27,$2A,$31,$2E,$2B
 			FCB	$35,$32,$2F,$39,$36,$33,$3D,$3A,$37,$3E,$3B,$3F
+
 M9E58			FCB	$BD,$99,$F9,$A6,$03,$48,$48,$48,$48,$AB,$02,$8A,$80
 			FCB	$97,$72,$86,$40,$BD,$9D,$25,$39
+
 M9E6D			FCB	$BD,$99,$F9,$E6,$04,$58,$58,$58,$58,$58,$58,$37,$C6
 			FCB	$6B,$BD,$A1,$21,$33,$1B,$8A,$28,$97,$72,$86,$C0,$BD
 			FCB	$9D,$25,$39
+
 M9E8A			FCB	$4F,$8A,$28,$97,$72,$86,$C0,$BD,$9D,$25,$39
+
 M9E95			FCB	$BD,$99,$EF,$E6,$06,$58,$58,$58,$58,$58,$58,$EB,$00
 			FCB	$37,$BD,$99,$F9,$33,$6D,$00,$27,$04,$CA,$20,$20,$02
 			FCB	$C4,$DF,$D7,$72,$86,$80,$BD,$9D,$25,$39
+
 M9EB9			FCB	$BD,$99,$EF,$E6,$08,$56,$56,$C4,$80,$EB,$01,$D7,$72
 			FCB	$86,$A0,$BD,$9D,$25,$39
+
 M9ECC			FCB	$BD,$99,$EF,$A6,$02,$E6,$0B,$CE,$9E,$18,$3A,$E6,$00
 			FCB	$C4,$03,$58,$58,$58,$58,$58,$58,$1B,$84,$DF,$97,$72
 			FCB	$86,$C0,$BD,$9D,$25,$39
+
 M9EEC			FCB	$BD,$99,$EF,$A6,$04,$43,$48,$48,$48,$48,$AB,$03,$97
 			FCB	$72,$86,$E0,$BD,$9D,$25,$39
+
 M9F00			FCB	$BD,$99,$EF,$A6,$05,$BD,$90,$8B,$97,$7C,$C6,$0A,$3A
 			FCB	$BD,$9F,$D9,$CE,$79,$13,$D6,$76,$3A,$E6,$00,$C4,$07
 			FCB	$C0,$04,$25,$0C,$C1,$04,$25,$01,$5F,$BD,$AB,$95,$0C
@@ -3633,15 +3692,19 @@ M9F00			FCB	$BD,$99,$EF,$A6,$05,$BD,$90,$8B,$97,$7C,$C6,$0A,$3A
 			FCB	$43,$50,$5F,$71,$86,$A0,$BE,$E0,$FF,$E6,$00,$C1,$14
 			FCB	$25,$06,$86,$63,$A0,$00,$20,$06,$CE,$9F,$A8,$3A,$A6
 			FCB	$00,$39
+
 M9FEC			FCB	$BD,$99,$EF,$A6,$09,$27,$0B,$C6,$20,$3D,$A6,$09,$48
 			FCB	$8A,$F0,$43,$20,$03,$CC,$00
+
 MA000			FCB	$00,$37,$CE,$78,$D3,$D6,$6F,$58,$58,$58,$DB,$76,$3A
 			FCB	$33,$A7,$00,$E7,$20,$7C,$00,$76,$7A,$00,$7B,$26,$E7
 			FCB	$39
+
 MA01B			FCB	$C6,$3E,$BD,$A1,$21,$80,$18,$F6,$77,$72,$C4,$04,$27
 			FCB	$18,$CE,$79,$3B,$D6,$76,$3A,$E6,$00,$2B,$0E,$36,$CE
 			FCB	$6D,$D7,$86,$0C,$3D,$3A,$E6,$07,$C0,$18,$32,$1B,$CE
 			FCB	$79,$1B,$DF,$A7,$7E,$9A,$D2
+
 MA049			FCB	$F6,$77,$72,$C4,$04,$27,$0A,$7D,$6E,$38,$27,$05,$F6
 			FCB	$6A,$A9,$20,$05,$C6,$42,$BD,$A1,$21,$CE,$A0,$6D,$3A
 			FCB	$A6,$00,$CE,$77,$C6,$DF,$A7,$7E,$9A,$D2,$FF,$FE,$F3
@@ -3653,16 +3716,20 @@ MA049			FCB	$F6,$77,$72,$C4,$04,$27,$0A,$7D,$6E,$38,$27,$05,$F6
 			FCB	$12,$12,$11,$10,$10,$0F,$0E,$0E,$0D,$0D,$0C,$0C,$0B
 			FCB	$0B,$0A,$0A,$09,$09,$08,$08,$07,$07,$06,$06,$05,$05
 			FCB	$04,$04,$03,$03,$02,$01
+
 MA0D1			FCB	$C6,$40,$BD,$A1,$21,$CE,$A0,$E4,$3A,$A6,$00,$CE,$79
 			FCB	$23,$DF,$A7,$7E,$9A,$D2,$00,$10,$21,$31,$41,$51,$61
 			FCB	$71,$81,$91,$A2,$B2,$C2
+
 MA0F1			FCB	$C6,$4B,$BD,$A1,$21,$80,$32,$CE,$79,$2B,$DF,$A7,$7E
 			FCB	$9A,$D2
+
 MA100			FCB	$C6,$43,$BD,$A1,$21,$BD,$90,$8B,$CE,$7D,$1B,$DF,$A7
 			FCB	$7E,$9A,$D2
+
 MA110			FCB	$C6,$4C,$BD,$A1,$21,$BD,$90,$8B,$CE,$7D,$33,$DF,$A7
 			FCB	$7E,$9A,$D2,$5F,$CE
-			DEC	$67,X
+			DEC	$67,X			; FIXME
 			ABX
 			XGDX
 			ADDD	M0074
@@ -3670,6 +3737,7 @@ MA110			FCB	$C6,$4C,$BD,$A1,$21,$BD,$90,$8B,$CE,$7D,$33,$DF,$A7
 			LDAA	,X
 			TAB
 			RTS
+
 HI_CALL_18		LDAB	M7565
 			ASLB
 			EORB	#$80
@@ -3908,6 +3976,7 @@ ZA2E8			BRN	ZA2E8
 			STAB	OPZ_R1
 			CLI
 			RTS
+
 MA2F0			FCB	$00,$01,$02,$04,$05,$06,$08,$09,$0A,$0C,$0D,$0E,$10
 			FCB	$11,$12,$14,$15,$16,$18,$19,$1A,$1C,$1D,$1E,$20,$21
 			FCB	$22,$24,$25,$26,$28,$29,$2A,$2C,$2D,$2E,$30,$31,$32
@@ -3916,6 +3985,7 @@ MA2F0			FCB	$00,$01,$02,$04,$05,$06,$08,$09,$0A,$0C,$0D,$0E,$10
 			FCB	$56,$58,$59,$5A,$5C,$5D,$5E,$60,$61,$62,$64,$65,$66
 			FCB	$68,$69,$6A,$6C,$6D,$6E,$70,$71,$72,$74,$75,$76,$78
 			FCB	$79,$7A,$7C,$7D,$7E
+
 MA350			FCB	$03,$01,$02,$00
 
 F_A354			TAB
@@ -4088,10 +4158,12 @@ F_A47E			LDX	#MA485
 			ABX
 			LDAB	,X
 			RTS
+
 MA485			FCB	$00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C
 			FCB	$0D,$0F,$11,$14,$17,$1A,$1C,$1F,$23,$27,$2A,$2E,$32
 			FCB	$36,$3A,$3E,$43,$48,$4E,$52,$58,$5D,$62,$69,$6E,$75
 			FCB	$7B,$81,$88,$8E,$95,$9C,$A4,$AB,$B3,$BB,$C2,$C2
+
 MA4B8			FCB	$00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C
 			FCB	$0D,$0E,$0F,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19
 			FCB	$1A,$1B,$1C,$1D,$1E,$1F,$20,$21,$22,$23,$24,$25,$26
@@ -4511,6 +4583,7 @@ ZA813			BRN	ZA813
 			DEC	>M0088
 			BPL	ZA7C1
 			RTS
+
 MA82B			FCB	$FF,$FF,$E0,$CD,$C0,$B5,$AD,$A6,$A0,$9A,$95,$91,$8D
 			FCB	$89,$86,$82,$80,$7D,$7A,$78,$75,$73,$71,$6F,$6D,$6B
 			FCB	$69,$67,$66,$64,$62,$61,$60,$5E,$5D,$5B,$5A,$59,$58
@@ -4531,6 +4604,7 @@ MA82B			FCB	$FF,$FF,$E0,$CD,$C0,$B5,$AD,$A6,$A0,$9A,$95,$91,$8D
 			FCB	$06,$06,$06,$05,$05,$05,$05,$05,$04,$04,$04,$04,$04
 			FCB	$03,$03,$03,$03,$03,$02,$02,$02,$02,$02,$02,$01,$01
 			FCB	$01,$01,$01,$00,$00,$00,$00,$00,$00
+
 MA92B			FCB	$30,$30,$30,$20,$1C,$1B,$1A,$19,$18,$17,$16,$15,$14
 			FCB	$13,$12,$11,$10,$0F,$0E,$0D,$0C,$09,$09,$09,$09,$08
 			FCB	$08,$08,$08,$06,$04,$02
@@ -4907,6 +4981,7 @@ ZAC23			CMPB	#$02
 			BRA	ZAC19
 ZAC2F			JSR	JMPOFF1
 			FCB	$16,$01,$11,$04,$0B,$06,$04,$0B,$0E,$00
+
 			COMB
 			SUBB	#$F0
 			BRA	ZAC48
@@ -5023,6 +5098,7 @@ ZAD07			AIM	#$FB,$00,X
 ZAD0C			LDAB	M00A0
 			JSR	JMPOFF1
 			FCB	$0F,$01,$11,$03,$0B,$08,$D8,$0A,$04,$0C,$05,$00
+
 			JMP	ZAE50
 ZAD20			CLRB
 			JMP	ZAC48
@@ -5042,6 +5118,7 @@ ZAD3B			LDAB	M7774
 			FCB	$75,$02,$32,$05,$71,$07,$2E,$08,$6D,$09,$2A,$0B,$18
 			FCB	$14,$67,$15,$32,$16,$12,$19,$20,$1B,$10,$1C,$51,$1D
 			FCB	$0A,$1F,$59,$20,$06,$28,$55,$36,$02,$00
+
 ZAD65			BRA	ZAD20
 			LDAB	M7788
 			CMPB	#$02
@@ -5294,6 +5371,7 @@ ZAF97			CLR	>M00AE
 			FCB	$5C,$6E,$40,$E2,$F9,$3E,$69,$C2,$71,$F8,$49,$64,$C5
 			FCB	$DA,$28,$4D,$5F,$31,$18,$11,$48,$5A,$1A,$0A,$0F,$05
 			FCB	$55,$18,$11,$1F
+
 			JMP	ZB127
 			JMP	ZB1AE
 			JMP	F_B164
@@ -5531,6 +5609,7 @@ ZB1EF			TBA
 			FCB	$0B,$22,$14,$B5,$15,$AF,$16,$96,$18,$AB,$1F,$96,$20
 			FCB	$16,$28,$C8,$33,$F9,$34,$C4,$35,$0F,$36,$0C,$3C,$99
 			FCB	$3D,$99,$3E,$7C,$3F,$04,$46,$93,$00
+
 ZB223			RTS
 			JMP	ZB326
 			STAB	M7774
@@ -5660,6 +5739,7 @@ ZB339			JSR	JMPOFF1
 			FCB	$09,$32,$0A,$2D,$0B,$31,$15,$26,$16,$2D,$18,$1F,$19
 			FCB	$11,$1A,$12,$1B,$13,$1C,$14,$1D,$21,$1F,$04,$20,$1D
 			FCB	$00
+
 			JMP	ZB551
 			JMP	ZB4EC
 			JMP	ZB4F7
@@ -5986,12 +6066,15 @@ MB5E5			FDB	M7565
 			FCB	$01
 			FDB	M75F7
 			FCB	$63
+
 MB61E			FDB	$3407,$3507,$DA07,F_8C06,$8A63
+
 MB628			FDB	$3B03,$3663,$3763,$3863,$3963,$3A01,$3C07,$3D03
 			FDB	$8801,$8707,$8907,$D807,Z8B3F,$D701,$801F,$811F
 			FDB	$840F,$821F,$830F,$DB03,$8603,$8563,$3F01,$400C
 			FDB	$4101,$4263,$4363,$6C63,$6D63,$4763,$4863,$4963
 			FDB	$4A63,$4B64,$4C63,$3E30,$6B07
+
 MB672			FDB	$6101,$8008,$829F,$8310,$847F,$857F,$860E,Z8730
 			FDB	$8863,$8903,$8A03,$600C,$6203,$8B01,$630B
 
@@ -6033,10 +6116,12 @@ ZB6CA			LDAB	M7774
 			FCB	$72,$01,$A1,$05,$7E,$07,$9D,$08,$7A,$09,$99,$1F,$8E
 			FCB	$20,$95,$29,$72,$33,$80,$34,$8F,$35,$7C,$36,$8B,$3C
 			FCB	$68,$3D,$87,$00
+
 ZB6EE			LDAB	M7774
 			JSR	JMPOFF1
 			FCB	$7F,$03,$10,$04,$19,$05,$79,$07,$56,$08,$75,$09,$52
 			FCB	$0A,$60,$0B,$6F,$00,$F6
+
 			ASR	$8927
 			PSHB
 			CMPB	#$02
@@ -6054,6 +6139,7 @@ ZB6EE			LDAB	M7774
 ZB724			LDAB	M7774
 			JSR	JMPOFF1
 			FCB	$49,$1B,$0E,$1C,$04,$1D,$43,$00
+
 JB732			CMPA	#$01
 			BLS	ZB770
 			LDAA	#$01
@@ -6291,6 +6377,7 @@ ZB939			TBA
 			FCB	$0A,$6D,$0B,$21,$15,$70,$16,$1D,$18,$73,$19,$78,$1A
 			FCB	$84,$1B,$74,$1C,$92,$1D,$97,$1F,$0F,$3C,$AC,$3D,$B3
 			FCB	$3E,$09,$46,$04,$47,$05,$00
+
 			JMP	ZBBB1
 			TAB
 			CLC
@@ -6395,6 +6482,7 @@ ZBA42			TBA
 			JSR	JMPOFF1
 			FCB	$10,$15,$11,$16,$0C,$18,$8B,$19,$08,$1B,$BC,$1C,$DC
 			FCB	$1D,$02,$00
+
 ZBA5C			TAB
 			CLC
 			RTS
@@ -6588,8 +6676,11 @@ ZBBF8			PSHB
 			BEQ	ZBC0D
 			JSR	F_F052
 ZBC0D			RTS
-MBC0E			FDB	ME633_via_cvec_bc0e,ME4C1_via_cvec_bc10
-			FDB	ME543_via_cvec_bc12,ME5BE_via_cvec_bc14
+
+MBC0E			FDB	ME633_via_cvec_bc0e
+			FDB	ME4C1_via_cvec_bc10
+			FDB	ME543_via_cvec_bc12
+			FDB	ME5BE_via_cvec_bc14
 			FDB	ME629_via_cvec_bc16
 
 F_BC18			TST	M777E
@@ -6944,6 +7035,7 @@ ZBECC			LDAB	M7774
 			FCB	$45,$20,$22,$28,$3B,$29,$3C,$2A,$40,$2B,$41,$2C,$42
 			FCB	$2E,$2E,$2F,$41,$30,$42,$31,$43,$32,$44,$33,$45,$34
 			FCB	$46,$35,$20,$36,$06,$3C,$25,$3F,$02,$00
+
 ZBF10			JMP	ZC0ED
 			JMP	ZC05A
 			JMP	ZC002
@@ -6970,6 +7062,7 @@ ZBF4F			LDAB	M7774
 			FCB	$22,$02,$26,$03,$5E,$04,$BA,$05,$1A,$07,$27,$08,$16
 			FCB	$09,$1D,$0A,$1E,$0B,$10,$15,$11,$16,$0C,$19,$1C,$1A
 			FCB	$27,$1B,$35,$1C,$3E,$1D,$02,$00
+
 			JMP	ZC0ED
 			JMP	ZC1EE
 			JMP	ZC18F
@@ -7076,6 +7169,7 @@ ZC07D			LDAB	M7789
 			BCC	ZC0ED
 			JSR	JMPOFFB
 			FCB	$06,$08,$0A,$0C,$08,$0D
+
 			JMP	ZC1AF
 			JMP	ZC1B4
 			JMP	ZC1B9
@@ -7093,6 +7187,7 @@ ZC0B1			LDAB	M7789
 			JSR	JMPOFF1
 			FCB	$1E,$01,$1F,$02,$17,$03,$1E,$04,$1F,$05,$CE,$0B,$15
 			FCB	$0C,$19,$0D,$1A,$0E,$06,$0F,$07,$10,$20,$00
+
 			JMP	ZC1C3
 			JMP	ZC1D8
 			JMP	ZC207
@@ -7892,6 +7987,7 @@ ZC7B4			ANDB	#$3F
 			RTS
 
 MC7BB			FCB	$7F,$30,$07,$63
+
 MC7BF			FCB	$02,$01,$63
 
 F_C7C2			LDAB	#$08
@@ -8078,6 +8174,7 @@ ZC8F6			LDAB	M7772
 			ANDB	#$07
 			JSR	JMPOFFB
 			FCB	$09,$21,$39,$05,$14,$2C,$35,$01
+
 			RTS
 			TST	M7793
 			BEQ	ZC916
@@ -8159,6 +8256,7 @@ ZC9B2			JSR	JMPOFF1
 			FCB	$09,$BC,$0A,$D0,$0B,$18,$1F,$E2,$20,$14,$29,$E5,$30
 			FCB	$14,$31,$E1,$33,$0D,$34,$0A,$35,$CC,$36,$06,$3C,$D7
 			FCB	$3D,$02,$00
+
 ZC9DF			RTS
 			JMP	ZCAEB
 			JMP	ZCADA
@@ -8388,6 +8486,7 @@ ZCBC3			LSRB
 			JSR	JMPOFF1
 			FCB	$1D,$01,$72,$02,$0C,$03,$0B,$04,$0C,$05,$0D,$06,$0E
 			FCB	$07,$02,$00
+
 ZCBDC			RTS
 			JMP	ZCDE3
 			JMP	ZCD33
@@ -8654,6 +8753,7 @@ ZCE0C			JSR	JMPOFF1
 			FCB	$07,$43,$08,$1A,$0A,$1F,$0B,$16,$40,$7B,$41,$C4,$42
 			FCB	$10,$60,$74,$62,$0C,$7B,$FD,$7C,$08,$7E,$07,$7F,$08
 			FCB	$80,$02,$00
+
 ZCE39			RTS
 			JMP	ZCF52
 			JMP	ZCF84
@@ -8991,14 +9091,23 @@ ZD0C8			LDAB	M00C4
 			ABX
 			LDX	,X
 			JMP	,X
-MD0DD			FDB	MD10B_via_cvec_d0dd,MD11A_via_cvec_d0df
-			FDB	MD148_via_cvec_d0e1,MD191_via_cvec_d0e3
-			FDB	MD1A7_via_cvec_d0e5,MD207_via_cvec_d0e7
-			FDB	MD256_via_cvec_d0e9,MD296_via_cvec_d0eb
-			FDB	MD296_via_cvec_d0eb,MD296_via_cvec_d0eb
-			FDB	MD296_via_cvec_d0eb,MD296_via_cvec_d0eb
-			FDB	MD296_via_cvec_d0eb,MD2D6_via_cvec_d0f7
+
+MD0DD			FDB	MD10B_via_cvec_d0dd
+			FDB	MD11A_via_cvec_d0df
+			FDB	MD148_via_cvec_d0e1
+			FDB	MD191_via_cvec_d0e3
+			FDB	MD1A7_via_cvec_d0e5
+			FDB	MD207_via_cvec_d0e7
+			FDB	MD256_via_cvec_d0e9
+			FDB	MD296_via_cvec_d0eb
+			FDB	MD296_via_cvec_d0eb
+			FDB	MD296_via_cvec_d0eb
+			FDB	MD296_via_cvec_d0eb
+			FDB	MD296_via_cvec_d0eb
+			FDB	MD296_via_cvec_d0eb
 			FDB	MD2D6_via_cvec_d0f7
+			FDB	MD2D6_via_cvec_d0f7
+
 ZD0FB			JMP	ZD304
 ZD0FE			JMP	ZD320
 ZD101			JMP	ZD104
@@ -9264,10 +9373,16 @@ F_D35B			JSR	HI_CALL_00
 			JSR	F_C95A
 			JSR	F_C972
 			RTS
-MD383			FDB	ME3EB_via_cvec_d383,ME456_via_cvec_d385
-			FDB	ME4C1_via_cvec_bc10,ME543_via_cvec_bc12
-			FDB	ME5BE_via_cvec_bc14,ME383_via_cvec_d38d
-			FDB	ME245_via_cvec_d38f,MD393_via_cvec_d391
+
+MD383			FDB	ME3EB_via_cvec_d383
+			FDB	ME456_via_cvec_d385
+			FDB	ME4C1_via_cvec_bc10
+			FDB	ME543_via_cvec_bc12
+			FDB	ME5BE_via_cvec_bc14
+			FDB	ME383_via_cvec_d38d
+			FDB	ME245_via_cvec_d38f
+			FDB	MD393_via_cvec_d391
+
 MD393_via_cvec_d391	LDAA	#$01
 			STAA	M00CC
 			JSR	F_DE39
@@ -9560,10 +9675,14 @@ F_D593			AIM	#$BF,TCSR3
 			LDX	,X
 			JMP	,X
 
-MD5A7			FDB	MD5B7_via_cvec_d5a7,MD5D7_via_cvec_d5a9
-			FDB	MD619_via_cvec_d5ab,MD64B_via_cvec_d5ad
-			FDB	MD694_via_cvec_d5af,MD6B4_via_cvec_d5b1
-			FDB	MD6D4_via_cvec_d5b3,MD710_via_cvec_d5b5
+MD5A7			FDB	MD5B7_via_cvec_d5a7
+			FDB	MD5D7_via_cvec_d5a9
+			FDB	MD619_via_cvec_d5ab
+			FDB	MD64B_via_cvec_d5ad
+			FDB	MD694_via_cvec_d5af
+			FDB	MD6B4_via_cvec_d5b1
+			FDB	MD6D4_via_cvec_d5b3
+			FDB	MD710_via_cvec_d5b5
 
 MD5B7_via_cvec_d5a7	LDAB	M00C4
 			SUBB	#$0F
@@ -9789,10 +9908,16 @@ ZD749			LDAB	M00C9
 			JMP	,X
 ZD75E			JMP	ZD774
 ZD761			JMP	ZD7BD
-MD764			FDB	MD7D4_via_cvec_d764,MD7E7_via_cvec_d766
-			FDB	MD7FA_via_cvec_d768,MD80D_via_cvec_d76a
-			FDB	MD81D_via_cvec_d76c,MD830_via_cvec_d76e
-			FDB	MD863_via_cvec_d770,MD874_via_cvec_d772
+
+MD764			FDB	MD7D4_via_cvec_d764
+			FDB	MD7E7_via_cvec_d766
+			FDB	MD7FA_via_cvec_d768
+			FDB	MD80D_via_cvec_d76a
+			FDB	MD81D_via_cvec_d76c
+			FDB	MD830_via_cvec_d76e
+			FDB	MD863_via_cvec_d770
+			FDB	MD874_via_cvec_d772
+
 ZD774			TST	>M00DF
 			BNE	ZD77C
 			JSR	HI_CALL_12
@@ -10013,9 +10138,13 @@ ZD976			LDX	#MD97F
 			ABX
 			LDX	,X
 			JMP	,X
-MD97F			FDB	MD989_via_cvec_d97f,MD9A6_via_cvec_d981
-			FDB	MD9C2_via_cvec_d983,MD9E2_via_cvec_d985
+
+MD97F			FDB	MD989_via_cvec_d97f
+			FDB	MD9A6_via_cvec_d981
+			FDB	MD9C2_via_cvec_d983
+			FDB	MD9E2_via_cvec_d985
 			FDB	MD9F0_via_cvec_d987
+
 MD989_via_cvec_d97f	LDAA	#$01
 			STAA	M7788
 			LDAA	#$04
@@ -10242,8 +10371,10 @@ ZDB46			CLR	M776E
 			JSR	F_C972
 			RTS
 			RTS
+
 MDB7B			FCB	$07,$00,$07,$01,$07,$03,$07,$04,$07,$02,$09,$01,$09
 			FCB	$00,$03,$02,$03,$01,$03,$03
+
 MDB8F			FCB	$02,$01,$02,$02,$02,$03,$02,$04,$02,$05,$02,$00,$03
 			FCB	$00,$03,$01,$0A,$0D,$0A,$00,$0A,$01,$0A,$02,$0A,$03
 			FCB	$0A,$04,$00,$00,$00,$00,$00,$00,$0A,$07,$0A,$08,$0A
@@ -10296,7 +10427,9 @@ ZDC06			CLR	M7788
 			LDAA	M00C2
 			JSR	F_DE96
 			RTS
+
 MDC18			FCB	$29,$2A,$2A,$2B,$2C,$2D,$2E,$2F,$30,$31,$32,$33
+
 ZDC24			CMPB	#$64
 			BCC	ZDC67
 			CMPB	#$60
@@ -10379,7 +10512,9 @@ ZDCBD			DECB
 			LDAA	>M00C3
 			JSR	F_DE9D
 			RTS
+
 MDCD8			FCB	$00,$01,$02,$03,$05,$06,$07,$00,$00,$04
+
 ZDCE2			SUBB	#$0B
 			STAB	M778C
 			CLR	M7788
@@ -10428,8 +10563,10 @@ ZDD23			JSR	F_DDD7
 			LDAA	>M00C3
 			JSR	F_DE9D
 			RTS
+
 MDD4A			FCB	$19,$00,$19,$01,$19,$02,$19,$03,$1A,$01,$1A,$00,$1A
 			FCB	$02
+
 ZDD58			LDAA	#$02
 			STAA	M7788
 			LDAA	#$1B
@@ -10495,10 +10632,14 @@ F_DDD7			LDAB	M7772
 			LDX	,X
 			JMP	,X
 
-MDDE8			FDB	MDE07_via_cvec_dde8,MDE02_via_cvec_ddea
-			FDB	MDE02_via_cvec_ddea,MDE07_via_cvec_dde8
-			FDB	MDDF8_via_cvec_ddf0,MDDF8_via_cvec_ddf0
-			FDB	MDDFD_via_cvec_ddf4,MDE07_via_cvec_dde8
+MDDE8			FDB	MDE07_via_cvec_dde8
+			FDB	MDE02_via_cvec_ddea
+			FDB	MDE02_via_cvec_ddea
+			FDB	MDE07_via_cvec_dde8
+			FDB	MDDF8_via_cvec_ddf0
+			FDB	MDDF8_via_cvec_ddf0
+			FDB	MDDFD_via_cvec_ddf4
+			FDB	MDE07_via_cvec_dde8
 
 MDDF8_via_cvec_ddf0	LDAB	#$07
 			JSR	F_8A08
@@ -10520,10 +10661,14 @@ F_DE08			LDAB	M7772
 			LDX	,X
 			JMP	,X
 
-MDE19			FDB	MDE33_via_cvec_de19,MDE38_via_cvec_de1b
-			FDB	MDE33_via_cvec_de19,MDE38_via_cvec_de1b
-			FDB	MDE29_via_cvec_de21,MDE29_via_cvec_de21
-			FDB	MDE2E_via_cvec_de25,MDE38_via_cvec_de1b
+MDE19			FDB	MDE33_via_cvec_de19
+			FDB	MDE38_via_cvec_de1b
+			FDB	MDE33_via_cvec_de19
+			FDB	MDE38_via_cvec_de1b
+			FDB	MDE29_via_cvec_de21
+			FDB	MDE29_via_cvec_de21
+			FDB	MDE2E_via_cvec_de25
+			FDB	MDE38_via_cvec_de1b
 
 MDE29_via_cvec_de21	LDAB	#$07
 			JSR	F_8A08
@@ -10545,10 +10690,14 @@ F_DE39			LDAB	M7772
 			LDX	,X
 			JMP	,X
 
-MDE4A			FDB	MDE64_via_cvec_de4a,MDE64_via_cvec_de4a
-			FDB	MDE64_via_cvec_de4a,MDE64_via_cvec_de4a
-			FDB	MDE5A_via_cvec_de52,MDE5A_via_cvec_de52
-			FDB	MDE5F_via_cvec_de56,MDE64_via_cvec_de4a
+MDE4A			FDB	MDE64_via_cvec_de4a
+			FDB	MDE64_via_cvec_de4a
+			FDB	MDE64_via_cvec_de4a
+			FDB	MDE64_via_cvec_de4a
+			FDB	MDE5A_via_cvec_de52
+			FDB	MDE5A_via_cvec_de52
+			FDB	MDE5F_via_cvec_de56
+			FDB	MDE64_via_cvec_de4a
 
 MDE5A_via_cvec_de52	LDAB	#$07
 			JSR	F_8A08
@@ -10567,10 +10716,14 @@ F_DE65			LDAB	M7772
 			LDX	,X
 			JMP	,X
 
-MDE76			FDB	MDE86_via_cvec_de76,MDE86_via_cvec_de76
-			FDB	MDE8B_via_cvec_de7a,MDE95_via_cvec_de7c
-			FDB	MDE90_via_cvec_de7e,MDE95_via_cvec_de7c
-			FDB	MDE90_via_cvec_de7e,MDE95_via_cvec_de7c
+MDE76			FDB	MDE86_via_cvec_de76
+			FDB	MDE86_via_cvec_de76
+			FDB	MDE8B_via_cvec_de7a
+			FDB	MDE95_via_cvec_de7c
+			FDB	MDE90_via_cvec_de7e
+			FDB	MDE95_via_cvec_de7c
+			FDB	MDE90_via_cvec_de7e
+			FDB	MDE95_via_cvec_de7c
 
 MDE86_via_cvec_de76	LDAB	#$07
 			JSR	F_8A08
@@ -10696,8 +10849,11 @@ ZDF7B			CMPA	#$40
 			BRA	ZDF5E
 ZDF83			LDAB	#$0B
 			BRA	ZDF5E
+
 MDF87			FCB	$00,$00,$05,$06,$07,$08,$09,$02,$01,$00,$00,$0C
+
 ZDF93			RTS
+
 MDF94			FCB	$FE,$C0,$B4,$AE,$A8,$A2,$9E,$98,$94,$90,$8D,$8A,$86
 			FCB	$82,$80,$7D,$7A,$77,$74,$72,$70,$6D,$6B,$69,$67,$65
 			FCB	$63,$61,$5F,$5D,$5C,$5A,$58,$56,$55,$53,$52,$51,$4F
@@ -10994,9 +11150,12 @@ ZE21B			LDAA	#$32
 			BNE	ZE21B
 			JSR	HI_CALL_10
 ZE230			RTS
+
 ME231			FCB	$F0,$43,$03,$00,$5D
+
 ME236			FCB	$F0,$43,$7E,$00,$21,$4C,$4D,$20,$20,$38,$39,$37,$36
 			FCB	$41,$45
+
 ME245_via_cvec_d38f	TST	M756C
 			BEQ	ZE28A
 			TST	>M00CC
@@ -11211,7 +11370,9 @@ ZE3C6			LDAA	,X
 			BNE	ZE3C6
 			JSR	HI_CALL_10
 			RTS
+
 ME3DE			FCB	$7E,$00,$78,$4C,$4D,$20,$20,$38,$39,$37,$36,$50,$45
+
 ME3EB_via_cvec_d383	TST	M756C
 			BNE	ZE3F1
 			RTS
@@ -11255,7 +11416,9 @@ ZE431			LDAA	,X
 			BNE	ZE431
 			JSR	HI_CALL_10
 			RTS
+
 ME449			FCB	$7E,$00,$22,$4C,$4D,$20,$20,$4D,$43,$52,$54,$45,$30
+
 ME456_via_cvec_d385	TST	M756C
 			BNE	ZE45C
 			RTS
@@ -11299,7 +11462,9 @@ ZE49C			LDAA	,X
 			BNE	ZE49C
 			JSR	HI_CALL_10
 			RTS
+
 ME4B4			FCB	$7E,$02,$0A,$4C,$4D,$20,$20,$4D,$43,$52,$54,$45,$31
+
 ME4C1_via_cvec_bc10	TST	M756C
 			BNE	ZE4C7
 			RTS
@@ -11355,9 +11520,11 @@ ZE51E			LDAA	,X
 			BNE	ZE51E
 			JSR	HI_CALL_10
 			RTS
+
 ME536			FCB	$7E,$00,$25,$4C,$4D,$20
 			FCB	$20,$38,$39,$37,$36,$53
 			FCB	$30
+
 ME543_via_cvec_bc12	TST	M756C
 			BNE	ZE549
 			RTS
@@ -11411,9 +11578,11 @@ ZE589			LDAA	,X
 			BNE	ZE589
 			JSR	HI_CALL_10
 			RTS
+
 ME5B1			FCB     $7E,$02,$0A,$4C,$4D,$20
 			FCB	$20,$38,$39,$37,$36,$53
 			FCB	$31
+
 ME5BE_via_cvec_bc14	TST	M756C
 			BNE	ZE5C4
 			RTS
@@ -11457,7 +11626,9 @@ ZE604			LDAA	,X
 			BNE	ZE604
 			JSR	HI_CALL_10
 			RTS
+
 ME61C			FCB	$7E,$00,$41,$4C,$4D,$20,$20,$38,$39,$37,$36,$53,$32
+
 ME629_via_cvec_bc16	JSR	ME3EB_via_cvec_d383
 			JSR	F_F052
 			JSR	ME456_via_cvec_d385
@@ -12168,6 +12339,7 @@ ZEBA0			STAA	$04,X
 			INCA
 			STAA	$10,X
 			RTS
+
 MEBA9			FCB	$FF,$76,$3B,$27,$1D,$17,$13,$0E
 
 F_EBB1			PSHB
@@ -12640,6 +12812,7 @@ ZEF2A			LDAA	$03,X
 			JSR	HI_CALL_1C
 			PULX
 ZEF40			RTS
+
 MEF41			FCB	$00,$08,$0C,$13,$18,$1D,$20,$27,$2B,$30,$33,$38,$3C
 			FCB	$3F,$43,$47,$4B,$50,$54,$58,$5B,$5F,$63,$65,$68,$6C
 			FCB	$6F,$72,$75,$78,$7B,$7D,$80,$83,$9A,$9C,$8B,$8D,$90
