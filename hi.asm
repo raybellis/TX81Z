@@ -4833,48 +4833,7 @@ ZAB76			PULA
 ZAB77			LDD	#$0000
 			BRA	ZAB60
 
-; Computed relative jump based on the data following
-; the JSR instruction.
-
-; Data is pairs of <offset, value> with the values in
-; ascending order except that the last value is always 0x00
-
-JMPOFF1 		PULX
-ZAB7D			TST	$01,X
-			BEQ	ZAB89
-			CMPB	$01,X
-			BCS	ZAB89
-			INX
-			INX
-			BRA	ZAB7D
-ZAB89			PSHB
-			LDAB	,X
-			ABX
-			PULB
-			JMP	,X
-
-; Computed relative jump.
-; Data following a JSR to this address contains a table of
-; offsets.  A is added to the (new) PC, the content of the
-; location is read and then also added to the PC
-
-JMPOFFA 		PULX
-			PSHB
-			TAB
-			BRA	ZAB97
-
-; Computed relative jump.
-; Data following a JSR to this address contains a table of
-; offsets.  B is added to the (new) PC, the content of the
-; location is read and then also added to the PC
-
-JMPOFFB 		PULX
-			PSHB
-ZAB97			ABX
-			LDAB	,X
-			ABX
-			PULB
-			JMP	,X
+			INCLUDE	"inc/jmpoff.asm"
 
 F_AB9E			CMPB	#$0D
 			BEQ	ZABC2

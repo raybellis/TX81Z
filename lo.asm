@@ -5881,42 +5881,8 @@ F_B53E			XGDX
 			XGDX
 			RTS
 
-; Computed relative jump based on the data following
-; the JSR instruction.
+			INCLUDE	"inc/jmpoff.asm"
 
-; Data is pairs of <offset, value> with the values in
-; ascending order except that the last value is always 0x00
-
-JMPOFF1 		PULX
-ZB54B			TST	$01,X
-			BEQ	ZB557
-			CMPB	$01,X
-			BCS	ZB557
-			INX
-			INX
-			BRA	ZB54B
-ZB557			PSHB
-			LDAB	,X
-			ABX
-			PULB
-			JMP	,X
-			PULX
-			PSHB
-			TAB
-			BRA	ZB565
-
-; Computed relative jump.
-; Data following a JSR to this address contains a table of
-; offsets.  B is added to the (new) PC, the content of the
-; location is read and then also added to the PC
-
-JMPOFFB 		PULX
-			PSHB
-ZB565			ABX
-			LDAB	,X
-			ABX
-			PULB
-			JMP	,X
 FOREVER 		BRA	FOREVER
 
 ; Preset voice table - 128 x 78 bytes each
