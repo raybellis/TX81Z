@@ -3502,18 +3502,91 @@ M9C35			FCB	$C6,$37,$BD,$A1,$21,$3C,$CE,$78,$46,$D6,$76,$3A,$E6
 			FCB	$20,$04,$38,$BD,$9C,$F5,$37,$CE,$78,$0E,$D6,$76,$58
 			FCB	$3A,$33,$ED,$00,$7C,$00,$76,$7A,$00,$7B,$26,$ED,$39
 
-F_9C76			FCB	$CE,$78,$4E,$DF,$A9,$CE,$7D,$13,$DF,$A7,$DE,$A9,$A6
-			FCB	$00,$2B,$2D,$BD,$9A,$2F,$A6,$39,$BD,$90,$8B,$3C,$DE
-			FCB	$A7,$A7,$00,$38,$A6,$48,$BD,$90,$8B,$3C,$DE,$A7,$A7
-			FCB	$02,$38,$A6,$4A,$BD,$90,$8B,$3C,$DE,$A7,$A7,$04,$38
-			FCB	$A6,$6D,$BD,$90,$8B,$DE,$A7,$A7,$06,$DE,$A7,$08,$DF
-			FCB	$A7,$DE,$A9,$08,$DF,$A9,$8C,$78,$50,$26,$BE,$CE,$7D
-			FCB	$3B,$DF,$A7,$4F,$36,$BD,$9A,$07,$A6,$47,$BD,$90,$8B
-			FCB	$3C,$DE,$A7,$A7,$00,$38,$A6,$49,$BD,$90,$8B,$3C,$DE
-			FCB	$A7,$A7,$08,$38,$A6,$6C,$BD,$90,$8B,$DE,$A7,$A7,$10
-			FCB	$08,$DF,$A7,$32,$4C,$81,$08,$26,$D4,$39,$86,$63,$A0
-			FCB	$00,$16,$C4,$70,$54,$54,$54,$54,$C0,$07,$50,$D7,$71
-			FCB	$84,$0F,$8A,$10,$48,$5F,$04,$7A,$00,$71,$26,$FA,$39
+F_9C76			LDX	#M784E			 ;9C76: CE 78 4E       '.xN'
+			STX	M00A9			 ;9C79: DF A9	       '..'
+			LDX	#M7D13			 ;9C7B: CE 7D 13       '.}.'
+			STX	M00A7			 ;9C7E: DF A7	       '..'
+Z9C80			LDX	M00A9			 ;9C80: DE A9	       '..'
+			LDAA	,X			 ;9C82: A6 00	       '..'
+			BMI	Z9CB3			 ;9C84: 2B 2D	       '+-'
+			JSR	F_9A2F			 ;9C86: BD 9A 2F       '../'
+			LDAA	$39,X			 ;9C89: A6 39	       '.9'
+			JSR	F_908B			 ;9C8B: BD 90 8B       '...'
+			PSHX				 ;9C8E: 3C	       '<'
+			LDX	M00A7			 ;9C8F: DE A7	       '..'
+			STAA	,X			 ;9C91: A7 00	       '..'
+			PULX				 ;9C93: 38	       '8'
+			LDAA	$48,X			 ;9C94: A6 48	       '.H'
+			JSR	F_908B			 ;9C96: BD 90 8B       '...'
+			PSHX				 ;9C99: 3C	       '<'
+			LDX	M00A7			 ;9C9A: DE A7	       '..'
+			STAA	$02,X			 ;9C9C: A7 02	       '..'
+			PULX				 ;9C9E: 38	       '8'
+			LDAA	$4A,X			 ;9C9F: A6 4A	       '.J'
+			JSR	F_908B			 ;9CA1: BD 90 8B       '...'
+			PSHX				 ;9CA4: 3C	       '<'
+			LDX	M00A7			 ;9CA5: DE A7	       '..'
+			STAA	$04,X			 ;9CA7: A7 04	       '..'
+			PULX				 ;9CA9: 38	       '8'
+			LDAA	$6D,X			 ;9CAA: A6 6D	       '.m'
+			JSR	F_908B			 ;9CAC: BD 90 8B       '...'
+			LDX	M00A7			 ;9CAF: DE A7	       '..'
+			STAA	$06,X			 ;9CB1: A7 06	       '..'
+Z9CB3			LDX	M00A7			 ;9CB3: DE A7	       '..'
+			INX				 ;9CB5: 08	       '.'
+			STX	M00A7			 ;9CB6: DF A7	       '..'
+			LDX	M00A9			 ;9CB8: DE A9	       '..'
+			INX				 ;9CBA: 08	       '.'
+			STX	M00A9			 ;9CBB: DF A9	       '..'
+			CPX	#M7850			 ;9CBD: 8C 78 50       '.xP'
+			BNE	Z9C80			 ;9CC0: 26 BE	       '&.'
+			LDX	#M7D3B			 ;9CC2: CE 7D 3B       '.};'
+			STX	M00A7			 ;9CC5: DF A7	       '..'
+			CLRA				 ;9CC7: 4F
+Z9CC8			PSHA				 ;9CC8: 36	       '6'
+			JSR	F_9A07			 ;9CC9: BD 9A 07       '...'
+			LDAA	$47,X			 ;9CCC: A6 47	       '.G'
+			JSR	F_908B			 ;9CCE: BD 90 8B       '...'
+			PSHX				 ;9CD1: 3C	       '<'
+			LDX	M00A7			 ;9CD2: DE A7	       '..'
+			STAA	,X			 ;9CD4: A7 00	       '..'
+			PULX				 ;9CD6: 38	       '8'
+			LDAA	$49,X			 ;9CD7: A6 49	       '.I'
+			JSR	F_908B			 ;9CD9: BD 90 8B       '...'
+			PSHX				 ;9CDC: 3C	       '<'
+			LDX	M00A7			 ;9CDD: DE A7	       '..'
+			STAA	$08,X			 ;9CDF: A7 08	       '..'
+			PULX				 ;9CE1: 38	       '8'
+			LDAA	$6C,X			 ;9CE2: A6 6C	       '.l'
+			JSR	F_908B			 ;9CE4: BD 90 8B       '...'
+			LDX	M00A7			 ;9CE7: DE A7	       '..'
+			STAA	$10,X			 ;9CE9: A7 10	       '..'
+			INX				 ;9CEB: 08	       '.'
+			STX	M00A7			 ;9CEC: DF A7	       '..'
+			PULA				 ;9CEE: 32	       '2'
+			INCA				 ;9CEF: 4C	       'L'
+			CMPA	#$08			 ;9CF0: 81 08	       '..'
+			BNE	Z9CC8			 ;9CF2: 26 D4	       '&.'
+			RTS				 ;9CF4: 39	       '9'
+			LDAA	#$63			 ;9CF5: 86 63	       '.c'
+			SUBA	,X			 ;9CF7: A0 00	       '..'
+			TAB				 ;9CF9: 16	       '.'
+			ANDB	#$70			 ;9CFA: C4 70	       '.p'
+			LSRB				 ;9CFC: 54	       'T'
+			LSRB				 ;9CFD: 54	       'T'
+			LSRB				 ;9CFE: 54	       'T'
+			LSRB				 ;9CFF: 54	       'T'
+			SUBB	#$07			 ;9D00: C0 07	       '..'
+			NEGB				 ;9D02: 50	       'P'
+			STAB	M0071			 ;9D03: D7 71	       '.q'
+			ANDA	#$0F			 ;9D05: 84 0F	       '..'
+			ORAA	#$10			 ;9D07: 8A 10	       '..'
+			ASLA				 ;9D09: 48	       'H'
+			CLRB				 ;9D0A: 5F	       '_'
+Z9D0B			LSRD				 ;9D0B: 04	       '.'
+			DEC	>M0071			 ;9D0C: 7A 00 71       'z.q'
+			BNE	Z9D0B			 ;9D0F: 26 FA	       '&.'
+			RTS				 ;9D11: 39	       '9'
 
 M9D12			FCB	$BD,$A1,$20,$BD,$9A,$E2,$A6,$38,$BD,$90,$8B,$CE,$7D
 			FCB	$7B,$DF,$A7,$7E,$9A,$D2,$D6,$6F,$58,$58,$58,$1B,$9B
