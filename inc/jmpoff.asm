@@ -8,15 +8,15 @@
 
 JMPOFF1 		PULX
 
-_LJMPLOOP		TST	$01,X
-			BEQ	_LJMPGO
+1			TST	$01,X
+			BEQ	2F
 			CMPB	$01,X
-			BCS	_LJMPGO
+			BCS	2F
 			INX
 			INX
-			BRA	_LJMPLOOP
+			BRA	1B
 
-_LJMPGO			PSHB
+2			PSHB
 			LDAB	,X
 			ABX
 			PULB
@@ -28,14 +28,14 @@ _LJMPGO			PSHB
 JMPOFFA			PULX
 			PSHB
 			TAB
-			BRA	_LJMPB
+			BRA	3F
 
 ; JUMPOFFB: 
 ; B is an index into the table, PC -> PC + A + table[A]
 
 JMPOFFB 		PULX
 			PSHB
-_LJMPB			ABX
+3			ABX
 			LDAB	,X
 			ABX
 			PULB

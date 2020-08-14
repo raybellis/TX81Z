@@ -40,6 +40,9 @@
 
 0x6000 - 0x7fff 8kB battery backed RAM (TC5564PL-20)
 
+* 0x6001 - 0x69c0 User voices
+* 0x6e45 - 0x7564 User performances
+
 ## IO PORT assignments
 
 * P20 : Cassette interface output
