@@ -1498,7 +1498,19 @@ F_8A08			CMPB	#$03
 			STAA	M7794
 Z8A1C			LDAA	M7772
 			JSR	JMPOFF1
-			FCB	$BB,$01,$15,$03,$9C,$08,$A2,$0A,$06,$0C,$07,$0D,$02
+			FCB	$BB
+			FCB	$01
+			FCB	$15
+			FCB	$03
+			FCB	$9C
+			FCB	$08
+			FCB	$A2
+			FCB	$0A
+			FCB	$06
+			FCB	$0C
+			FCB	$07
+			FCB	$0D
+			FCB	$02
 			FCB	$00
 
 			JMP	Z8B9E
@@ -1507,8 +1519,24 @@ Z8A36			JMP	Z8BBB
 			CMPA	#$12
 			BCC	Z8AB1
 			JSR	JMPOFFA
-			FCB	$46,$45,$27,$9A,$42,$41,$0C,$96,$95,$6A,$6E,$92,$91
-			FCB	$90,$6F,$8E,$8D,$62
+			FCB	$46
+			FCB	$45
+			FCB	$27
+			FCB	$9A
+			FCB	$42
+			FCB	$41
+			FCB	$0C
+			FCB	$96
+			FCB	$95
+			FCB	$6A
+			FCB	$6E
+			FCB	$92
+			FCB	$91
+			FCB	$90
+			FCB	$6F
+			FCB	$8E
+			FCB	$8D
+			FCB	$62
 
 			DECB
 			TST	M7795
@@ -1569,7 +1597,13 @@ Z8AC7			JMP	Z8BBB
 			BCC	Z8ADD
 			CLR	>M00A4
 			JSR	JMPOFFA
-			FCB	$10,$0F,$98,$7E,$06,$08,$01
+			FCB	$10
+			FCB	$0F
+			FCB	$98
+			FCB	$7E
+			FCB	$06
+			FCB	$08
+			FCB	$01
 
 Z8ADD			JMP	Z8BC1
 			JMP	Z8B8D
@@ -1958,7 +1992,13 @@ Z8DD5			JMP	Z8F10
 Z8DD8			CMPA	#$07
 			BCC	Z8DE6
 			JSR	JMPOFFA
-			FCB	$0B,$58,$05,$04,$4B,$D7,$02
+			FCB	$0B
+			FCB	$58
+			FCB	$05
+			FCB	$04
+			FCB	$4B
+			FCB	$D7
+			FCB	$02
 
 Z8DE6			RTS
 			JMP	Z8EF6
@@ -4983,7 +5023,16 @@ ZAC23			CMPB	#$02
 			DEC	>M00AE
 			BRA	ZAC19
 ZAC2F			JSR	JMPOFF1
-			FCB	$16,$01,$11,$04,$0B,$06,$04,$0B,$0E,$00
+			FCB	$16
+			FCB	$01
+			FCB	$11
+			FCB	$04
+			FCB	$0B
+			FCB	$06
+			FCB	$04
+			FCB	$0B
+			FCB	$0E
+			FCB	$00
 
 			COMB
 			SUBB	#$F0
@@ -5100,7 +5149,18 @@ ZAD07			AIM	#$FB,$00,X
 			BRA	ZAD02
 ZAD0C			LDAB	M00A0
 			JSR	JMPOFF1
-			FCB	$0F,$01,$11,$03,$0B,$08,$D8,$0A,$04,$0C,$05,$00
+			FCB	$0F
+			FCB	$01
+			FCB	$11
+			FCB	$03
+			FCB	$0B
+			FCB	$08
+			FCB	$D8
+			FCB	$0A
+			FCB	$04
+			FCB	$0C
+			FCB	$05
+			FCB	$00
 
 			JMP	ZAE50
 ZAD20			CLRB
@@ -5118,9 +5178,42 @@ ZAD33			CMPB	#$09
 			BCS	ZADB6
 ZAD3B			LDAB	M7774
 			JSR	JMPOFF1
-			FCB	$75,$02,$32,$05,$71,$07,$2E,$08,$6D,$09,$2A,$0B,$18
-			FCB	$14,$67,$15,$32,$16,$12,$19,$20,$1B,$10,$1C,$51,$1D
-			FCB	$0A,$1F,$59,$20,$06,$28,$55,$36,$02,$00
+			FCB	$75
+			FCB	$02
+			FCB	$32
+			FCB	$05
+			FCB	$71
+			FCB	$07
+			FCB	$2E
+			FCB	$08
+			FCB	$6D
+			FCB	$09
+			FCB	$2A
+			FCB	$0B
+			FCB	$18
+			FCB	$14
+			FCB	$67
+			FCB	$15
+			FCB	$32
+			FCB	$16
+			FCB	$12
+			FCB	$19
+			FCB	$20
+			FCB	$1B
+			FCB	$10
+			FCB	$1C
+			FCB	$51
+			FCB	$1D
+			FCB	$0A
+			FCB	$1F
+			FCB	$59
+			FCB	$20
+			FCB	$06
+			FCB	$28
+			FCB	$55
+			FCB	$36
+			FCB	$02
+			FCB	$00
 
 ZAD65			BRA	ZAD20
 			LDAB	M7788
@@ -5371,9 +5464,36 @@ ZAF92			CMPB	#$1E
 			CLRB
 ZAF97			CLR	>M00AE
 			JSR	JMPOFFB
-			FCB	$5C,$6E,$40,$E2,$F9,$3E,$69,$C2,$71,$F8,$49,$64,$C5
-			FCB	$DA,$28,$4D,$5F,$31,$18,$11,$48,$5A,$1A,$0A,$0F,$05
-			FCB	$55,$18,$11,$1F
+			FCB	$5C
+			FCB	$6E
+			FCB	$40
+			FCB	$E2
+			FCB	$F9
+			FCB	$3E
+			FCB	$69
+			FCB	$C2
+			FCB	$71
+			FCB	$F8
+			FCB	$49
+			FCB	$64
+			FCB	$C5
+			FCB	$DA
+			FCB	$28
+			FCB	$4D
+			FCB	$5F
+			FCB	$31
+			FCB	$18
+			FCB	$11
+			FCB	$48
+			FCB	$5A
+			FCB	$1A
+			FCB	$0A
+			FCB	$0F
+			FCB	$05
+			FCB	$55
+			FCB	$18
+			FCB	$11
+			FCB	$1F
 
 			JMP	ZB127
 			JMP	ZB1AE
@@ -5608,10 +5728,54 @@ F_B1DD			PSHB
 			JMP	ZB339
 ZB1EF			TBA
 			JSR	JMPOFF1
-			FCB	$34,$01,$4D,$02,$BD,$05,$76,$07,$B9,$08,$72,$09,$B5
-			FCB	$0B,$22,$14,$B5,$15,$AF,$16,$96,$18,$AB,$1F,$96,$20
-			FCB	$16,$28,$C8,$33,$F9,$34,$C4,$35,$0F,$36,$0C,$3C,$99
-			FCB	$3D,$99,$3E,$7C,$3F,$04,$46,$93,$00
+			FCB	$34
+			FCB	$01
+			FCB	$4D
+			FCB	$02
+			FCB	$BD
+			FCB	$05
+			FCB	$76
+			FCB	$07
+			FCB	$B9
+			FCB	$08
+			FCB	$72
+			FCB	$09
+			FCB	$B5
+			FCB	$0B
+			FCB	$22
+			FCB	$14
+			FCB	$B5
+			FCB	$15
+			FCB	$AF
+			FCB	$16
+			FCB	$96
+			FCB	$18
+			FCB	$AB
+			FCB	$1F
+			FCB	$96
+			FCB	$20
+			FCB	$16
+			FCB	$28
+			FCB	$C8
+			FCB	$33
+			FCB	$F9
+			FCB	$34
+			FCB	$C4
+			FCB	$35
+			FCB	$0F
+			FCB	$36
+			FCB	$0C
+			FCB	$3C
+			FCB	$99
+			FCB	$3D
+			FCB	$99
+			FCB	$3E
+			FCB	$7C
+			FCB	$3F
+			FCB	$04
+			FCB	$46
+			FCB	$93
+			FCB	$00
 
 ZB223			RTS
 			JMP	ZB326
@@ -5738,9 +5902,45 @@ ZB333			ADDA	#$64
 			LDAB	#$7F
 			BRA	ZB2E9
 ZB339			JSR	JMPOFF1
-			FCB	$43,$02,$42,$03,$4A,$04,$AA,$05,$3B,$07,$F9,$08,$37
-			FCB	$09,$32,$0A,$2D,$0B,$31,$15,$26,$16,$2D,$18,$1F,$19
-			FCB	$11,$1A,$12,$1B,$13,$1C,$14,$1D,$21,$1F,$04,$20,$1D
+			FCB	$43
+			FCB	$02
+			FCB	$42
+			FCB	$03
+			FCB	$4A
+			FCB	$04
+			FCB	$AA
+			FCB	$05
+			FCB	$3B
+			FCB	$07
+			FCB	$F9
+			FCB	$08
+			FCB	$37
+			FCB	$09
+			FCB	$32
+			FCB	$0A
+			FCB	$2D
+			FCB	$0B
+			FCB	$31
+			FCB	$15
+			FCB	$26
+			FCB	$16
+			FCB	$2D
+			FCB	$18
+			FCB	$1F
+			FCB	$19
+			FCB	$11
+			FCB	$1A
+			FCB	$12
+			FCB	$1B
+			FCB	$13
+			FCB	$1C
+			FCB	$14
+			FCB	$1D
+			FCB	$21
+			FCB	$1F
+			FCB	$04
+			FCB	$20
+			FCB	$1D
 			FCB	$00
 
 			JMP	ZB551
@@ -6070,7 +6270,7 @@ MB5E5			FDB	M7565
 			FDB	M75F7
 			FCB	$63
 
-MB61E			FDB	$3407,$3507,$DA07,F_8C06,$8A63
+MB61E			FDB	$3407,$3507,$DA07,$8C06,$8A63
 
 MB628			FDB	$3B03,$3663,$3763,$3863,$3963,$3A01,$3C07,$3D03
 			FDB	$8801,$8707,$8907,$D807,Z8B3F,$D701,$801F,$811F
@@ -6116,14 +6316,58 @@ F_B6BB			LDAA	M778C
 			JMP	ZB724
 ZB6CA			LDAB	M7774
 			JSR	JMPOFF1
-			FCB	$72,$01,$A1,$05,$7E,$07,$9D,$08,$7A,$09,$99,$1F,$8E
-			FCB	$20,$95,$29,$72,$33,$80,$34,$8F,$35,$7C,$36,$8B,$3C
-			FCB	$68,$3D,$87,$00
+			FCB	$72
+			FCB	$01
+			FCB	$A1
+			FCB	$05
+			FCB	$7E
+			FCB	$07
+			FCB	$9D
+			FCB	$08
+			FCB	$7A
+			FCB	$09
+			FCB	$99
+			FCB	$1F
+			FCB	$8E
+			FCB	$20
+			FCB	$95
+			FCB	$29
+			FCB	$72
+			FCB	$33
+			FCB	$80
+			FCB	$34
+			FCB	$8F
+			FCB	$35
+			FCB	$7C
+			FCB	$36
+			FCB	$8B
+			FCB	$3C
+			FCB	$68
+			FCB	$3D
+			FCB	$87
+			FCB	$00
 
 ZB6EE			LDAB	M7774
 			JSR	JMPOFF1
-			FCB	$7F,$03,$10,$04,$19,$05,$79,$07,$56,$08,$75,$09,$52
-			FCB	$0A,$60,$0B,$6F,$00,$F6
+			FCB	$7F
+			FCB	$03
+			FCB	$10
+			FCB	$04
+			FCB	$19
+			FCB	$05
+			FCB	$79
+			FCB	$07
+			FCB	$56
+			FCB	$08
+			FCB	$75
+			FCB	$09
+			FCB	$52
+			FCB	$0A
+			FCB	$60
+			FCB	$0B
+			FCB	$6F
+			FCB	$00
+			FCB	$F6
 
 			ASR	$8927
 			PSHB
@@ -6141,7 +6385,14 @@ ZB6EE			LDAB	M7774
 			BRA	ZB74A
 ZB724			LDAB	M7774
 			JSR	JMPOFF1
-			FCB	$49,$1B,$0E,$1C,$04,$1D,$43,$00
+			FCB	$49
+			FCB	$1B
+			FCB	$0E
+			FCB	$1C
+			FCB	$04
+			FCB	$1D
+			FCB	$43
+			FCB	$00
 
 JB732			CMPA	#$01
 			BLS	ZB770
@@ -6376,10 +6627,52 @@ F_B931			TST	M7788
 ZB939			TBA
 			LDAB	M7774
 			JSR	JMPOFF1
-			FCB	$31,$02,$39,$04,$30,$05,$2B,$07,$6F,$08,$27,$09,$72
-			FCB	$0A,$6D,$0B,$21,$15,$70,$16,$1D,$18,$73,$19,$78,$1A
-			FCB	$84,$1B,$74,$1C,$92,$1D,$97,$1F,$0F,$3C,$AC,$3D,$B3
-			FCB	$3E,$09,$46,$04,$47,$05,$00
+			FCB	$31
+			FCB	$02
+			FCB	$39
+			FCB	$04
+			FCB	$30
+			FCB	$05
+			FCB	$2B
+			FCB	$07
+			FCB	$6F
+			FCB	$08
+			FCB	$27
+			FCB	$09
+			FCB	$72
+			FCB	$0A
+			FCB	$6D
+			FCB	$0B
+			FCB	$21
+			FCB	$15
+			FCB	$70
+			FCB	$16
+			FCB	$1D
+			FCB	$18
+			FCB	$73
+			FCB	$19
+			FCB	$78
+			FCB	$1A
+			FCB	$84
+			FCB	$1B
+			FCB	$74
+			FCB	$1C
+			FCB	$92
+			FCB	$1D
+			FCB	$97
+			FCB	$1F
+			FCB	$0F
+			FCB	$3C
+			FCB	$AC
+			FCB	$3D
+			FCB	$B3
+			FCB	$3E
+			FCB	$09
+			FCB	$46
+			FCB	$04
+			FCB	$47
+			FCB	$05
+			FCB	$00
 
 			JMP	ZBBB1
 			TAB
@@ -6483,8 +6776,22 @@ ZBA42			TBA
 			CLR	>M00A4
 			LDAB	M7774
 			JSR	JMPOFF1
-			FCB	$10,$15,$11,$16,$0C,$18,$8B,$19,$08,$1B,$BC,$1C,$DC
-			FCB	$1D,$02,$00
+			FCB	$10
+			FCB	$15
+			FCB	$11
+			FCB	$16
+			FCB	$0C
+			FCB	$18
+			FCB	$8B
+			FCB	$19
+			FCB	$08
+			FCB	$1B
+			FCB	$BC
+			FCB	$1C
+			FCB	$DC
+			FCB	$1D
+			FCB	$02
+			FCB	$00
 
 ZBA5C			TAB
 			CLC
@@ -7033,11 +7340,68 @@ ZBEBF			STAA	,X
 			JMP	ZBF4F
 ZBECC			LDAB	M7774
 			JSR	JMPOFF1
-			FCB	$47,$01,$48,$02,$3A,$05,$3B,$06,$3C,$07,$34,$08,$44
-			FCB	$09,$30,$14,$3D,$15,$2C,$16,$4B,$18,$28,$19,$3B,$1D
-			FCB	$45,$20,$22,$28,$3B,$29,$3C,$2A,$40,$2B,$41,$2C,$42
-			FCB	$2E,$2E,$2F,$41,$30,$42,$31,$43,$32,$44,$33,$45,$34
-			FCB	$46,$35,$20,$36,$06,$3C,$25,$3F,$02,$00
+			FCB	$47
+			FCB	$01
+			FCB	$48
+			FCB	$02
+			FCB	$3A
+			FCB	$05
+			FCB	$3B
+			FCB	$06
+			FCB	$3C
+			FCB	$07
+			FCB	$34
+			FCB	$08
+			FCB	$44
+			FCB	$09
+			FCB	$30
+			FCB	$14
+			FCB	$3D
+			FCB	$15
+			FCB	$2C
+			FCB	$16
+			FCB	$4B
+			FCB	$18
+			FCB	$28
+			FCB	$19
+			FCB	$3B
+			FCB	$1D
+			FCB	$45
+			FCB	$20
+			FCB	$22
+			FCB	$28
+			FCB	$3B
+			FCB	$29
+			FCB	$3C
+			FCB	$2A
+			FCB	$40
+			FCB	$2B
+			FCB	$41
+			FCB	$2C
+			FCB	$42
+			FCB	$2E
+			FCB	$2E
+			FCB	$2F
+			FCB	$41
+			FCB	$30
+			FCB	$42
+			FCB	$31
+			FCB	$43
+			FCB	$32
+			FCB	$44
+			FCB	$33
+			FCB	$45
+			FCB	$34
+			FCB	$46
+			FCB	$35
+			FCB	$20
+			FCB	$36
+			FCB	$06
+			FCB	$3C
+			FCB	$25
+			FCB	$3F
+			FCB	$02
+			FCB	$00
 
 ZBF10			JMP	ZC0ED
 			JMP	ZC05A
@@ -7062,9 +7426,40 @@ ZBF10			JMP	ZC0ED
 			JMP	ZC155
 ZBF4F			LDAB	M7774
 			JSR	JMPOFF1
-			FCB	$22,$02,$26,$03,$5E,$04,$BA,$05,$1A,$07,$27,$08,$16
-			FCB	$09,$1D,$0A,$1E,$0B,$10,$15,$11,$16,$0C,$19,$1C,$1A
-			FCB	$27,$1B,$35,$1C,$3E,$1D,$02,$00
+			FCB	$22
+			FCB	$02
+			FCB	$26
+			FCB	$03
+			FCB	$5E
+			FCB	$04
+			FCB	$BA
+			FCB	$05
+			FCB	$1A
+			FCB	$07
+			FCB	$27
+			FCB	$08
+			FCB	$16
+			FCB	$09
+			FCB	$1D
+			FCB	$0A
+			FCB	$1E
+			FCB	$0B
+			FCB	$10
+			FCB	$15
+			FCB	$11
+			FCB	$16
+			FCB	$0C
+			FCB	$19
+			FCB	$1C
+			FCB	$1A
+			FCB	$27
+			FCB	$1B
+			FCB	$35
+			FCB	$1C
+			FCB	$3E
+			FCB	$1D
+			FCB	$02
+			FCB	$00
 
 			JMP	ZC0ED
 			JMP	ZC1EE
@@ -7171,7 +7566,12 @@ ZC07D			LDAB	M7789
 			CMPB	#$06
 			BCC	ZC0ED
 			JSR	JMPOFFB
-			FCB	$06,$08,$0A,$0C,$08,$0D
+			FCB	$06
+			FCB	$08
+			FCB	$0A
+			FCB	$0C
+			FCB	$08
+			FCB	$0D
 
 			JMP	ZC1AF
 			JMP	ZC1B4
@@ -7188,8 +7588,30 @@ ZC0A6			TST	M7789
 ZC0AE			JMP	ZC1AF
 ZC0B1			LDAB	M7789
 			JSR	JMPOFF1
-			FCB	$1E,$01,$1F,$02,$17,$03,$1E,$04,$1F,$05,$CE,$0B,$15
-			FCB	$0C,$19,$0D,$1A,$0E,$06,$0F,$07,$10,$20,$00
+			FCB	$1E
+			FCB	$01
+			FCB	$1F
+			FCB	$02
+			FCB	$17
+			FCB	$03
+			FCB	$1E
+			FCB	$04
+			FCB	$1F
+			FCB	$05
+			FCB	$CE
+			FCB	$0B
+			FCB	$15
+			FCB	$0C
+			FCB	$19
+			FCB	$0D
+			FCB	$1A
+			FCB	$0E
+			FCB	$06
+			FCB	$0F
+			FCB	$07
+			FCB	$10
+			FCB	$20
+			FCB	$00
 
 			JMP	ZC1C3
 			JMP	ZC1D8
@@ -8120,7 +8542,14 @@ ZC8F3			AIM	#$EF,PORT6
 ZC8F6			LDAB	M7772
 			ANDB	#$07
 			JSR	JMPOFFB
-			FCB	$09,$21,$39,$05,$14,$2C,$35,$01
+			FCB	$09
+			FCB	$21
+			FCB	$39
+			FCB	$05
+			FCB	$14
+			FCB	$2C
+			FCB	$35
+			FCB	$01
 
 			RTS
 			TST	M7793
@@ -8199,10 +8628,48 @@ ZC9A5			LDAB	M7774
 			BCS	ZC9B2
 			JMP	ZCB0C
 ZC9B2			JSR	JMPOFF1
-			FCB	$31,$01,$28,$03,$47,$04,$84,$05,$C9,$07,$C0,$08,$C5
-			FCB	$09,$BC,$0A,$D0,$0B,$18,$1F,$E2,$20,$14,$29,$E5,$30
-			FCB	$14,$31,$E1,$33,$0D,$34,$0A,$35,$CC,$36,$06,$3C,$D7
-			FCB	$3D,$02,$00
+			FCB	$31
+			FCB	$01
+			FCB	$28
+			FCB	$03
+			FCB	$47
+			FCB	$04
+			FCB	$84
+			FCB	$05
+			FCB	$C9
+			FCB	$07
+			FCB	$C0
+			FCB	$08
+			FCB	$C5
+			FCB	$09
+			FCB	$BC
+			FCB	$0A
+			FCB	$D0
+			FCB	$0B
+			FCB	$18
+			FCB	$1F
+			FCB	$E2
+			FCB	$20
+			FCB	$14
+			FCB	$29
+			FCB	$E5
+			FCB	$30
+			FCB	$14
+			FCB	$31
+			FCB	$E1
+			FCB	$33
+			FCB	$0D
+			FCB	$34
+			FCB	$0A
+			FCB	$35
+			FCB	$CC
+			FCB	$36
+			FCB	$06
+			FCB	$3C
+			FCB	$D7
+			FCB	$3D
+			FCB	$02
+			FCB	$00
 
 ZC9DF			RTS
 			JMP	ZCAEB
@@ -8431,8 +8898,22 @@ ZCBC3			LSRB
 			LSRB
 			ANDB	#$07
 			JSR	JMPOFF1
-			FCB	$1D,$01,$72,$02,$0C,$03,$0B,$04,$0C,$05,$0D,$06,$0E
-			FCB	$07,$02,$00
+			FCB	$1D
+			FCB	$01
+			FCB	$72
+			FCB	$02
+			FCB	$0C
+			FCB	$03
+			FCB	$0B
+			FCB	$04
+			FCB	$0C
+			FCB	$05
+			FCB	$0D
+			FCB	$06
+			FCB	$0E
+			FCB	$07
+			FCB	$02
+			FCB	$00
 
 ZCBDC			RTS
 			JMP	ZCDE3
@@ -8696,10 +9177,48 @@ ZCDF0			CLR	>M00C4
 			BEQ	ZCE39
 			LDAB	M00BE
 ZCE0C			JSR	JMPOFF1
-			FCB	$2A,$01,$32,$02,$38,$03,$24,$04,$41,$05,$51,$06,$83
-			FCB	$07,$43,$08,$1A,$0A,$1F,$0B,$16,$40,$7B,$41,$C4,$42
-			FCB	$10,$60,$74,$62,$0C,$7B,$FD,$7C,$08,$7E,$07,$7F,$08
-			FCB	$80,$02,$00
+			FCB	$2A
+			FCB	$01
+			FCB	$32
+			FCB	$02
+			FCB	$38
+			FCB	$03
+			FCB	$24
+			FCB	$04
+			FCB	$41
+			FCB	$05
+			FCB	$51
+			FCB	$06
+			FCB	$83
+			FCB	$07
+			FCB	$43
+			FCB	$08
+			FCB	$1A
+			FCB	$0A
+			FCB	$1F
+			FCB	$0B
+			FCB	$16
+			FCB	$40
+			FCB	$7B
+			FCB	$41
+			FCB	$C4
+			FCB	$42
+			FCB	$10
+			FCB	$60
+			FCB	$74
+			FCB	$62
+			FCB	$0C
+			FCB	$7B
+			FCB	$FD
+			FCB	$7C
+			FCB	$08
+			FCB	$7E
+			FCB	$07
+			FCB	$7F
+			FCB	$08
+			FCB	$80
+			FCB	$02
+			FCB	$00
 
 ZCE39			RTS
 			JMP	ZCF52

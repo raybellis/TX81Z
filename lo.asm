@@ -2217,7 +2217,14 @@ F_9207			LDX	#M69C1
 			LDAA	M00CD
 			LDAB	M00D7
 			JSR	JMPOFFB
-			FCB	$35,$34,$06,$72,$A6,$70,$82,$8A
+			FCB	$35
+			FCB	$34
+			FCB	$06
+			FCB	$72
+			FCB	$A6
+			FCB	$70
+			FCB	$82
+			FCB	$8A
 
 J921B			LDAB	#$4C
 			MUL
@@ -3610,8 +3617,30 @@ Z9CFF			LDAB	M7772
 			BCS	Z9D07
 			CLRB
 Z9D07			JSR	JMPOFFB
-			FCB	$1E,$17,$19,$14,$20,$3A,$57,$10,$0F,$18,$C9,$0C,$0B
-			FCB	$0A,$7C,$08,$07,$10,$FA,$04,$03,$02,$B0
+			FCB	$1E
+			FCB	$17
+			FCB	$19
+			FCB	$14
+			FCB	$20
+			FCB	$3A
+			FCB	$57
+			FCB	$10
+			FCB	$0F
+			FCB	$18
+			FCB	$C9
+			FCB	$0C
+			FCB	$0B
+			FCB	$0A
+			FCB	$7C
+			FCB	$08
+			FCB	$07
+			FCB	$10
+			FCB	$FA
+			FCB	$04
+			FCB	$03
+			FCB	$02
+			FCB	$B0
+
 J9D21			RTS
 Z9D22			JMP	Z9EEC
 			JMP	Z9EC0
@@ -3809,9 +3838,41 @@ Z9F0C			LDAB	M7788
 			JMP	Z9FAC
 Z9F1A			LDAB	M7774
 			JSR	JMPOFF1
-D9F20			FCB	$E5,$0B,$20,$14,$1F,$1F,$1C,$28,$1F,$29,$2A,$30,$34
-			FCB	$31,$26,$33,$1B,$34,$32,$35,$0E,$3C,$1E,$3D,$34,$3E
-			FCB	$2E,$3F,$06,$46,$32,$47,$02,$00
+D9F20			FCB	$E5
+			FCB	$0B
+			FCB	$20
+			FCB	$14
+			FCB	$1F
+			FCB	$1F
+			FCB	$1C
+			FCB	$28
+			FCB	$1F
+			FCB	$29
+			FCB	$2A
+			FCB	$30
+			FCB	$34
+			FCB	$31
+			FCB	$26
+			FCB	$33
+			FCB	$1B
+			FCB	$34
+			FCB	$32
+			FCB	$35
+			FCB	$0E
+			FCB	$3C
+			FCB	$1E
+			FCB	$3D
+			FCB	$34
+			FCB	$3E
+			FCB	$2E
+			FCB	$3F
+			FCB	$06
+			FCB	$46
+			FCB	$32
+			FCB	$47
+			FCB	$02
+			FCB	$00
+
 J9F42			RTS
 J9F43			SUBB	#$09
 			BRA	Z9F72
@@ -3844,9 +3905,43 @@ Z9F75			LDAB	M7774
 			CLRA
 			STAA	M7789
 Z9F84			JSR	JMPOFF1
-D9F87			FCB	$24,$02,$70,$03,$40,$04,$42,$05,$1C,$07,$46,$08,$18
-			FCB	$09,$46,$0A,$48,$0B,$12,$15,$48,$16,$0E,$18,$48,$19
-			FCB	$4A,$1A,$4C,$1B,$4E,$1C,$50,$1D,$02,$00
+D9F87			FCB	$24
+			FCB	$02
+			FCB	$70
+			FCB	$03
+			FCB	$40
+			FCB	$04
+			FCB	$42
+			FCB	$05
+			FCB	$1C
+			FCB	$07
+			FCB	$46
+			FCB	$08
+			FCB	$18
+			FCB	$09
+			FCB	$46
+			FCB	$0A
+			FCB	$48
+			FCB	$0B
+			FCB	$12
+			FCB	$15
+			FCB	$48
+			FCB	$16
+			FCB	$0E
+			FCB	$18
+			FCB	$48
+			FCB	$19
+			FCB	$4A
+			FCB	$1A
+			FCB	$4C
+			FCB	$1B
+			FCB	$4E
+			FCB	$1C
+			FCB	$50
+			FCB	$1D
+			FCB	$02
+			FCB	$00
+
 Z9FAB			RTS
 Z9FAC			LDAA	M7774
 			CMPA	#$15
@@ -4529,9 +4624,35 @@ ZA509			ABX
 			LDAA	,X
 			LDAB	M7774
 			JSR	JMPOFF1
-DA512			FCB	$1C,$29,$1E,$2A,$22,$2B,$26,$2C,$3B,$2E,$46,$2F,$30
-			FCB	$30,$0E,$31,$47,$32,$75,$33,$9D,$34,$06,$3C,$0E,$3D
-			FCB	$02,$00
+DA512			FCB	$1C
+			FCB	$29
+			FCB	$1E
+			FCB	$2A
+			FCB	$22
+			FCB	$2B
+			FCB	$26
+			FCB	$2C
+			FCB	$3B
+			FCB	$2E
+			FCB	$46
+			FCB	$2F
+			FCB	$30
+			FCB	$30
+			FCB	$0E
+			FCB	$31
+			FCB	$47
+			FCB	$32
+			FCB	$75
+			FCB	$33
+			FCB	$9D
+			FCB	$34
+			FCB	$06
+			FCB	$3C
+			FCB	$0E
+			FCB	$3D
+			FCB	$02
+			FCB	$00
+
 			PULX
 			PULB
 			PULA
@@ -5495,8 +5616,27 @@ ZB029			LDX	#LCD_BUFFER + 6
 			STX	M00A7
 			LDAB	M7774
 			JSR	JMPOFF1
-DB034			FCB	$45,$02,$12,$03,$15,$04,$18,$05,$3D,$07,$19,$08,$39
-			FCB	$09,$15,$0A,$18,$0B,$33,$00
+DB034			FCB	$45
+			FCB	$02
+			FCB	$12
+			FCB	$03
+			FCB	$15
+			FCB	$04
+			FCB	$18
+			FCB	$05
+			FCB	$3D
+			FCB	$07
+			FCB	$19
+			FCB	$08
+			FCB	$39
+			FCB	$09
+			FCB	$15
+			FCB	$0A
+			FCB	$18
+			FCB	$0B
+			FCB	$33
+			FCB	$00
+
 			LDX	#S_LFO_EDIT
 			BRA	ZB076
 			LDX	#S_SENS_EDIT
@@ -5547,7 +5687,19 @@ ZB0AC			LDX	#S_UT
 			BCC	ZB123
 			LDAB	M7774
 			JSR	JMPOFF1
-DB0C4			FCB	$5E,$15,$0A,$16,$5A,$18,$12,$19,$14,$1D,$54,$00
+DB0C4			FCB	$5E
+			FCB	$15
+			FCB	$0A
+			FCB	$16
+			FCB	$5A
+			FCB	$18
+			FCB	$12
+			FCB	$19
+			FCB	$14
+			FCB	$1D
+			FCB	$54
+			FCB	$00
+
 JB0D0			TST	>M00A5
 			BEQ	ZB0D9
 			LDAB	#$0A
@@ -5627,8 +5779,24 @@ F_B163			LDAB	#'P'
 			JSR	PUTSTRX
 			LDAB	M7774
 			JSR	JMPOFF1
-DB177			FCB	$42,$28,$10,$29,$14,$2A,$27,$2B,$14,$30,$38,$31,$14
-			FCB	$34,$04,$36,$32,$00
+DB177			FCB	$42
+			FCB	$28
+			FCB	$10
+			FCB	$29
+			FCB	$14
+			FCB	$2A
+			FCB	$27
+			FCB	$2B
+			FCB	$14
+			FCB	$30
+			FCB	$38
+			FCB	$31
+			FCB	$14
+			FCB	$34
+			FCB	$04
+			FCB	$36
+			FCB	$32
+			FCB	$00
 
 			CLRB
 			LDX	#LCD_BUFFER + 1
@@ -5718,7 +5886,14 @@ ZB232			JSR	SET_CGCHAR
 			BCS	ZB23F
 			CLRB
 ZB23F			JSR	JMPOFFB
-DB242			FCB	$08,$15,$27,$39,$53,$5F,$74,$7B
+DB242			FCB	$08
+			FCB	$15
+			FCB	$27
+			FCB	$39
+			FCB	$53
+			FCB	$5F
+			FCB	$74
+			FCB	$7B
 
 JB24A			LDX	#LCD_BUFFER + 22
 			STX	M00A7
