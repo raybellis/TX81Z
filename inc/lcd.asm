@@ -36,6 +36,7 @@ PUTSTRX
 ;-------
 ;
 ; Store character B in @(0xA7) and increment pointer
+; - no registers modified
 ;
 PUTCHAR			PSHX
 			LDX	M00A7
