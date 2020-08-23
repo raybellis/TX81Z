@@ -13,3 +13,5 @@ USER_PFM		EQU	$6E45	; user PFMs (24 x 76 bytes = 1824)
 LCD_COPY		EQU	$7D8B	; copy of current LCD output (32 bytes)
 
 LCD_BUFFER		EQU	$7DAB	; buffer for pending LCD output (32 bytes)
+
+STACK_TOP		EQU	$7FFF	; the top of the stack

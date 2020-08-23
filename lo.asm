@@ -152,11 +152,11 @@ M7FE0			EQU	$7FE0
 ;****************************************************
 
 BANK_HI			MACRO
-&0			OIM	#$08,PORT6
+&0			OIM	#%00001000,PORT6
 			ENDM
 
 BANK_SW			MACRO
-&0			OIM	#$08,PORT6
+&0			OIM	#%00001000,PORT6
 			ENDM
 
 ;****************************************************
@@ -165,17 +165,17 @@ BANK_SW			MACRO
 
 			ORG	$8000
 
-hdlr_RST		OIM	#$08,PORT6		; attempt to select HI bank
-			LDAA	#$F8
-			STAA	DDR6			; set P63 - P67 as outputs
-			OIM	#$08,PORT6		; attempt to select HI bank (again)
+hdlr_RST		BANK_HI				; attempt to select HI bank
+			LDAA	#%11111000		; set P63 - P67 as outputs
+			STAA	DDR6			; -
+			BANK_HI				; attempt to select HI bank (again)
 			NOP
 			NOP
 			RTS
 
 hdlr_SWI2		NOP
-			OIM	#$08,PORT6		; select HI bank
-			NOP				;
+			BANK_HI				; select HI bank
+			NOP
 			NOP
 			NOP
 			NOP
@@ -184,7 +184,7 @@ hdlr_SWI2		NOP
 			RTI
 
 hdlr_CMI		NOP
-			OIM	#$08,PORT6		; select HI bank
+			BANK_HI				; select HI bank
 			NOP
 			NOP
 			NOP
@@ -194,7 +194,7 @@ hdlr_CMI		NOP
 			RTI
 
 hdlr_DIV0		NOP
-			OIM	#$08,PORT6		; select HI bank
+			BANK_HI				; select HI bank
 			NOP
 			NOP
 			NOP
@@ -204,7 +204,7 @@ hdlr_DIV0		NOP
 			RTI
 
 hdlr_IRQ		NOP
-			OIM	#$08,PORT6		; select HI bank
+			BANK_HI				; select HI bank
 			NOP
 			NOP
 			NOP
@@ -1021,7 +1021,7 @@ LO_CALL_04		LDAA	#$01
 			ADDD	#STANDARD_PFM
 			XGDX
 			STX	M00A9
-			AIM	#$BF,TCSR3
+			AIM	#%10111111,TCSR3
 			LDX	#M6DD7
 			STX	M00A7
 			JSR	LO_CALL_05
@@ -1475,10 +1475,10 @@ C_8B4A
 			JSR	HI_CALL_0F
 			JSR	HI_CALL_18
 			JSR	HI_CALL_11
-			AIM	#$BF,TCSR3
+			AIM	#%10111111,TCSR3
 			JSR	HI_CALL_15
 			JSR	HI_CALL_16
-			OIM	#$40,TCSR3
+			OIM	#%01000000,TCSR3
 23			JMP	C_8CF5
 24			JSR	HI_CALL_1B
 			JSR	HI_CALL_04
@@ -1779,7 +1779,7 @@ F_8D3E			JSR	F_9B4A
 			LDAB	M7789
 			ANDB	#$0C
 			BEQ	25F
-			AIM	#$BF,TCSR3
+			AIM	#%10111111,TCSR3
 			JSR	F_90E5
 			LDX	#M69C1
 			STX	M00A9
@@ -1790,7 +1790,7 @@ F_8D3E			JSR	F_9B4A
 			LDAA	#$01
 			STAA	M7791
 			BRA	27F
-25			AIM	#$BF,TCSR3
+25			AIM	#%10111111,TCSR3
 			LDAB	M7773
 			JSR	HI_CALL_19
 			JSR	F_90D5
@@ -1810,7 +1810,7 @@ F_8D3E			JSR	F_9B4A
 			LDD	#$0101
 			STD	M776E
 			STD	M7770
-			OIM	#$40,TCSR3
+			OIM	#%01000000,TCSR3
 27			LDX	#LCD_BUFFER + 16
 			STX	M00A7
 			LDX	#S_LOAD_COMPLETED
@@ -2745,7 +2745,7 @@ LO_CALL_02		LDAA	#$00
 			BNE	2F
 			LDAA	#$04
 			STAA	M7772
-			JSR	F_98BA
+			JSR	DELAY_30_x_4500
 			LDAA	#$04
 			STAA	M00D8
 			CLR	>M00D9
@@ -2765,9 +2765,9 @@ LO_CALL_02		LDAA	#$00
 			CLR	M776D
 			CLR	M7D6B
 			CLR	M7F99
-			AIM	#$BF,TCSR3
-			AIM	#$F7,TCSR1
-			AIM	#$FE,RP5CR
+			AIM	#%10111111,TCSR3
+			AIM	#%11110111,TCSR1
+			AIM	#%11111110,RP5CR
 			LDAA	#$04
 			STAA	M0058
 			LDAA	#$45
@@ -2776,9 +2776,9 @@ LO_CALL_02		LDAA	#$00
 			STAA	M00F1
 			LDAB	#$00
 			JSR	HI_CALL_1D
-			OIM	#$01,RP5CR
-			OIM	#$08,TCSR1
-			OIM	#$40,TCSR3
+			OIM	#%00000001,RP5CR
+			OIM	#%00001000,TCSR1
+			OIM	#%01000000,TCSR3
 			CLR	M7933
 			CLRA
 			LDAB	#$30
@@ -2795,16 +2795,16 @@ LO_CALL_02		LDAA	#$00
 			LDAA	#$80
 			LDX	#S_HP_R
 			BSR	F_9604
-			AIM	#$BF,TCSR3
-			AIM	#$F7,TCSR1
+			AIM	#%10111111,TCSR3
+			AIM	#%11110111,TCSR1
 			LDAA	#$04
 			STAA	M0058
 			LDAA	#$45
 			STAA	M0051
 			LDAB	#$00
 			JSR	HI_CALL_1C
-			OIM	#$08,TCSR1
-			OIM	#$40,TCSR3
+			OIM	#%00001000,TCSR1
+			OIM	#%01000000,TCSR3
 			LDAA	#$04
 			STAA	M7772
 			BRA	LO_CALL_02_PT2
@@ -2822,7 +2822,7 @@ F_9604			PSHA
 1001			JSR	HI_CALL_17
 			CMPB	#$01
 			BNE	1001B
-			JSR	F_98BA
+			JSR	DELAY_30_x_4500
 			RTS
 
 ;-------
@@ -2865,7 +2865,7 @@ LO_CALL_02_PT2		JSR	F_9B4E
 			STAA	TCSR2
 			LDAA	#$02
 			STAA	TCSR3
-			AIM	#$FE,RP5CR
+			AIM	#%11111110,RP5CR
 			JSR	F_96C4
 			JSR	F_9700
 			JSR	F_97E2
@@ -2888,7 +2888,7 @@ LO_CALL_02_PT2		JSR	F_9B4E
 			BRA	10F
 7			CMPA	#$03
 			BNE	8F
-			JSR	F_98C6
+			JSR	TEST_LEDS
 			BRA	10F
 8			CMPA	#$04
 			BNE	9F
@@ -3049,7 +3049,7 @@ F_978D			LDAB	#$0A
 			INCB
 			BRA	2B
 3			LDAB	#$01
-			JSR	F_98BC
+			JSR	DELAY_B_x_4500
 			LDX	#S_TX81Z
 			STX	M00A9
 			LDX	#M7E0C
@@ -3192,30 +3192,31 @@ F_9893			LDAA	M00D9
 			JSR	LCD_UPDATE
 			LDAA	M00D9
 			CMPA	#$05
-			BCC	6F
+			BCC	1000F
 			INCA
 			STAA	M00D9
-			BRA	F_98BA
+			BRA	DELAY_30_x_4500
 2			LDAA	#$FF
 			CLRB
 			BRA	1B
 
 ;-------	fallthrough
 
-F_98BA			LDAB	#30
+DELAY_30_x_4500		LDAB	#30
 
 ;-------	fallthrough
 
-F_98BC			LDX	#4500
-5			DEX
-			BNE	5B
+DELAY_B_x_4500
+0			LDX	#4500
+1			DEX
+			BNE	1B
 			DECB
-			BNE	F_98BC
-6			RTS
+			BNE	0B
+1000			RTS
 
 ;-------
 
-F_98C6			TST	>M00D9
+TEST_LEDS		TST	>M00D9
 			BNE	3F
 			LDAA	#$01
 			STAA	M776C
@@ -3224,21 +3225,21 @@ F_98C6			TST	>M00D9
 			LDX	#S_CHECK_LED
 			JSR	LCD_OUT
 			CLRB
-1			LDAA	#$80
-2			ANDA	#$F7
+1			LDAA	#%10000000
+2			ANDA	#%11110111
 			STAA	PORT6
 			LSRA
 			PSHB
 			LDAB	#30
-			JSR	F_98BC
+			JSR	DELAY_B_x_4500
 			PULB
 			INCB
-			CMPB	#$04
+			CMPB	#4
 			BEQ	1B
-			CMPB	#$08
+			CMPB	#8
 			BNE	2B
-			LDAA	#$F0
-			ANDA	#$F7
+			LDAA	#%11110000
+			ANDA	#%11110111
 			STAA	PORT6
 3			RTS
 
