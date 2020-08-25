@@ -11,6 +11,8 @@
 FILCHR			TEXT	$FF
 BANK			TEXT	LO
 
+			INCLUDE	"inc/macros.asm"
+
 ;****************************************************
 ;* Used Labels					    *
 ;****************************************************
@@ -146,18 +148,6 @@ M7E0C			EQU	$7E0C
 M7EE8			EQU	$7EE8
 M7F99			EQU	$7F99
 M7FE0			EQU	$7FE0
-
-;****************************************************
-;* ROM Bank manipulation macros			    *
-;****************************************************
-
-BANK_HI			MACRO
-&0			OIM	#%00001000,PORT6
-			ENDM
-
-BANK_SW			MACRO
-&0			OIM	#%00001000,PORT6
-			ENDM
 
 ;****************************************************
 ;* Program Code / Data Areas			    *

@@ -12,12 +12,14 @@
 FILCHR                  TEXT    $FF
 BANK			TEXT	HI
 
+			INCLUDE "inc/macros.asm"
+
 ;****************************************************
 ;* Used Labels					    *
 ;****************************************************
 
 			INCLUDE	"inc/hw.asm"
-			INCLUDE	"INC/ram.asm"
+			INCLUDE	"inc/ram.asm"
 
 ; CPU RAM
 
@@ -314,18 +316,6 @@ M7F89			EQU	$7F89
 M7F99			EQU	$7F99
 M7F9A			EQU	$7F9A
 M7FB2			EQU	$7FB2
-
-;****************************************************
-;* ROM Bank manipulation macros			    *
-;****************************************************
-
-BANK_HI			MACRO
-&0			OIM	#%00001000,PORT6
-			ENDM
-
-BANK_SW			MACRO
-&0			AIM	#%11110111,PORT6
-			ENDM
 
 ;****************************************************
 ;* Program Code / Data Areas			    *
