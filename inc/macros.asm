@@ -10,7 +10,7 @@ BANK_HI                 MACRO
                         ENDM
 
 ;
-; Bank swap macro is conditional, depending on which bank we're in
+; Bank swap depends on which bank we're in
 ;
 			IFC	&BANK,HI
 BANK_SW                 MACRO
@@ -22,4 +22,59 @@ BANK_SW                 MACRO
 			ENDM
 			ENDIF
 
+;
+; A 2 byte, 3 cycle NOP
+;
+SPIN3			MACRO
+&0			BRN	*
+			ENDM
 
+;
+; A forward branching 2 byte, 3 cycle NOP
+;
+SPIN3F			MACRO
+&0			BRN	* + 2
+			ENDM
+
+;
+; A 3 byte, 4 cycle NOP
+;
+SPIN4			MACRO
+&0			BRN	*
+			NOP
+			ENDM
+;
+; A forward branching 3 byte, 4 cycle NOP
+;
+SPIN4F			MACRO
+&0			BRN	* + 2
+			NOP
+			ENDM
+;
+;
+; Wait for OPZ busy flag to clear
+;
+OPZ_POLL		MACRO
+&0
+5000			TST	OPZ_DATA
+			BMI	5000B
+			ENDM
+
+;
+; Write A to OPZ register B
+;
+OPZ_OUT_A		MACRO
+&0			STAB	OPZ_ADDRESS
+			BRN	*
+			NOP
+			STAA	OPZ_DATA
+			ENDM
+;
+; Write B to OPZ register A
+;
+OPZ_OUT_B		MACRO
+&0			STAA	OPZ_ADDRESS
+			BRN	*
+			NOP
+			STAB	OPZ_DATA
+			ENDM
