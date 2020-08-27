@@ -14,11 +14,11 @@ BANK_HI                 MACRO
 ;
 			IFC	&BANK,HI
 BANK_SW                 MACRO
-&0                      AIM     #%11110111,PORT6
+&0                      BANK_LO
 			ENDM
 			ELSE
 BANK_SW                 MACRO
-&0                      OIM     #%00001000,PORT6
+&0                      BANK_HI
 			ENDM
 			ENDIF
 
@@ -30,6 +30,14 @@ SPIN3			MACRO
 			ENDM
 
 ;
+; A 3 byte, 4 cycle NOP
+;
+SPIN4			MACRO
+&0			SPIN3
+			NOP
+			ENDM
+
+;
 ; A forward branching 2 byte, 3 cycle NOP
 ;
 SPIN3F			MACRO
@@ -37,17 +45,10 @@ SPIN3F			MACRO
 			ENDM
 
 ;
-; A 3 byte, 4 cycle NOP
-;
-SPIN4			MACRO
-&0			BRN	*
-			NOP
-			ENDM
-;
 ; A forward branching 3 byte, 4 cycle NOP
 ;
 SPIN4F			MACRO
-&0			BRN	* + 2
+&0			SPIN3F
 			NOP
 			ENDM
 ;
@@ -65,8 +66,7 @@ OPZ_POLL		MACRO
 ;
 OPZ_OUT_A		MACRO
 &0			STAB	OPZ_ADDRESS
-			BRN	*
-			NOP
+			SPIN4
 			STAA	OPZ_DATA
 			ENDM
 ;
@@ -74,7 +74,6 @@ OPZ_OUT_A		MACRO
 ;
 OPZ_OUT_B		MACRO
 &0			STAA	OPZ_ADDRESS
-			BRN	*
-			NOP
+			SPIN4
 			STAB	OPZ_DATA
 			ENDM
