@@ -12,15 +12,13 @@ BANK_HI                 MACRO
 ;
 ; Bank swap depends on which bank we're in
 ;
+BANK_SW                 MACRO
 			IFC	&BANK,HI
-BANK_SW                 MACRO
 &0                      BANK_LO
-			ENDM
 			ELSE
-BANK_SW                 MACRO
 &0                      BANK_HI
-			ENDM
 			ENDIF
+			ENDM
 
 ;
 ; A 2 byte, 3 cycle NOP
