@@ -2,8 +2,8 @@
 ;* A09 Assembler options			    *
 ;****************************************************
 
-	IF	&VERSION < $012A
-		ERR	"Incompatible assembler version"
+	IF	&VERSION < $012B
+		ERR	"Incompatible assembler version - 1.43 or higher required"
 	ENDIF
 
 			NAME	HI
