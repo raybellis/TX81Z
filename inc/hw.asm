@@ -28,3 +28,9 @@ LCD_CMD 		EQU	$4000
 LCD_DATA		EQU	$4001
 
 RAM			EQU	$6000
+
+;
+; TCSR3 fields
+;
+ECMI			EQU	%01000000	; Enable Counter Match Interrupt
+N_ECMI			EQU	%10111111
