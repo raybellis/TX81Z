@@ -94,7 +94,6 @@ M00AF			EQU	$00AF
 M00B0			EQU	$00B0
 M00B2			EQU	$00B2
 M00B3			EQU	$00B3
-M00BD			EQU	$00BD
 M00BE			EQU	$00BE
 M00BF			EQU	$00BF
 M00C0			EQU	$00C0
@@ -2470,38 +2469,38 @@ HI_CALL_01		PSHA
 			CLRA
 			CLRB
 			LDX	#M7CE3
-Z90E3			STD	,X
+1			STD	,X
 			INX
 			INX
 			CPX	#M7CF3
-			BNE	Z90E3
+			BNE	1B
 			LDD	#$1700
-Z90EF			STD	,X
+2			STD	,X
 			INX
 			INX
 			CPX	#M7D13
-			BNE	Z90EF
+			BNE	2B
 			LDD	#$1700
 			LDX	#M7F29
-Z90FE			STD	,X
+3			STD	,X
 			INX
 			INX
 			CPX	#M7F39
-			BNE	Z90FE
+			BNE	3B
 			CLRA
 			CLRB
 			LDX	#M7F39
-Z910C			STD	,X
+4			STD	,X
 			INX
 			INX
 			CPX	#M7F89
-			BNE	Z910C
+			BNE	4B
 			LDX	#M00E7
 			LDAA	#$FF
-Z911A			STAA	,X
+5			STAA	,X
 			INX
 			CPX	#M00EF
-			BNE	Z911A
+			BNE	5B
 			JSR	F_993C
 			JSR	F_995A
 			PULX
@@ -3470,7 +3469,7 @@ Z99B2			PULA
 			BRA	Z99A0
 Z99C9			BSR	F_99DE
 			BRA	Z99B2
-Z99CD			LDAB	M00BD
+Z99CD			LDAB	MIDI_RX_CMD
 			CMPB	#$F0
 			BCC	Z99DD
 			ANDB	#$0F
@@ -3480,15 +3479,17 @@ Z99CD			LDAB	M00BD
 			STAB	M00DA
 Z99DD			RTS
 
+;-------
+
 F_99DE			CLRB
-Z99DF			LDX	#M7F89
+1			LDX	#M7F89
 			ABX
 			LDAA	M007B
 			ORAA	,X
 			STAA	,X
 			INCB
 			CMPB	#$10
-			BNE	Z99DF
+			BNE	1B
 			RTS
 
 F_99EF			LDD	#M6A67
@@ -9445,18 +9446,18 @@ POLL			TST	POLL_ENABLE		; polling gets disabled sometimes
 6			CMPA	#$F8			; >= $F8
 			BCC	_POLL_EXIT		; yes?  we're done
 
-7			STAA	M00BD			; store MIDI command
+7			STAA	MIDI_RX_CMD			; store MIDI command
 			CLR	>M00C4
 			CMPA	#SYX			; is it a SysEx start
 			BEQ	9F			; yes?  branch
-			BCC	8F
-			ANDA	#$0F
-			TAB
-			LDX	#M7F89
-			ABX
-			LDAA	,X
+			BCC	8F			; > $F0 ? go around...
+			ANDA	#$0F			; mask out MIDI channel
+			TAB				; store in B
+			LDX	#M7F89			; offset into table
+			ABX				; -
+			LDAA	,X			; get value from table
 			STAA	M00DA
-8			BRA	POLL
+8			BRA	POLL			; go around again
 
 							; start of SysEx handling
 9			AIM	#~ECMI,TCSR3		; disable timer 2 interrupts
@@ -9464,10 +9465,10 @@ POLL			TST	POLL_ENABLE		; polling gets disabled sometimes
 			STAB	M00B3			; sysex flag?
 			BRA	POLL			; go around
 
-10			LDAA	#$F7
+10			LDAA	#EOX
 			BRA	7B
 
-11			LDAB	M00BD
+11			LDAB	MIDI_RX_CMD
 			CMPB	#SYX
 			BCS	12F
 			BHI	POLL
@@ -9482,76 +9483,82 @@ POLL			TST	POLL_ENABLE		; polling gets disabled sometimes
 			ANDB	#$07
 
 			JSR	JMPOFF1
-			FCB	JCBE9 - *
+			FCB	C_CBE9 - *		; note off ?
 			FCB	$01
-			FCB	JCC40 - *
+			FCB	C_CC40 - *		; note on ?
 			FCB	$02
-			FCB	_POLL_EXIT - *
+			FCB	_POLL_EXIT - *		; poly aftertouch
 			FCB	$03
-			FCB	JCBDD - *
+			FCB	1F - *			; control change
 			FCB	$04
-			FCB	JCBE0 - *
+			FCB	2F - *			; program change
 			FCB	$05
-			FCB	JCBE3 - *
+			FCB	3F - *			; channel aftertouch
 			FCB	$06
-			FCB	JCBE6 - *
+			FCB	4F - *			; pitch bend
 			FCB	$07
-			FCB	_POLL_EXIT - *
+			FCB	_POLL_EXIT - *		; sysex
 			FCB	$00
 
 _POLL_EXIT		RTS
 
-JCBDD			JMP	ZCDE3
-JCBE0			JMP	ZCD33
-JCBE3			JMP	ZCDCF
-JCBE6			JMP	ZCCDC
-JCBE9			TST	>M00C4
-			BNE	ZCBF6
+1			JMP	C_CDE3
+2			JMP	ZCD33
+3			JMP	ZCDCF
+4			JMP	ZCCDC
+
+;-------
+
+C_CBE9			TST	>M00C4
+			BNE	1F
 			INC	>M00C4
 			STAA	M00BE
 			JMP	POLL
-ZCBF6			CLR	>M00C4
-ZCBF9			LDAB	M756B
-			BEQ	ZCC07
+1			CLR	>M00C4
+2			LDAB	M756B
+			BEQ	3F
 			EORB	M00BE
 			ANDB	#$01
-			BEQ	ZCC07
+			BEQ	3F
 			JMP	POLL
-ZCC07			AIM	#~ECMI,TCSR3
+3			AIM	#~ECMI,TCSR3
 			AIM	#%11110111,TCSR1
 			LDAB	M00BE
 			STAB	M0051
 			LDAA	M00DA
 			CLRB
-ZCC14			LSRA
-			BCS	ZCC1B
-			BEQ	ZCC37
-			BRA	ZCC34
-ZCC1B			PSHA
+4			LSRA
+			BCS	5F
+			BEQ	8F
+			BRA	7F
+5			PSHA
 			PSHB
 			JSR	F_EA9B
 			JSR	F_ECDD
 			LDAA	#$04
 			STAA	M0058
 			JSR	F_EDEA
-			BVS	ZCC2F
+			BVS	6F
 			JSR	HI_CALL_1C
-ZCC2F			JSR	F_EE1F
+6			JSR	F_EE1F
 			PULB
 			PULA
-ZCC34			INCB
-			BRA	ZCC14
-ZCC37			OIM	#%00001000,TCSR1
+7			INCB
+			BRA	4B
+8			OIM	#%00001000,TCSR1
 			OIM	#ECMI,TCSR3
 			JMP	POLL
-JCC40			TST	>M00C4
+
+;--------
+
+C_CC40			TST	>M00C4
 			BNE	ZCC4D
 			INC	>M00C4
 			STAA	M00BE
 			JMP	POLL
 ZCC4D			CLR	>M00C4
 			TSTA
-			BEQ	ZCBF9
+			BEQ	2B
 			LDAB	M756B
 			BEQ	ZCC61
 			EORB	M00BE
@@ -9634,7 +9641,7 @@ ZCCE7			CLR	>M00C4
 			TST	>M00DA
 			BNE	ZCD1A
 			BRA	ZCD2C
-ZCD0F			LDAB	M00BD
+ZCD0F			LDAB	MIDI_RX_CMD
 			ANDB	#$0F
 			ADDB	#$02
 			CMPB	M756A
@@ -9663,7 +9670,7 @@ ZCD33			TST	M7568
 ZCD43			LDAB	M7568
 			CMPB	#$02
 			BEQ	ZCD9A
-ZCD4A			LDAB	M00BD
+ZCD4A			LDAB	MIDI_RX_CMD
 			ANDB	#$0F
 			CMPB	M7566
 			BEQ	ZCD5C
@@ -9743,11 +9750,13 @@ ZCDDB			ASLA
 			LDX	#M7D5B
 			JSR	F_D012
 			RTS
-ZCDE3			TST	>M00C4
+
+C_CDE3			TST	>M00C4
 			BNE	ZCDF0
 			INC	>M00C4
 			STAA	M00BE
 			JMP	POLL
+
 ZCDF0			CLR	>M00C4
 			LDAB	M00BE
 			CMPB	#$40
@@ -9836,7 +9845,7 @@ JCE6A			LDAB	M7772
 			LDAB	M7566
 			CMPB	#$10
 			BEQ	ZCE81
-			LDAB	M00BD
+			LDAB	MIDI_RX_CMD
 			ANDB	#$0F
 			CMPB	M7566
 			BNE	ZCE9D
@@ -9907,7 +9916,7 @@ JCEEB			AIM	#~ECMI,TCSR3
 			LDAB	M7772
 			ANDB	#$04
 			BEQ	ZCF0D
-			LDAB	M00BD
+			LDAB	MIDI_RX_CMD
 			ANDB	#$0F
 			ADDB	#$02
 			CMPB	M7569
@@ -9957,7 +9966,7 @@ ZCF52			LDAB	M7772
 			LDAB	M7566
 			CMPB	#$10
 			BEQ	ZCF69
-			LDAB	M00BD
+			LDAB	MIDI_RX_CMD
 			ANDB	#$0F
 			CMPB	M7566
 			BNE	ZCF83
@@ -9978,7 +9987,7 @@ ZCF84			LDAB	M7772
 			LDAB	M7566
 			CMPB	#$10
 			BEQ	ZCF9B
-			LDAB	M00BD
+			LDAB	MIDI_RX_CMD
 			ANDB	#$0F
 			CMPB	M7566
 			BNE	ZCF83
@@ -9993,7 +10002,7 @@ ZCFA5			AIM	#~ECMI,TCSR3
 			LDAB	M7772
 			BITB	#$04
 			BEQ	ZD00B
-			LDAB	M00BD
+			LDAB	MIDI_RX_CMD
 			ANDB	#$0F
 			ADDB	#$02
 			CMPB	M7569
@@ -10051,7 +10060,7 @@ F_D012			AIM	#~ECMI,TCSR3
 			TST	>M00DA
 			BNE	ZD039
 			BRA	ZD04B
-ZD02E			LDAB	M00BD
+ZD02E			LDAB	MIDI_RX_CMD
 			ANDB	#$0F
 			ADDB	#$02
 			CMPB	M7569
@@ -10132,6 +10141,7 @@ F_D099			LDAA	TCSR1
 ZD0C4			PULA
 			STAA	TCSR1
 			RTS
+
 ZD0C8			LDAB	M00C4
 			CMPB	#$FA
 			BEQ	ZD0FE
@@ -10163,8 +10173,8 @@ MD0DD			FDB	MD10B_via_cvec_d0dd
 ZD0FB			JMP	ZD304
 ZD0FE			JMP	ZD320
 ZD101			JMP	ZD104
-ZD104			LDAA	#$F7
-			STAA	M00BD
+ZD104			LDAA	#EOX
+			STAA	MIDI_RX_CMD
 			JMP	POLL
 MD10B_via_cvec_d0dd	STAA	M00BE
 			CMPA	#$43
@@ -11958,7 +11968,7 @@ _SIO_TX			LDX	PTR_TX			; check if there's anything to send
 			BEQ	2F
 			CMPA	#SENSE			; Active Sense?
 			BEQ	2F
-2			STAA	MIDI_TX_RUNSTAT		; TX running status - not used
+2			STAA	MIDI_TX_CMD		; TX running status - not used
 3			STAA	TDR			; transmit the data
 			INX				; calc next position
 			CPX	#MIDI_RXBUF		; check for buffer end
@@ -11991,8 +12001,8 @@ MIDI_INIT		LDAA	#%00001100		; CC = %011, SS = %000
 			LDX	#MIDI_TXBUF		; clear MIDI TX buffer
 			STX	PTR_TX_TAIL		; -
 			STX	PTR_TX			; -
-			LDAA	#$F7
-			STAA	M00BD
+			LDAA	#EOX			; pretend last command was EOX
+			STAA	MIDI_RX_CMD		;
 			LDX	#MIDI_RXBUF		; clear MIDI RX buffer
 			STX	PTR_RX_TAIL		; -
 			STX	PTR_RX			; -
@@ -12000,8 +12010,8 @@ MIDI_INIT		LDAA	#%00001100		; CC = %011, SS = %000
 
 ;-------
 
-MIDI_INIT_RX		LDAA	#$F7
-			STAA	M00BD
+MIDI_INIT_RX		LDAA	#EOX
+			STAA	MIDI_RX_CMD
 			LDX	#MIDI_RXBUF
 			STX	PTR_RX_TAIL
 			STX	PTR_RX
@@ -12719,7 +12729,7 @@ MIDI_SYSEX_END		LDAA	MIDI_CRC		; get running CRC
 			NEGA				; negate it
 			ANDA	#$7F			; clear top bit
 			JSR	MIDI_SEND		; send that
-			LDAA	#$F7			; send EOX
+			LDAA	#EOX			; send EOX
 			JSR	MIDI_SEND		; -
 			RTS
 

@@ -9,7 +9,8 @@ PTR_TX			EQU	$00B4	; pointer for next MIDI TX
 PTR_RX			EQU	$00B6	; pointer for pending MIXI RX data
 PTR_TX_TAIL		EQU	$00B8	; pointer for last MIDI TX sent
 PTR_RX_TAIL		EQU	$00BA	; pointer for next MIDI RX
-MIDI_TX_RUNSTAT		EQU	$00BC	; last MIDI command sent
+MIDI_TX_CMD		EQU	$00BC	; last MIDI command sent
+MIDI_RX_CMD		EQU	$00BD	; last MIDI command received
 MIDI_CRC		EQU	$00C5	; rolling MIDI SysEx CRC
 MIDI_RX_ERR		EQU	$00CA	; non-zero if 
 
@@ -31,5 +32,7 @@ MIDI_TXBUF_END		EQU	$7E0B
 
 MIDI_RXBUF		EQU	$7E0C	; .. $7EE7 (220 bytes)
 MIDI_RXBUF_END		EQU	$7EE7	;
+
+MIDI_CHANS		EQU	$7F89	; (16 bytes)
 
 STACK_TOP		EQU	$7FFF	; the top of the stack
