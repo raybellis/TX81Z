@@ -6,20 +6,20 @@
 		ERR	"Incompatible assembler version - 1.44 or higher required"
 	ENDIF
 
-			NAME	HI
                         OPT     H03,NCL,NOW,EXP
 
 FILCHR                  TEXT    $FF
 BANK			TEXT	HI
 
+			INCLUDE	"inc/hw.asm"
+			INCLUDE	"inc/ram.asm"
+			INCLUDE "inc/constants.asm"
 			INCLUDE "inc/macros.asm"
 
 ;****************************************************
 ;* Used Labels					    *
 ;****************************************************
 
-			INCLUDE	"inc/hw.asm"
-			INCLUDE	"inc/ram.asm"
 
 ; CPU RAM
 
@@ -32,14 +32,12 @@ M0051			EQU	$0051
 M0052			EQU	$0052
 M0053			EQU	$0053
 M0054			EQU	$0054
-M_LOOP_COUNT		EQU	$0055
 M0056			EQU	$0056
 M0057			EQU	$0057
 M0058			EQU	$0058
 M0059			EQU	$0059
 M005A			EQU	$005A
 M005B			EQU	$005B
-M0060			EQU	$0060
 M006B			EQU	$006B
 M006C			EQU	$006C
 M006D			EQU	$006D
@@ -194,7 +192,6 @@ M7767			EQU	$7767
 M7769			EQU	$7769
 M776A			EQU	$776A
 M776B			EQU	$776B
-M776C			EQU	$776C
 M776D			EQU	$776D
 M776E			EQU	$776E
 M776F			EQU	$776F
@@ -467,10 +464,10 @@ XROM_VEC2		FDB	hdlr_RST
 ; main execution loop
 ;
 LOOP			OIM	#ECMI,TCSR3
-			LDAA	M_LOOP_COUNT	; increment loop count modulo 16
+			LDAA	LOOP_COUNT	; increment loop count modulo 16
 			INCA			; -
 			ANDA	#$0F		; -
-			STAA	M_LOOP_COUNT	; -
+			STAA	LOOP_COUNT	; -
 			BNE	1F		; -
 			JSR	F_89F9		; called every 16 iterations
 1			JSR	POLL
@@ -8730,7 +8727,7 @@ ZC588			CLRA
 ZC589			STAA	M7772
 			CLR	M777D
 			LDAA	#$01
-			STAA	M776C
+			STAA	POLL_ENABLE
 			CLR	>M00EF
 			JSR	F_C7C2
 			LDAA	#$B1
@@ -9408,18 +9405,21 @@ ZCB3C			JMP	ZC9F1
 
 ;-------
 
-POLL			TST	M776C
-			BEQ	3F
-			TST	>MIDI_RX_ERR
-			BEQ	1F
-			JSR	SHOW_RX_ERR
-			BRA	3F
-1			TST	>M00CB
+POLL			TST	POLL_ENABLE		; polling gets disabled sometimes
+			BEQ	3F			; bug out if so
+
+			TST	>MIDI_RX_ERR		; check for MIDI RX errors
+			BEQ	1F			; none?  branch
+			JSR	SHOW_RX_ERR		; display the error
+			BRA	3F			; bug out
+
+1			TST	>M00CB			; ??
 			BEQ	2F
 			JSR	F_E6BD
-2			LDX	PTR_RX_TAIL
-			CPX	PTR_RX
-			BNE	4F
+
+2			LDX	PTR_RX			; check for data in the RX buffer
+			CPX	PTR_RX_TAIL
+			BNE	4F			; branch to process it
 			LDAA	M00B3
 			CMPA	#$01
 			BCS	_POLL_EXIT
@@ -9429,25 +9429,26 @@ POLL			TST	M776C
 
 4			LDD	#$0000
 			STD	M00B0
-			LDAA	,X
-			CPX	#MIDI_RXBUF_END
+			LDAA	,X			; get first byte from RX buffer
+			CPX	#MIDI_RXBUF_END		; compare pointer to buffer end
 			BNE	5F
-			LDX	#MIDI_RXBUF - 1
-5			INX
-			STX	PTR_RX_TAIL
-			TSTA
-			BPL	11F
-			CMPA	#$FE
-			BNE	6F
+			LDX	#MIDI_RXBUF - 1		; reset to (one before) buffer start
+5			INX				; inc RX buffer pointer
+			STX	PTR_RX			; and save it
+			TSTA				; re-examine A
+			BPL	11F			; if it's data, branch
+			CMPA	#$FE			; is it Active Sense?
+			BNE	6F			; no?  branch...
 			LDAB	#$01
 			STAB	M00AF
 			CLR	>M00B2
-6			CMPA	#$F8
-			BCC	_POLL_EXIT
-7			STAA	M00BD
+6			CMPA	#$F8			; >= $F8
+			BCC	_POLL_EXIT		; yes?  we're done
+
+7			STAA	M00BD			; store MIDI command
 			CLR	>M00C4
-			CMPA	#$F0
-			BEQ	9F
+			CMPA	#SYX			; is it a SysEx start
+			BEQ	9F			; yes?  branch
 			BCC	8F
 			ANDA	#$0F
 			TAB
@@ -9456,19 +9457,24 @@ POLL			TST	M776C
 			LDAA	,X
 			STAA	M00DA
 8			BRA	POLL
+
+							; start of SysEx handling
 9			AIM	#~ECMI,TCSR3		; disable timer 2 interrupts
 			LDAB	#$01
-			STAB	M00B3
-			BRA	POLL
+			STAB	M00B3			; sysex flag?
+			BRA	POLL			; go around
+
 10			LDAA	#$F7
 			BRA	7B
+
 11			LDAB	M00BD
-			CMPB	#$F0
+			CMPB	#SYX
 			BCS	12F
 			BHI	POLL
 			TST	M756C
 			BEQ	10B
 			JMP	ZD0C8
+
 12			LSRB
 			LSRB
 			LSRB
@@ -11927,15 +11933,15 @@ SIO			LDAA	XROM			; remember XROM state
 			BRA	_SIO_EXIT
 
 _SIO_RX			LDAA	RDR			; read received data
-			LDX	PTR_RX			; store in ringer buffer
+			LDX	PTR_RX_TAIL		; store at end of ring buffer
 			STAA	,X			; -
 			INX				; calc next position
 			CPX	#MIDI_RXBUF_END + 1	; check for buffer end
 			BNE	1F
 			LDX	#MIDI_RXBUF		; go to buffer start
-1			CPX	PTR_RX_TAIL		; check for RX buffer overflow
+1			CPX	PTR_RX			; check for RX buffer overflow
 			BEQ	_SIO_RX_FULL
-			STX	PTR_RX			; save the pointer
+			STX	PTR_RX_TAIL		; save the pointer
 			BRA	_SIO_EXIT		; and we're done
 
 _SIO_RX_FULL		LDAA	#$01			; handle input buffer overflow
@@ -11948,9 +11954,9 @@ _SIO_TX			LDX	PTR_TX			; check if there's anything to send
 			BEQ	_SIO_TX_DONE		; nope?  done...
 			LDAA	,X			; get the next TX byte
 			BPL	3F			; branch if it's MIDI data
-			CMPA	#$F0			; SysEx?
+			CMPA	#SYX			; SysEx?
 			BEQ	2F
-			CMPA	#$FE			; Active Sense?
+			CMPA	#SENSE			; Active Sense?
 			BEQ	2F
 2			STAA	MIDI_TX_RUNSTAT		; TX running status - not used
 3			STAA	TDR			; transmit the data
@@ -11988,8 +11994,8 @@ MIDI_INIT		LDAA	#%00001100		; CC = %011, SS = %000
 			LDAA	#$F7
 			STAA	M00BD
 			LDX	#MIDI_RXBUF		; clear MIDI RX buffer
-			STX	PTR_RX			; -
 			STX	PTR_RX_TAIL		; -
+			STX	PTR_RX			; -
 			RTS
 
 ;-------
@@ -11997,8 +12003,8 @@ MIDI_INIT		LDAA	#%00001100		; CC = %011, SS = %000
 MIDI_INIT_RX		LDAA	#$F7
 			STAA	M00BD
 			LDX	#MIDI_RXBUF
-			STX	PTR_RX
 			STX	PTR_RX_TAIL
+			STX	PTR_RX
 			RTS
 
 ;-------
@@ -12405,9 +12411,9 @@ ZE38A			ASR	$02,X
 ZE39A			TST	>M00CC
 			BEQ	ZE3A0
 			RTS
-ZE3A0			LDAA	#$F0
+ZE3A0			LDAA	#SYX
 			JSR	MIDI_SEND
-			LDAA	#$43
+			LDAA	#MFR_YAMAHA
 			JSR	MIDI_SEND
 			LDAA	M7567
 			JSR	MIDI_SEND
@@ -12451,9 +12457,9 @@ ZE3F7			JSR	HI_CALL_00
 			STX	M00A7
 			LDX	#S_TRANSMITTING
 			JSR	LCD_WRITE
-			LDAA	#$F0
+			LDAA	#SYX
 			JSR	MIDI_SEND
-			LDAA	#$43
+			LDAA	#MFR_YAMAHA
 			JSR	MIDI_SEND
 			LDAA	M7567
 			JSR	MIDI_SEND
@@ -12497,9 +12503,9 @@ ZE462			JSR	HI_CALL_00
 			STX	M00A7
 			LDX	#S_TRANSMITTING
 			JSR	LCD_WRITE
-			LDAA	#$F0
+			LDAA	#SYX
 			JSR	MIDI_SEND
-			LDAA	#$43
+			LDAA	#MFR_YAMAHA
 			JSR	MIDI_SEND
 			LDAA	M7567
 			JSR	MIDI_SEND
@@ -12543,9 +12549,9 @@ ZE4CD			JSR	HI_CALL_00
 			STX	M00A7
 			LDX	#S_TRANSMITTING
 			JSR	LCD_WRITE
-			LDAA	#$F0
+			LDAA	#SYX
 			JSR	MIDI_SEND
-			LDAA	#$43
+			LDAA	#MFR_YAMAHA
 			JSR	MIDI_SEND
 			LDAA	M7567
 			JSR	MIDI_SEND
@@ -12603,9 +12609,9 @@ ZE54F			JSR	HI_CALL_00
 			STX	M00A7
 			LDX	#S_TRANSMITTING
 			JSR	LCD_WRITE
-			LDAA	#$F0
+			LDAA	#SYX
 			JSR	MIDI_SEND
-			LDAA	#$43
+			LDAA	#MFR_YAMAHA
 			JSR	MIDI_SEND
 			LDAA	M7567
 			JSR	MIDI_SEND
@@ -12661,9 +12667,9 @@ ZE5CA			JSR	HI_CALL_00
 			STX	M00A7
 			LDX	#S_TRANSMITTING
 			JSR	LCD_WRITE
-			LDAA	#$F0
+			LDAA	#SYX
 			JSR	MIDI_SEND
-			LDAA	#$43
+			LDAA	#MFR_YAMAHA
 			JSR	MIDI_SEND
 			LDAA	M7567
 			JSR	MIDI_SEND
@@ -13059,21 +13065,22 @@ ZE8CB			PULX
 ZE8CF			RTS
 
 F_E8D0			TST	>M00AF
-			BEQ	ZE8F3
+			BEQ	1F
 			TST	>M00B2
-			BNE	ZE8F3
+			BNE	1F
 			LDD	M00B0
-			ADDD	#DDR2
+			ADDD	#$0001
 			STD	M00B0
 			XGDX
-			CPX	#M0060
-			BCS	ZE8F3
+			CPX	#$0060
+			BCS	1F
 			CLR	>M00AF
 			LDD	#$0000
 			STD	M00B0
 			LDAA	#$01
 			STAA	M00CB
-ZE8F3			RTS
+1			RTS
+
 HI_CALL_15		LDAA	M776B
 			ANDA	#$E9
 			STAA	M776B
