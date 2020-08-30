@@ -8,7 +8,8 @@ PTR_TX			EQU	$00B4	; pointer for next MIDI TX
 PTR_RX_TAIL		EQU	$00B6	; pointer for first MIDI RX
 PTR_TX_TAIL		EQU	$00B8	; pointer for last MIDI TX
 PTR_RX			EQU	$00BA	; pointer for next MIDI RX
-M_TX_RUNSTAT		EQU	$00BC	; last MIDI command sent
+MIDI_TX_RUNSTAT		EQU	$00BC	; last MIDI command sent
+MIDI_RX_ERR		EQU	$00CA	; non-zero if 
 
 USER_VOICE		EQU	$6001	; user voices (32 x 78 bytes = 2496)
 					; $6001 .. $69C0
