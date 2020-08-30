@@ -2,8 +2,8 @@
 ;* A09 Assembler options			    *
 ;****************************************************
 
-	IF	&VERSION < $012B
-		ERR	"Incompatible assembler version - 1.43 or higher required"
+	IF	&VERSION < $012C
+		ERR	"Incompatible assembler version - 1.44 or higher required"
 	ENDIF
 
 			OPT	H03,NCL,NOW,EXP
@@ -1013,7 +1013,7 @@ LO_CALL_04		LDAA	#$01
 			ADDD	#STANDARD_PFM
 			XGDX
 			STX	M00A9
-			AIM	#N_ECMI,TCSR3
+			AIM	#~ECMI,TCSR3
 			LDX	#M6DD7
 			STX	M00A7
 			JSR	LO_CALL_05
@@ -1467,7 +1467,7 @@ C_8B4A
 			JSR	HI_CALL_0F
 			JSR	HI_CALL_18
 			JSR	HI_CALL_11
-			AIM	#N_ECMI,TCSR3
+			AIM	#~ECMI,TCSR3
 			JSR	HI_CALL_15
 			JSR	HI_CALL_16
 			OIM	#ECMI,TCSR3
@@ -1771,7 +1771,7 @@ F_8D3E			JSR	F_9B4A
 			LDAB	M7789
 			ANDB	#$0C
 			BEQ	25F
-			AIM	#N_ECMI,TCSR3
+			AIM	#~ECMI,TCSR3
 			JSR	F_90E5
 			LDX	#M69C1
 			STX	M00A9
@@ -1782,7 +1782,7 @@ F_8D3E			JSR	F_9B4A
 			LDAA	#$01
 			STAA	M7791
 			BRA	27F
-25			AIM	#N_ECMI,TCSR3
+25			AIM	#~ECMI,TCSR3
 			LDAB	M7773
 			JSR	HI_CALL_19
 			JSR	F_90D5
@@ -2753,7 +2753,7 @@ LO_CALL_02		LDAA	#$00
 			CLR	M776D
 			CLR	M7D6B
 			CLR	M7F99
-			AIM	#N_ECMI,TCSR3
+			AIM	#~ECMI,TCSR3
 			AIM	#%11110111,TCSR1
 			AIM	#%11111110,RP5CR
 			LDAA	#$04
@@ -2783,7 +2783,7 @@ LO_CALL_02		LDAA	#$00
 			LDAA	#$80
 			LDX	#S_HP_R
 			BSR	F_9604
-			AIM	#N_ECMI,TCSR3
+			AIM	#~ECMI,TCSR3
 			AIM	#%11110111,TCSR1
 			LDAA	#$04
 			STAA	M0058
