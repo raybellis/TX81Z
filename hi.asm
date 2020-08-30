@@ -329,9 +329,9 @@ hdlr_RST		BANK_HI			; ensure we remain in the HI bank
 			BANK_HI			; make sure we're really in the HI bank
 			JMP	RESET		; jump to real reset routine
 
-hdlr_SWI2		JSR	SWI2
+hdlr_OCI		JSR	OCI
 			RTI
-			JSR	SWI2		; entry point from LO bank
+			JSR	OCI		; entry point from LO bank
 			BANK_SW			; return to LO bank
 			RTI
 
@@ -341,15 +341,15 @@ hdlr_CMI		JSR	CMI
 			BANK_SW			; return to LO bank
 			RTI
 
-hdlr_DIV0		JSR	DIV0
+hdlr_SIO		JSR	SIO
 			RTI
-			JSR	DIV0		; entry point from LO bank
+			JSR	SIO		; entry point from LO bank
 			BANK_SW			; return to LO bank
 			RTI
 
-hdlr_IRQ		JSR	IRQ
+hdlr_IRQ1		JSR	IRQ1
 			RTI
-			JSR	IRQ		; entry point from LO bank
+			JSR	IRQ1		; entry point from LO bank
 			BANK_SW			; return to LO bank
 			RTI
 
@@ -2283,7 +2283,11 @@ Z8F78			SEI
 			OIM	#ECMI,TCSR3
 			RTS
 
-SWI2			LDAA	RP5CR
+;-------
+;
+; Timer 1 Output Compare Interrupt
+;
+OCI			LDAA	RP5CR
 			PSHA
 			AIM	#%11111110,RP5CR
 			LDAA	TCSR3
@@ -2346,7 +2350,11 @@ Z8FEC			SEI
 			STAA	RP5CR
 			RTS
 
-IRQ			LDAA	TCSR3
+;-------
+;
+; IRQ1 handler (OPZ chip)
+;
+IRQ1			LDAA	TCSR3
 			PSHA
 			AIM	#~ECMI,TCSR3
 			AIM	#%11111110,RP5CR
@@ -11911,7 +11919,11 @@ MDF94			FCB	$FE,$C0,$B4,$AE,$A8,$A2,$9E,$98,$94,$90,$8D,$8A,$86
 			FCB	$0D,$0C,$0C,$0B,$0B,$0A,$09,$09,$08,$07,$07,$06,$06
 			FCB	$05,$05,$04,$04,$03,$03,$02,$02,$01,$01,$00
 
-DIV0			LDAA	XROM
+;-------
+;
+; Serial interrupt handler
+;
+SIO			LDAA	XROM
 			PSHA
 			LDAA	TRSCR
 			ASLA
@@ -13904,7 +13916,5 @@ ZF057			DEX
 			RTS
 			RTS
 ZF065			BRA	ZF065
-
-			ORG	$FFEA
 
 			INCLUDE	"inc/vecs.asm"

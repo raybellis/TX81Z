@@ -163,7 +163,7 @@ hdlr_RST		BANK_HI				; attempt to select HI bank
 			NOP
 			RTS
 
-hdlr_SWI2		NOP
+hdlr_OCI		NOP
 			BANK_HI				; select HI bank
 			NOP
 			NOP
@@ -183,7 +183,7 @@ hdlr_CMI		NOP
 			NOP
 			RTI
 
-hdlr_DIV0		NOP
+hdlr_SIO		NOP
 			BANK_HI				; select HI bank
 			NOP
 			NOP
@@ -193,7 +193,7 @@ hdlr_DIV0		NOP
 			NOP
 			RTI
 
-hdlr_IRQ		NOP
+hdlr_IRQ1		NOP
 			BANK_HI				; select HI bank
 			NOP
 			NOP
@@ -6733,7 +6733,4 @@ F_B53E			XGDX
 
 			INCLUDE	"inc/voice.asm"
 			INCLUDE	"inc/pfm.asm"
-
-			ORG	$FFEA
-
 			INCLUDE	"inc/vecs.asm"
