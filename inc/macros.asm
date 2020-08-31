@@ -2,11 +2,11 @@
 ; Port 63 controls which ROM bank is selected
 ;
 BANK_LO                 MACRO
-&0                      AIM     #%11110111,PORT6
+&0                      AIM     #~BANKSEL,PORT6
                         ENDM
 
 BANK_HI                 MACRO
-&0                      OIM     #%00001000,PORT6
+&0                      OIM     #BANKSEL,PORT6
                         ENDM
 
 ;
