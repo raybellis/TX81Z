@@ -45,17 +45,19 @@ RAM			EQU	$6000
 ; Field names for CPU IO registers		    *
 ;****************************************************
 
-; RP5CR ($xx)
-IRQ1E			EQU	%00000001	; IRQ1 Enable
-IRQ2E			EQU	%00000010	; IRQ2 Enable
-MRE			EQU	%00000100	; Memory Ready Enable
-RAME			EQU	%01000000	; RAM Enable
-
 ; TCSR1 ($08)
 EOCI1			EQU	%00001000	; Enable Output Compare Interrupt 1
 
 ; TCSR2 ($0F)
 EOCI2			EQU	%00001000	; Enable Output Compare Interrupt 2
+
+; RCMR  ($10)
+SS000			EQU	%00000000	; Speed Select 000 (E / 16)
+SS001			EQU	%00000001	; Speed Select 001 (E / 128)
+SS010			EQU	%00000010	; Speed Select 010 (E / 1024)
+SS011			EQU	%00000011	; Speed Select 011 (E / 4096)
+
+CC011			EQU	%00001100	; Clock Control / Format Select
 
 ; TRCSR ($11)
 WU			EQU	%00000001	; Wake-Up
@@ -67,8 +69,13 @@ TDRE			EQU	%00100000	; Transimit Data Register Empty
 ORFE			EQU	%01000000	; Overrun Framing Error
 RDRF			EQU	%10000000	; Receive Data Register Full
 
-; TCSR3 ($1B)
+; RP5CR ($14)
+IRQ1E			EQU	%00000001	; IRQ1 Enable
+IRQ2E			EQU	%00000010	; IRQ2 Enable
+MRE			EQU	%00000100	; Memory Ready Enable
+RAME			EQU	%01000000	; RAM Enable
 
+; TCSR3 ($1B)
 CKS00			EQU	%00000000	; Input Clock Select
 CKS01			EQU	%00000001
 CKS10			EQU	%00000010

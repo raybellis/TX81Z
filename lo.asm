@@ -145,8 +145,8 @@ M7FE0			EQU	$7FE0
 			ORG	$8000
 
 hdlr_RST		BANK_HI				; attempt to select HI bank
-			LDAA	#%11111000		; set P63 - P67 as outputs
-			STAA	DDR6			; -
+			LDAA	#LED4|LED3|LED2|LED1|BANKSEL
+			STAA	DDR6			; set P63 - P67 as outputs
 			BANK_HI				; attempt to select HI bank (again)
 			NOP
 			NOP
@@ -3211,7 +3211,7 @@ TEST_LEDS		TST	>M00D9
 			BEQ	1B
 			CMPB	#8
 			BNE	2B
-			LDAA	#(LED4|LED3|LED2|LED1)
+			LDAA	#LED4|LED3|LED2|LED1
 			ANDA	#~BANKSEL
 			STAA	PORT6
 3			RTS
@@ -3649,7 +3649,7 @@ F_9C2A			PSHA
 			CPX	#100
 			BCC	6F
 			JSR	PUTCHAR
-			CPX	#FRCL
+			CPX	#$0A
 			BCC	5F
 			JSR	PUTCHAR
 			LDAB	#$01
@@ -5044,7 +5044,7 @@ F_A600			TST	>M00A3
 			TAB
 			LDX	M00A7
 			XGDX
-			SUBD	#RMCR
+			SUBD	#$10
 			XGDX
 			STAB	,X
 			LDAB	#$06
