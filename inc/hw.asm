@@ -45,7 +45,10 @@ RAM			EQU	$6000
 ; Field names for CPU IO registers		    *
 ;****************************************************
 
-; TRCSR
+; TCSR1 ($08)
+EOCI1			EQU	%00001000	; Enable Output Compare Interrupt 1
+
+; TRCSR ($11)
 RDRF			EQU	%10000000	; Receive Data Register Full
 ORFE			EQU	%01000000	; Overrun Framing Error
 TDRE			EQU	%00100000	; Transimit Data Register Empty
@@ -55,7 +58,7 @@ TIE			EQU	%00000100	; Transmit Interrupt Enable
 TE			EQU	%00000010	; Transmit Enable
 WU			EQU	%00000001	; Wake-Up
 
-; TCSR3
+; TCSR3 ($1B)
 ECMI			EQU	%01000000	; Enable Counter Match Interrupt
 
 ;****************************************************
