@@ -23,6 +23,7 @@ USER_PFM		EQU	$6E45	; user PFMs (24 x 76 bytes = 1824)
 					; $6E45 .. $7564
 
 MIDI_ID			EQU	$7567	; MIDI device ID
+MIDI_NOTE_MODE		EQU	$756B	; 0 = All / 1 = Odd / 2 = Even
 
 POLL_ENABLE		EQU	$776C	; set to 0 to skip polling
 
