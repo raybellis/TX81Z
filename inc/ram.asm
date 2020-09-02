@@ -22,8 +22,23 @@ USER_VOICE		EQU	$6001	; user voices (32 x 78 bytes = 2496)
 USER_PFM		EQU	$6E45	; user PFMs (24 x 76 bytes = 1824)
 					; $6E45 .. $7564
 
-MIDI_ID			EQU	$7567	; MIDI device ID
-MIDI_NOTE_MODE		EQU	$756B	; 0 = All / 1 = Odd / 2 = Even
+;
+; System Parameters, apparently arranged in memory
+; per the SYS bulk data format on p78 of the manual.
+;
+SYS_PARAMS		EQU	$7565
+
+SYS_TUNE		EQU	$7565	; master tune
+SYS_MIDBCH		EQU	$7566	; Basic recv. chan.  16 = Omni
+SYS_MIDTCH		EQU	$7567	; Trans. chan.
+SYS_PCINF		EQU	$7568	; Program Change Switch
+SYS_COINF		EQU	$7569	; Cont. chang switch
+SYS_PBSW		EQU	$756A	; Pitchbend SW
+SYS_NOTESW		EQU	$756B	; 0 = All / 1 = Odd / 2 = Even
+SYS_SYSAVL		EQU	$756C	; Exclusive on / off
+SYS_MLOCK		EQU	$756D	; Mem. Protect
+SYS_CMBIN		EQU	$756E	; Combine
+SYS_AT			EQU	$756F	; Aftertouch
 
 POLL_ENABLE		EQU	$776C	; set to 0 to skip polling
 
