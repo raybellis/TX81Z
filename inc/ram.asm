@@ -22,9 +22,10 @@ USER_VOICE		EQU	$6001	; user voices (32 x 78 bytes = 2496)
 USER_PFM		EQU	$6E45	; user PFMs (24 x 76 bytes = 1824)
 					; $6E45 .. $7564
 
+;-------
 ;
-; System Parameters, apparently arranged in memory
-; per the SYS bulk data format on p78 of the manual.
+; System Parameters, arranged in memory per the
+; bulk data format on p78 of the manual.
 ;
 SYS_PARAMS		EQU	$7565
 
@@ -40,6 +41,16 @@ SYS_MLOCK		EQU	$756D	; Mem. Protect
 SYS_CMBIN		EQU	$756E	; Combine
 SYS_AT			EQU	$756F	; Aftertouch
 
+;-------
+;
+; Effects parameters, arranged in memory per the
+; bulk data format on p75 of the manual
+;
+EFFECTS_PARAMS		EQU	$75F1
+
+EF1T			EQU	$75F1
+
+;-------
 POLL_ENABLE		EQU	$776C	; set to 0 to skip polling
 
 LCD_COPY		EQU	$7D8B	; copy of current LCD output (32 bytes)
