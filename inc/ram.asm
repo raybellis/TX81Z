@@ -2,6 +2,10 @@
 ;* Identified RAM memory locations		    *
 ;****************************************************
 
+;-------
+;
+; CPU RAM ($40 - $FF)
+;
 XROM			EQU	$0040	; storage for XROM call number
 LOOP_COUNT		EQU	$0055	; counts iterations of main loop (modulo 16)
 
@@ -15,6 +19,10 @@ MIDI_RX_DATA_1		EQU	$00BE	; first MIDI data byte received
 MIDI_RX_DATA_COUNT	EQU	$00C4	; how many data bytes received
 MIDI_CRC		EQU	$00C5	; rolling MIDI SysEx CRC
 MIDI_RX_ERR		EQU	$00CA	; non-zero if 
+
+;-------
+;
+;
 
 USER_VOICE		EQU	$6001	; user voices (32 x 78 bytes = 2496)
 					; $6001 .. $69C0
@@ -43,12 +51,48 @@ SYS_AT			EQU	$756F	; Aftertouch
 
 ;-------
 ;
+; TBD - 2 * 64 bytes
+;
+;M7571			EQU	$7571
+
+;-------
+;
 ; Effects parameters, arranged in memory per the
-; bulk data format on p75 of the manual
+; bulk data format on p75 of the manual.  55 bytes.
 ;
 EFFECTS_PARAMS		EQU	$75F1
 
 EF1T			EQU	$75F1
+EF1P			EQU	$75F2
+EF1F			EQU	$75F3
+EF1L			EQU	$75F4
+
+EF2D			EQU	$75F5
+EF2S			EQU	$75F6
+EF2R			EQU	$75F7
+
+CHORD			EQU	$75F8	; 48 bytes
+CHORD_END		EQU	$7627	;
+
+EFFECTS_PARAMS_END	EQU	$7627
+
+;-------
+;
+; TBC - 24 bytes
+;
+;M7628			EQU	$7628
+
+;-------
+;
+; TBC - 4 * 64 bytes (?)
+;
+;M7640			EQU	$7640
+
+;-------
+;
+; TBC - 16 bytes
+;
+;M7740			EQU	$7740
 
 ;-------
 POLL_ENABLE		EQU	$776C	; set to 0 to skip polling
