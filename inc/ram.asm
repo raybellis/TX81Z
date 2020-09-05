@@ -18,7 +18,7 @@ MIDI_RX_CMD		EQU	$00BD	; last MIDI command received
 MIDI_RX_DATA_1		EQU	$00BE	; first MIDI data byte received
 MIDI_RX_DATA_COUNT	EQU	$00C4	; how many data bytes received
 MIDI_CRC		EQU	$00C5	; rolling MIDI SysEx CRC
-MIDI_RX_ERR		EQU	$00CA	; non-zero if 
+MIDI_RX_ERR		EQU	$00CA	; non-zero if MIDI RX error
 
 ;-------
 ;
@@ -26,6 +26,17 @@ MIDI_RX_ERR		EQU	$00CA	; non-zero if
 
 USER_VOICE		EQU	$6001	; user voices (32 x 78 bytes = 2496)
 					; $6001 .. $69C0
+
+PFM_EDIT_BUF		EQU	$6DD7	; performance edit buffer (110 bytes)
+PFM_EDIT_INST_0		EQU	PFM_EDIT_BUF
+PFM_EDIT_INST_4		EQU	PFM_EDIT_BUF + 4 * 12
+PFM_EDIT_INST_END	EQU	PFM_EDIT_BUF + 95
+PFM_EDIT_MICTUN		EQU	PFM_EDIT_BUF + 96	; microtune table
+PFM_EDIT_ASSIGN		EQU	PFM_EDIT_BUF + 97	; assign mode
+PFM_EDIT_EFFECT		EQU	PFM_EDIT_BUF + 98	; effect select
+PFM_EDIT_KEY		EQU	PFM_EDIT_BUF + 99	; microtune key
+PFM_EDIT_NAME		EQU	PFM_EDIT_BUF + 100
+PFM_EDIT_BUF_END	EQU	PFM_EDIT_BUF + 109
 
 USER_PFM		EQU	$6E45	; user PFMs (24 x 76 bytes = 1824)
 					; $6E45 .. $7564
