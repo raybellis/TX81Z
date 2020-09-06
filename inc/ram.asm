@@ -6,39 +6,39 @@
 ;
 ; CPU RAM ($40 - $FF)
 ;
-XROM			EQU	$0040	; storage for XROM call number
+XROM			EQU	$0040			; storage for XROM call number
 
-NOTE_NUMBER		EQU	$0052	; MIDI note to be played
-LOOP_COUNT		EQU	$0055	; counts iterations of main loop (modulo 16)
+NOTE_NUMBER		EQU	$0052			; MIDI note to be played
+LOOP_COUNT		EQU	$0055			; counts iterations of main loop (modulo 16)
 
-SWITCH_LO		EQU	$009B	; switch state (1 .. 8)
-SWITCH_HI		EQU	$009C	; switch state (9 .. 11)
+SWITCH_LO		EQU	$009B			; switch state (1 .. 8)
+SWITCH_HI		EQU	$009C			; switch state (9 .. 11)
 
-SWITCH_LO_N		EQU	$009D	; pressed switches (1 .. 8)
-SWITCH_HI_N		EQU	$009E	; pressed switches (9 .. 11)
+SWITCH_LO_N		EQU	$009D			; pressed switches (1 .. 8)
+SWITCH_HI_N		EQU	$009E			; pressed switches (9 .. 11)
 
-PTR_TX			EQU	$00B4	; pointer for next MIDI TX
-PTR_RX			EQU	$00B6	; pointer for pending MIXI RX data
-PTR_TX_TAIL		EQU	$00B8	; pointer for last MIDI TX sent
-PTR_RX_TAIL		EQU	$00BA	; pointer for next MIDI RX
-MIDI_TX_CMD		EQU	$00BC	; last MIDI command sent
-MIDI_RX_CMD		EQU	$00BD	; last MIDI command received
-MIDI_RX_DATA_1		EQU	$00BE	; first MIDI data byte received
-MIDI_RX_DATA_COUNT	EQU	$00C4	; how many data bytes received
-MIDI_TX_CRC		EQU	$00C5	; rolling MIDI TX SysEx CRC
-MIDI_RX_CRC		EQU	$00C6	; rolling MIDI RX SysEx CRC
-MIDI_RX_ERR		EQU	$00CA	; non-zero if MIDI RX error
+PTR_TX			EQU	$00B4			; pointer for next MIDI TX
+PTR_RX			EQU	$00B6			; pointer for pending MIXI RX data
+PTR_TX_TAIL		EQU	$00B8			; pointer for last MIDI TX sent
+PTR_RX_TAIL		EQU	$00BA			; pointer for next MIDI RX
+MIDI_TX_CMD		EQU	$00BC			; last MIDI command sent
+MIDI_RX_CMD		EQU	$00BD			; last MIDI command received
+MIDI_RX_DATA_1		EQU	$00BE			; first MIDI data byte received
+MIDI_RX_DATA_COUNT	EQU	$00C4			; how many data bytes received
+MIDI_TX_CRC		EQU	$00C5			; rolling MIDI TX SysEx CRC
+MIDI_RX_CRC		EQU	$00C6			; rolling MIDI RX SysEx CRC
+MIDI_RX_ERR		EQU	$00CA			; non-zero if MIDI RX error
 
 ;-------
 ;
 ;
 
-USER_VOICE		EQU	$6001	; user voices (32 x 78 bytes = 2496)
-					; $6001 .. $69C0
+USER_VOICE		EQU	$6001			; user voices (32 x 78 bytes = 2496)
+							; $6001 .. $69C0
 
 ;				# $6A67 + 8 * 110 = $6DD7
 
-PFM_EDIT_BUF		EQU	$6DD7	; performance edit buffer (110 bytes)
+PFM_EDIT_BUF		EQU	$6DD7			; performance edit buffer (110 bytes)
 PFM_EDIT_INST_0		EQU	PFM_EDIT_BUF
 PFM_EDIT_INST_4		EQU	PFM_EDIT_BUF + 4 * 12
 PFM_EDIT_INST_END	EQU	PFM_EDIT_BUF + 96
@@ -49,8 +49,8 @@ PFM_EDIT_KEY		EQU	PFM_EDIT_INST_END + 3	; microtune key
 PFM_EDIT_NAME		EQU	PFM_EDIT_INST_END + 4
 PFM_EDIT_BUF_END	EQU	PFM_EDIT_NAME + 10
 
-USER_PFM		EQU	$6E45	; user PFMs (24 x 76 bytes = 1824)
-					; $6E45 .. $7564
+USER_PFM		EQU	$6E45			; user PFMs (24 x 76 bytes = 1824)
+							; $6E45 .. $7564
 
 ;-------
 ;
@@ -59,23 +59,24 @@ USER_PFM		EQU	$6E45	; user PFMs (24 x 76 bytes = 1824)
 ;
 SYS_PARAMS		EQU	$7565
 
-SYS_TUNE		EQU	$7565	; master tune
-SYS_MIDBCH		EQU	$7566	; Basic recv. chan.  16 = Omni
-SYS_MIDTCH		EQU	$7567	; Trans. chan.
-SYS_PCINF		EQU	$7568	; Program Change Switch
-SYS_COINF		EQU	$7569	; Cont. chang switch
-SYS_PBSW		EQU	$756A	; Pitchbend SW
-SYS_NOTESW		EQU	$756B	; 0 = All / 1 = Odd / 2 = Even
-SYS_SYSAVL		EQU	$756C	; Exclusive on / off
-SYS_MLOCK		EQU	$756D	; Mem. Protect
-SYS_CMBIN		EQU	$756E	; Combine
-SYS_AT			EQU	$756F	; Aftertouch
+SYS_TUNE		EQU	$7565			; master tune
+SYS_MIDBCH		EQU	$7566			; Basic recv. chan.  16 = Omni
+SYS_MIDTCH		EQU	$7567			; Trans. chan.
+SYS_PCINF		EQU	$7568			; Program Change Switch
+SYS_COINF		EQU	$7569			; Cont. chang switch
+SYS_PBSW		EQU	$756A			; Pitchbend SW
+SYS_NOTESW		EQU	$756B			; 0 = All / 1 = Odd / 2 = Even
+SYS_SYSAVL		EQU	$756C			; Exclusive on / off
+SYS_MLOCK		EQU	$756D			; Mem. Protect
+SYS_CMBIN		EQU	$756E			; Combine
+SYS_AT			EQU	$756F			; Aftertouch
 
 ;-------
 ;
 ; TBD - 2 * 64 bytes
 ;
-;M7571			EQU	$7571
+PROG_CHANGES		EQU	$7571
+PROG_CHANGES_END	EQU	PROG_CHANGES + 128
 
 ;-------
 ;
@@ -102,42 +103,44 @@ EFFECTS_PARAMS_END	EQU	CHORD_END
 ;
 ; TBC - 24 bytes
 ;
-;M7628			EQU	$7628
+MICROTUNE_OCT		EQU	$7628
+MICROTUNE_OCT_END	EQU	MICROTUNE_OCT + 24
 
 ;-------
 ;
-; TBC - 4 * 64 bytes (?)
+; Full microtune table
 ;
-MICROTUNE		EQU	$7640
-MICROTUNE_END		EQU	MICROTUNE + 256
+MICROTUNE_FULL		EQU	$7640
+MICROTUNE_FULL_END	EQU	MICROTUNE_FULL + 256
 
 ;-------
 ;
-; TBC - 16 bytes
-;
+; TBC
 ;M7740			EQU	$7740
 
 ;-------
+
 NOTE_VELOCITY		EQU	$7769
-POLL_ENABLE		EQU	$776C	; set to 0 to skip polling
+POLL_ENABLE		EQU	$776C			; set to 0 to skip polling
 
-OP_ENABLE		EQU	$776E		;
-OP_ENABLE_END		EQU	OP_ENABLE + 4	;
+OP_ENABLE		EQU	$776E			;
+OP_ENABLE_END		EQU	OP_ENABLE + 4		;
 
-FLAG_EDITED		EQU	$7792	; Data changed
-FLAG_COMPARE		EQU	$7793	; Compare mode
+PFM_EDITED		EQU	$7791			; Performance data changed
+VOICE_EDITED		EQU	$7792			; Voice data changed
+VOICE_COMPARE		EQU	$7793			; Voice compare mode
 
-LCD_COPY		EQU	$7D8B	; copy of current LCD output (32 bytes)
-LCD_BUFFER		EQU	$7DAB	; buffer for pending LCD output (32 bytes)
+LCD_COPY		EQU	$7D8B			; copy of current LCD output (32 bytes)
+LCD_BUFFER		EQU	$7DAB			; buffer for pending LCD output (32 bytes)
 
-MIDI_TXBUF		EQU	$7DCC	; .. $7E0B (64 bytes)
+MIDI_TXBUF		EQU	$7DCC			; .. $7E0B (64 bytes)
 MIDI_TXBUF_END		EQU	MIDI_TXBUF + 64
 
-MIDI_RXBUF		EQU	$7E0C	; .. $7EE7 (220 bytes)
+MIDI_RXBUF		EQU	$7E0C			; .. $7EE7 (220 bytes)
 MIDI_RXBUF_END		EQU	MIDI_RXBUF + 220
 
 ; 7EE9 8 bytes (indexed by instrument number) TBC
 
-MIDI_CHANS		EQU	$7F89	; (16 bytes)
+MIDI_CHANS		EQU	$7F89			; (16 bytes)
 
-STACK_TOP		EQU	$7FFF	; the top of the stack
+STACK_TOP		EQU	$7FFF			; the top of the stack
