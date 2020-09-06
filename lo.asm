@@ -955,13 +955,13 @@ LO_CALL_03		TST	SYS_SYSAVL
 			MUL
 			ADDD	#PRESET_VOICE
 			XGDX
-			JSR	F_9ACD
+			JSR	MIDI_SEND_VOICE
 			LDAB	M00C7
 			INCB
 			STAB	M00C7
 			CMPB	#$20
 			BNE	1B
-			JSR	MIDI_SYSEX_END
+			JSR	MIDI_SEND_EOX
 2			RTS
 
 S_TRANSMITTING		FCC	"Transmitting!!  "
@@ -3303,8 +3303,8 @@ INIT_EVERYTHING		JSR	INIT_USER_VOICES
 D_INIT_EFFECTS_PARAMS	FCB	$08,$18,$00,$49		; EF1
 			FCB	$00,$00,$19		; EF2
 			FCB	$10,$13,$18,$31		; CHORD C3
-			FCB	$10,$13,$15,$18		; C#3
-			FCB	$11,$15,$18,$31
+			FCB	$10,$13,$15,$18		; CHORD C#3
+			FCB	$11,$15,$18,$31		; ...
 			FCB	$10,$13,$18,$31
 			FCB	$0F,$14,$18,$31
 			FCB	$10,$13,$15,$18
@@ -3388,7 +3388,7 @@ HI_CALL_0E		PSHB
 HI_CALL_0F		PSHB
 			LDAB	#$0F
 			BRA	1F
-MIDI_SYSEX_END		PSHB
+MIDI_SEND_EOX		PSHB
 			LDAB	#$10
 			BRA	1F
 HI_CALL_11		PSHB
@@ -3436,104 +3436,13 @@ HI_CALL_1D		PSHB
 
 ;-------
 
-F_9ACD			CLRB
-1			PSHB
-			LDAA	,X
-			CMPB	#$30
-			BNE	4F
-			TIM	#$04,$00,X
-			BNE	2F
-			ANDA	#$FB
-			ORAA	#$02
-			BRA	3F
-2			ORAA	#$04
-			ANDA	#$FD
-3			ANDA	#$0F
-4			PSHX
-			ANDA	#$7F
-			TAB
-			ADDB	MIDI_TX_CRC
-			STAB	MIDI_TX_CRC
-			JSR	MIDI_SEND
-			PULX
-			INX
-			PULB
-			INCB
-			CMPB	#$43
-			BNE	1B
-			PSHX
-5			LDAA	#$63
-			PSHB
-			TAB
-			ADDB	MIDI_TX_CRC
-			STAB	MIDI_TX_CRC
-			JSR	MIDI_SEND
-			PULB
-			INCB
-			CMPB	#$46
-			BNE	5B
-6			LDAA	#$32
-			PSHB
-			TAB
-			ADDB	MIDI_TX_CRC
-			STAB	MIDI_TX_CRC
-			JSR	MIDI_SEND
-			PULB
-			INCB
-			CMPB	#$49
-			BNE	6B
-			PULX
-7			PSHB
-			LDAA	,X
-			CMPB	#$4F
-			BNE	8F
-			ANDA	#$0F
-8			PSHX
-			ANDA	#$7F
-			TAB
-			ADDB	MIDI_TX_CRC
-			STAB	MIDI_TX_CRC
-			JSR	MIDI_SEND
-			PULX
-			INX
-			PULB
-			INCB
-			CMPB	#$54
-			BNE	7B
-9			CLRA
-			PSHB
-			TAB
-			ADDB	MIDI_TX_CRC
-			STAB	MIDI_TX_CRC
-			JSR	MIDI_SEND
-			PULB
-			INCB
-			CMPB	#$80
-			BNE	9B
-			RTS
+			INCLUDE	"inc/voice_send.asm"
 
 ;-------
 
-LCD_CLR_BOTTOM		LDAA	#$10
-			BRA	1F
-
-;-------	fallthrough
-
-LCD_CLR			LDAA	#$20
-1			LDX	#LCD_BUFFER + 32
-2			PSHA
-			LDAA	#' '
-			DEX
-			STAA	,X
-			PULA
-			DECA
-			BNE	2B
-			RTS
-
-;-------
+			INCLUDE	"inc/lcd_clr.asm"
 
 PUTSTR_OFFSET		SET	SO_32_VOICE_ - $80
-
 			INCLUDE	"inc/lcd.asm"
 
 ;-------
