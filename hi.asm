@@ -74,7 +74,6 @@ M0095			EQU	$0095
 M0097			EQU	$0097
 M0098			EQU	$0098
 M009A			EQU	$009A
-M009B			EQU	$009B
 M009F			EQU	$009F
 M00A0			EQU	$00A0
 M00A1			EQU	$00A1
@@ -137,7 +136,6 @@ M6AD5			EQU	$6AD5
 M7570			EQU	$7570
 M7571			EQU	$7571
 M7628			EQU	$7628
-M7640			EQU	$7640
 M76C0			EQU	$76C0
 M7735			EQU	$7735
 M7740			EQU	$7740
@@ -1365,7 +1363,7 @@ F_890E			STAB	M00DC
 			BNE	2F
 			TAB
 			ASLB
-			LDX	#M7640
+			LDX	#MICROTUNE
 			ABX
 			LDD	,X
 			ASLB
@@ -1453,7 +1451,7 @@ F_890E			STAB	M00DC
 			BRA	18F
 16			TAB
 			ASLB
-			LDX	#M7640
+			LDX	#MICROTUNE
 			ABX
 			LDD	,X
 			ASLB
@@ -5687,26 +5685,28 @@ F_ABC7			TST	>M00AE
 ;-------
 
 C_AC2F			JSR	JMPOFF1
-			FCB	C_AC48 - *
+			FCB	C_AC48 - *		; B = 0
 			FCB	$01
-			FCB	C_AC45 - *
+			FCB	C_AC45 - *		; B = 1 .. 3
 			FCB	$04
-			FCB	C_AC41 - *
+			FCB	C_AC41 - *		; B = 4 .. 5
 			FCB	$06
-			FCB	C_AC3C - *
+			FCB	C_AC3C - *		; B = 6 .. 10
 			FCB	$0B
-			FCB	C_AC48 - *
+			FCB	C_AC48 - *		; default
 			FCB	$00
 
-C_AC3C			COMB
-			SUBB	#$F0
+C_AC3C			COMB				; B = 6 .. 10
+			SUBB	#$F0			;  -> 9 .. 5
 			BRA	C_AC48
-C_AC41			SUBB	#$03
-			BRA	C_AC48
-C_AC45			COMB
-			SUBB	#$F2
 
-C_AC48			TST	>M00A3
+C_AC41			SUBB	#$03			; B = 4 .. 5
+			BRA	C_AC48			;  -> 1 .. 2
+
+C_AC45			COMB				; B = 1 .. 3
+			SUBB	#$F2			; -> 12 .. 10
+
+C_AC48			TST	>M00A3			;
 			BEQ	1F
 			CMPB	M00A0
 			BEQ	1F
@@ -5730,54 +5730,57 @@ READ_SWITCHES		LDAA	PORT2			; read all of port 2 (pressed = low)
 			LSRA				; shift right (___321__)
 			LSRA				; shift right (____321_)
 			LSRA				; shift right (_____321)
-			STAA	SWITCH_LO		; and save
+			STAA	SWITCH_LO_N		; and save
 			LDAA	PORT5			; read all of port 5 (pressed = low)
 			COMA				; invert the bits (pressed = high)
 			ANDA	#SW7|SW6|SW5|SW4|SW11	; mask the required bits (7654__B_)
 			LSRA				; shift right (_7654__B)
-			CLR	>SWITCH_HI		; get ready to save
+			CLR	>SWITCH_HI_N		; get ready to save
 			LSRA				; shift right (__7654__) - SW11 -> C
 			BCC	1F			; if not pressed skip
-			OIM	#%00000100,SWITCH_HI	; save SW11
+			OIM	#%00000100,SWITCH_HI_N	; save SW11
 1			ASLA				; shift left (07654___)
-			ORAA	SWITCH_LO		; combine    (07654321)
-			STAA	SWITCH_LO		; and save
+			ORAA	SWITCH_LO_N		; combine    (07654321)
+			STAA	SWITCH_LO_N		; and save
 			LDAA	PORT6			; read switches 8 - 10
 			COMA				; flip the bits (pressed = high)
 			ANDA	#SW10|SW9|SW8		; mask the required bits (_____A98)
 			LSRA				; shift right (______A9) - SW8 -> C
 			BCC	2F			; if not pressed skip
-			OIM	#%10000000,SWITCH_LO	; save SW8
-2			ORAA	SWITCH_HI		; combine with SW11 (_____BA9)
-			STAA	SWITCH_HI		; and save
-			CLRB
-			LDX	#M009B
-			LDAA	SWITCH_LO
-			CMPA	,X
-			BNE	3F
-			INX
-			INCB
-			LDAA	SWITCH_HI
-			CMPA	,X
-			BNE	3F
-			JMP	10F
-3			CMPB	#$01
-			BNE	4F
-			PSHA
-			EORA	,X
-			ANDA	#$04
-			PULA
-			BEQ	4F
-			STAA	,X
-			LDAB	#$03
-			BITA	#$04
-			BNE	C_AC48
-			INCB
-			BRA	C_AC48
-4			ASLB
-			ASLB
-			ASLB
-			PSHB
+			OIM	#%10000000,SWITCH_LO_N	; save SW8
+2			ORAA	SWITCH_HI_N		; combine with SW11 (_____BA9)
+			STAA	SWITCH_HI_N		; and save
+
+			CLRB				; B <- 0
+			LDX	#SWITCH_LO		; offset to state
+			LDAA	SWITCH_LO_N		; get current low switches
+			CMPA	,X			; compare to low state
+			BNE	3F			; different?  branch
+			INX				; inc offset (point to SWITCH_HI)
+			INCB				; B <- 1
+			LDAA	SWITCH_HI_N		; A <- current high switches
+			CMPA	,X			; compare to high state
+			BNE	3F			; different? branch
+			JMP	10F			; switches match - branch
+
+3			CMPB	#$01			; check which byte was different
+			BNE	4F			; low byte?  branch
+			PSHA				; save A
+			EORA	,X			; generate differences
+			ANDA	#$04			; mask off bit 2 (SW11 - Store/Copy)
+			PULA				; restore A (no flags change)
+			BEQ	4F			; no difference?  branch
+			STAA	,X			; save (non-EOR'd value) to high state
+			LDAB	#$03			; B <- 3
+			BITA	#$04			; test bit 2 again (SW11)
+			BNE	C_AC48			; set?  branch
+			INCB				; B <- 4
+			BRA	C_AC48			; branch
+
+4			ASLB				; B <- B * 8
+			ASLB				; -
+			ASLB				; -
+			PSHB				; and save
 			EORA	,X
 			BEQ	10F
 			BITA	,X
@@ -5815,25 +5818,26 @@ READ_SWITCHES		LDAA	PORT2			; read all of port 2 (pressed = low)
 			JMP	C_AC48
 9			AIM	#%11111011,$00,X
 			BRA	8B
-10			LDAB	M00A0
 
+10			LDAB	M00A0
 			JSR	JMPOFF1
-			FCB	C_AD20 - *
+			FCB	C_AD20 - *		; B = 0
 			FCB	$01
-			FCB	C_AD24 - *
+			FCB	C_AD24 - *		; B = 1 .. 2
 			FCB	$03
-			FCB	C_AD20 - *
+			FCB	C_AD20 - *		; B = 3 .. 7
 			FCB	$08
-			FCB	C_ADEF - *
+			FCB	C_ADEF - *		; B = 8 .. 9
 			FCB	$0A
-			FCB	11F - *
+			FCB	11F - *			; B = 10, 11
 			FCB	$0C
-			FCB	C_AD20 - *
+			FCB	C_AD20 - *		; default
 			FCB	$00
 
 11			JMP	C_AE50
 
-C_AD20			CLRB
+							; B = 3 .. 7
+C_AD20			CLRB				; B <- 0
 			JMP	C_AC48
 
 C_AD24			TBA
@@ -5928,7 +5932,7 @@ C_ADAA			LDAB	M7788
 			BNE	17B
 C_ADB6			CMPA	#$02
 			BEQ	27F
-			TIM	#%00001000,M009B
+			TIM	#%00001000,SWITCH_LO	; test SW4 (INC)
 			BEQ	17B
 			LDAB	#$01
 24			LDX	M00A1
@@ -5944,7 +5948,7 @@ C_ADB6			CMPA	#$02
 26			CLR	>M00A1
 			CLR	>M00A2
 			RTS
-27			TIM	#%00010000,M009B
+27			TIM	#%00010000,SWITCH_LO	; test SW5 (DEC)
 			BEQ	17B
 			LDAB	#$02
 			BRA	24B
@@ -5956,11 +5960,11 @@ C_ADEF			TST	>M00A4
 			BNE	37F
 			CMPB	#$09
 			BEQ	29F
-			TIM	#%01000000,M009B
+			TIM	#%01000000,SWITCH_LO	; test SW7 (PARAM-)
 			BEQ	37F
 			LDAB	#$08
 			BRA	30F
-29			TIM	#%00100000,M009B
+29			TIM	#%00100000,SWITCH_LO	; test SW6 (PARAM+)
 			BEQ	37F
 			LDAB	#$09
 30			LDAA	M7772
@@ -5998,11 +6002,11 @@ C_ADEF			TST	>M00A4
 
 C_AE50			CMPB	#$0B
 			BEQ	36F
-			TIM	#%00000100,M009B
+			TIM	#%00000100,SWITCH_LO	; test SW3 (volume down)
 			BEQ	37F
 			LDAB	#$0A
 			BRA	39F
-36			TIM	#%00000010,M009B
+36			TIM	#%00000010,SWITCH_LO	; test SW2 (volume up)
 			BNE	38F
 37			JMP	17B
 38			LDAB	#$0B
@@ -6889,7 +6893,7 @@ ZB51F			LDAA	M7788
 			BEQ	ZB534
 ZB52F			JSR	HI_CALL_03
 			BRA	ZB4D0
-ZB534			LDX	#M7640
+ZB534			LDX	#MICROTUNE
 			BRA	ZB53C
 ZB539			LDX	#M7628
 ZB53C			LDAB	M778A
@@ -7952,7 +7956,7 @@ ZBDC6			LDAB	M7788
 			LDAB	M7789
 			CMPB	#$0F
 			BEQ	ZBDDE
-ZBDD4			CPX	#M7740
+ZBDD4			CPX	#MICROTUNE_END
 			BCS	ZBDE2
 			CPX	#M7750
 			BCC	ZBDE2
@@ -8635,7 +8639,7 @@ HI_CALL_02		LDAB	M778A
 			JMP	ZC406
 ZC365			LDX	#M7F9A
 			STX	M00A9
-			LDX	#M7640
+			LDX	#MICROTUNE
 			STX	M00A7
 			LDAB	#$0C
 ZC371			PSHB
@@ -8667,7 +8671,7 @@ ZC38B			INX
 ZC39C			PSHB
 			LDAA	#$18
 			MUL
-			LDX	#M7640
+			LDX	#MICROTUNE
 			ABX
 			STX	M00A9
 			LDAB	#$18
@@ -8710,7 +8714,7 @@ ZC3D1			INX
 			CMPB	#$0A
 			BNE	ZC39C
 			CLRB
-			LDX	#M7640
+			LDX	#MICROTUNE
 ZC3EB			LDAA	,X
 ZC3ED			CMPA	#$0D
 			BCC	ZC3F5
@@ -8758,22 +8762,22 @@ ZC441			CLRA
 ZC442			STAA	M7F99
 			RTS
 
-LCD_INIT		LDAA	#$38			; LCD Mode Set
+LCD_INIT		LDAA	#$38			; A <- LCD Mode Set
 			LDX	#$0000
-ZC44B			DEX
-			BNE	ZC44B
-			STAA	LCD_CMD
+1			DEX				; wait a bit
+			BNE	1B			; -
+			STAA	LCD_CMD			; send LCD mode set
 			LDX	#10000
-ZC454			DEX
-			BNE	ZC454
-			STAA	LCD_CMD
+2			DEX				; wait a bit more
+			BNE	2B			; -
+			STAA	LCD_CMD			; send it again
 			LDX	#10000
-ZC45D			DEX
-			BNE	ZC45D
-			STAA	LCD_CMD
-			JSR	LCD_WAIT
-			STAA	LCD_CMD
-			JSR	LCD_WAIT
+3			DEX				; wait a bit more again
+			BNE	3B			;-
+			STAA	LCD_CMD			; send it again
+			JSR	LCD_WAIT		; wait for LCD busy to clear
+			STAA	LCD_CMD			; and once more for luck...
+			JSR	LCD_WAIT		; and wait for LCD busy to clear
 			LDAA	#$0C
 			STAA	LCD_CMD
 			JSR	LCD_WAIT
@@ -8782,106 +8786,111 @@ ZC45D			DEX
 			JSR	LCD_WAIT
 			LDAA	#$06
 			STAA	LCD_CMD
-			LDAA	#$20
-			LDX	#LCD_COPY
-ZC486			STAA	,X
+
+			LDAA	#$20			; erase the off screen LCD buffer
+			LDX	#LCD_COPY		; -
+4			STAA	,X			; -
+			INX				; -
+			CPX	#LCD_COPY + 32		; -
+			BNE	4B			; -
+
+			LDX	#SWITCH_LO		; clear switch state
+5			CLR	,X			; why is this a loop just to clear two bytes?!
 			INX
-			CPX	#LCD_BUFFER
-			BNE	ZC486
-			LDX	#M009B
-ZC491			CLR	,X
-			INX
-			CPX	#M009B + 2
-			BNE	ZC491
+			CPX	#SWITCH_LO + 2
+			BNE	5B
+
 			JSR	F_C253
 			CMPA	#$60
-			BNE	ZC4A4
+			BNE	6F
 			LDAB	#$01
-			BRA	ZC4B2
-ZC4A4			CMPA	#$A0
-			BNE	ZC4AC
+			BRA	8F
+6			CMPA	#$A0
+			BNE	7F
 			LDAB	#$02
-			BRA	ZC4B2
-ZC4AC			CMPA	#$C0
-			BNE	ZC4CA
+			BRA	8F
+7			CMPA	#$C0
+			BNE	9F
 			LDAB	#$03
-ZC4B2			STAB	M00A6
+8			STAB	M00A6
 			LSRA
 			LSRA
 			LSRA
 			LSRA
 			LSRA
-			STAA	M009B
+			STAA	SWITCH_LO
 			LDX	#S_VERSION
 			STX	M00A9
 			LDAB	#$10
 			LDX	#M7740
 			JSR	MEMCPY_xB_A9_X
-			BRA	ZC4EE
-ZC4CA			JSR	READ_SWITCHES
+			BRA	12F
+9			JSR	READ_SWITCHES
 			CMPB	#$07
-			BNE	ZC4D4
+			BNE	10F
 			JSR	READ_SWITCHES
-ZC4D4			CMPB	#$03
-			BNE	ZC4EE
+10			CMPB	#$03
+			BNE	12F
 			LDAA	#$01
 			STAA	M00AD
-ZC4DC			LDX	#S_GOOD_MORNING
+11			LDX	#S_GOOD_MORNING
 			STX	M00A9
 			LDAB	#$10
 			LDX	#M7740
 			JSR	MEMCPY_xB_A9_X
 			TST	>M00AD
-			BNE	ZC544
-ZC4EE			JSR	F_C8D9
+			BNE	20F
+12			JSR	F_C8D9
 			CLRB
-ZC4F2			PSHB
+13			PSHB
 			LSRB
 			ANDB	#$03
 			LDAA	#$80
-ZC4F8			TSTB
-			BEQ	ZC4FF
+14			TSTB
+			BEQ	15F
 			DECB
 			LSRA
-			BRA	ZC4F8
-ZC4FF			ORAA	#$08
+			BRA	14B
+15			ORAA	#$08
 			STAA	PORT6
 			PULB
 			CMPB	#$10
-			BCS	ZC512
+			BCS	16F
 			LDX	#M7740
 			PSHB
 			SUBB	#$10
 			ABX
 			PULB
-			BRA	ZC516
-ZC512			LDX	#S_YAMAHA_TX81Z
+			BRA	17F
+16			LDX	#S_YAMAHA_TX81Z
 			ABX
-ZC516			LDAA	,X
+17			LDAA	,X
 			LDX	#LCD_BUFFER
 			ABX
 			STX	M00A7
 			CMPA	#$20
-			BCS	ZC4DC
+			BCS	11B
 			CMPA	#$80
-			BCC	ZC4DC
+			BCC	11B
 			PSHB
 			TAB
 			JSR	PUTCHAR
 			JSR	LCD_UPDATE
 			PULB
 			TST	>M00A6
-			BNE	ZC53A
+			BNE	19F
 			LDX	#$A000
-ZC537			DEX
-			BNE	ZC537
-ZC53A			INCB
+18			DEX
+			BNE	18B
+19			INCB
 			CMPB	#$20
-			BNE	ZC4F2
+			BNE	13B
 			LDAB	#$FF
 			JSR	DELAY_B_x_4500
-ZC544			JSR	F_C8D9
+20			JSR	F_C8D9
 			RTS
+
+;-------
 
 F_C548			CLR	M7F99
 			CLR	M7788
@@ -9141,7 +9150,7 @@ ZC78B			LDX	#M7628
 			CMPB	#$0C
 			BNE	ZC78B
 			CLRB
-ZC796			LDX	#M7640
+ZC796			LDX	#MICROTUNE
 			JSR	F_C7A1
 			CMPB	#$80
 			BNE	ZC796
@@ -10992,7 +11001,7 @@ MD5D7_via_cvec_d5a9	TST	>M00C8
 			BNE	ZD5FD
 			LDAB	MIDI_RX_DATA_COUNT
 			SUBB	#$0F
-			LDX	#M7640
+			LDX	#MICROTUNE
 			ABX
 			STAA	,X
 			ADDA	MIDI_RX_CRC
@@ -12741,7 +12750,7 @@ ZE431			LDAA	,X
 			JSR	MIDI_SEND
 			PULX
 			INX
-			CPX	#M7640
+			CPX	#M7628 + 24
 			BNE	ZE431
 			JSR	MIDI_SEND_EOX
 			RTS
@@ -12769,7 +12778,7 @@ ZE462			JSR	HI_CALL_00
 			LDAA	SYS_MIDTCH
 			JSR	MIDI_SEND
 			CLRB
-ZE487			LDX	#ME4B4
+ZE487			LDX	#S_SYSEX_MCRTE1
 			ABX
 			LDAA	,X
 			JSR	MIDI_SEND
@@ -12778,7 +12787,7 @@ ZE487			LDX	#ME4B4
 			BCS	ZE487
 			LDAA	#$85
 			STAA	MIDI_TX_CRC
-			LDX	#M7640
+			LDX	#MICROTUNE
 ZE49C			LDAA	,X
 			PSHX
 			ANDA	#$7F
@@ -12788,12 +12797,13 @@ ZE49C			LDAA	,X
 			JSR	MIDI_SEND
 			PULX
 			INX
-			CPX	#M7740
+			CPX	#MICROTUNE_END
 			BNE	ZE49C
 			JSR	MIDI_SEND_EOX
 			RTS
 
-ME4B4			FCB	$7E,$02,$0A,$4C,$4D,$20,$20,$4D,$43,$52,$54,$45,$31
+S_SYSEX_MCRTE1		FCB	$7E,$02,$0A
+			FCC	'LM  MCRTE1'
 
 ME4C1_via_cvec_bc10	TST	SYS_SYSAVL
 			BNE	ZE4C7

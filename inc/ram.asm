@@ -11,8 +11,11 @@ XROM			EQU	$0040	; storage for XROM call number
 NOTE_NUMBER		EQU	$0052	; MIDI note to be played
 LOOP_COUNT		EQU	$0055	; counts iterations of main loop (modulo 16)
 
-SWITCH_LO		EQU	$009D	; pressed switches (1 .. 8)
-SWITCH_HI		EQU	$009E	; pressed switches (9 .. 11)
+SWITCH_LO		EQU	$009B	; switch state (1 .. 8)
+SWITCH_HI		EQU	$009C	; switch state (9 .. 11)
+
+SWITCH_LO_N		EQU	$009D	; pressed switches (1 .. 8)
+SWITCH_HI_N		EQU	$009E	; pressed switches (9 .. 11)
 
 PTR_TX			EQU	$00B4	; pointer for next MIDI TX
 PTR_RX			EQU	$00B6	; pointer for pending MIXI RX data
@@ -105,7 +108,8 @@ EFFECTS_PARAMS_END	EQU	CHORD_END
 ;
 ; TBC - 4 * 64 bytes (?)
 ;
-;M7640			EQU	$7640
+MICROTUNE		EQU	$7640
+MICROTUNE_END		EQU	MICROTUNE + 256
 
 ;-------
 ;
