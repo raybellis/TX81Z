@@ -8,7 +8,8 @@
 ;
 XROM			EQU	$0040			; storage for XROM call number
 
-NOTE_NUMBER		EQU	$0052			; MIDI note to be played
+NOTE_NUMBER_STOP	EQU	$0051			; MIDI note to be stopped
+NOTE_NUMBER		EQU	$0052			; MIDI note to be started
 LOOP_COUNT		EQU	$0055			; counts iterations of main loop (modulo 16)
 
 SWITCH_LO		EQU	$009B			; switch state (1 .. 8)
@@ -120,6 +121,7 @@ MICROTUNE_FULL_END	EQU	MICROTUNE_FULL + 256
 
 ;-------
 
+CHORD_NOTE		EQU	$7756
 NOTE_VELOCITY		EQU	$7769
 POLL_ENABLE		EQU	$776C			; set to 0 to skip polling
 
