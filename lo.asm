@@ -172,8 +172,7 @@ hdlr_IRQ1		NOP
 
 			ORG	$8200
 
-XROM_VEC2
-M8200			FDB	hdlr_RST
+XROM_VEC2		FDB	hdlr_RST
 
 ; XROM jump table
 
