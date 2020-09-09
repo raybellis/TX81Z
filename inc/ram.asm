@@ -132,6 +132,8 @@ PFM_EDITED		EQU	$7791			; Performance data changed
 VOICE_EDITED		EQU	$7792			; Voice data changed
 VOICE_COMPARE		EQU	$7793			; Voice compare mode
 
+INST_VOLUME		EQU	$7D6B			; scaled 0..255 (8 bytes)
+
 LCD_COPY		EQU	$7D8B			; copy of current LCD output (32 bytes)
 LCD_BUFFER		EQU	$7DAB			; buffer for pending LCD output (32 bytes)
 
