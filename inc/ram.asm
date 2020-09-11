@@ -32,13 +32,33 @@ MIDI_RX_ERR		EQU	$00CA			; non-zero if MIDI RX error
 
 ;-------
 ;
+; 32 x 72 bytes of user preset data
 ;
-
 USER_VOICE		EQU	$6001			; user voices (32 x 78 bytes = 2496)
-							; $6001 .. $69C0
+USER_VOICE_END		EQU	USER_VOICE + 32 * 78	; $69C1
 
-;				# $6A67 + 8 * 110 = $6DD7
+;-------
 
+; TBC			EQU	$69C1
+
+;--------
+;
+; 8 x 110 bytes of live voice data
+;
+VOICE_EDIT_BUF		EQU	$6A67
+
+VOICE_EDIT_OPS		EQU	VOICE_EDIT_BUF
+VOICE_EDIT_OPS_END	EQU	VOICE_EDIT_OPS + 52
+VOICE_EDIT_PARAMS	EQU	VOICE_EDIT_OPS_END
+
+VOICE_EDIT_END		EQU	$6AC4
+
+; $6A67 + 8 * 110 = $6DD7
+
+;-------
+;
+; Performance edit buffer
+;
 PFM_EDIT_BUF		EQU	$6DD7			; performance edit buffer (110 bytes)
 PFM_EDIT_INST_0		EQU	PFM_EDIT_BUF
 PFM_EDIT_INST_4		EQU	PFM_EDIT_BUF + 4 * 12
@@ -50,6 +70,9 @@ PFM_EDIT_KEY		EQU	PFM_EDIT_INST_END + 3	; microtune key
 PFM_EDIT_NAME		EQU	PFM_EDIT_INST_END + 4
 PFM_EDIT_BUF_END	EQU	PFM_EDIT_NAME + 10
 
+;
+;
+;
 USER_PFM		EQU	$6E45			; user PFMs (24 x 76 bytes = 1824)
 							; $6E45 .. $7564
 
@@ -60,17 +83,19 @@ USER_PFM		EQU	$6E45			; user PFMs (24 x 76 bytes = 1824)
 ;
 SYS_PARAMS		EQU	$7565
 
-SYS_TUNE		EQU	$7565			; master tune
-SYS_MIDBCH		EQU	$7566			; Basic recv. chan.  16 = Omni
-SYS_MIDTCH		EQU	$7567			; Trans. chan.
-SYS_PCINF		EQU	$7568			; Program Change Switch
-SYS_COINF		EQU	$7569			; Cont. chang switch
-SYS_PBSW		EQU	$756A			; Pitchbend SW
-SYS_NOTESW		EQU	$756B			; 0 = All / 1 = Odd / 2 = Even
-SYS_SYSAVL		EQU	$756C			; Exclusive on / off
-SYS_MLOCK		EQU	$756D			; Mem. Protect
-SYS_CMBIN		EQU	$756E			; Combine
-SYS_AT			EQU	$756F			; Aftertouch
+SYS_TUNE		EQU	SYS_PARAMS + 0		; master tune
+SYS_MIDBCH		EQU	SYS_PARAMS + 1		; Basic recv. chan.  16 = Omni
+SYS_MIDTCH		EQU	SYS_PARAMS + 2		; Trans. chan.
+SYS_PCINF		EQU	SYS_PARAMS + 3		; Program Change Switch
+SYS_COINF		EQU	SYS_PARAMS + 4		; Cont. chang switch
+SYS_PBSW		EQU	SYS_PARAMS + 5		; Pitchbend SW
+SYS_NOTESW		EQU	SYS_PARAMS + 6		; 0 = All / 1 = Odd / 2 = Even
+SYS_SYSAVL		EQU	SYS_PARAMS + 7		; Exclusive on / off
+SYS_MLOCK		EQU	SYS_PARAMS + 8		; Mem. Protect
+SYS_CMBIN		EQU	SYS_PARAMS + 9		; Combine
+SYS_AT			EQU	SYS_PARAMS + 10		; Aftertouch
+
+SYS_PARAMS_END		EQU	SYS_PARAMS + 11
 
 ;-------
 ;
@@ -116,8 +141,9 @@ MICROTUNE_FULL_END	EQU	MICROTUNE_FULL + 256
 
 ;-------
 ;
-; TBC
-;M7740			EQU	$7740
+; TBC - 16 byte table
+;
+M7740			EQU	$7740
 
 ;-------
 
@@ -128,11 +154,18 @@ POLL_ENABLE		EQU	$776C			; set to 0 to skip polling
 OP_ENABLE		EQU	$776E			;
 OP_ENABLE_END		EQU	OP_ENABLE + 4		;
 
+; VOICE_NUM		EQU	$778B			; index into voice edit table
+
 PFM_EDITED		EQU	$7791			; Performance data changed
 VOICE_EDITED		EQU	$7792			; Voice data changed
 VOICE_COMPARE		EQU	$7793			; Voice compare mode
 
+INST_MODULATION		EQU	$7D53			; CC modulation (8 bytes)
+INST_BREATH		EQU	$7D5B			; CC breath (8 bytes)
+INST_FOOT		EQU	$7D63			; CC foot (8 bytes)
 INST_VOLUME		EQU	$7D6B			; scaled 0..255 (8 bytes)
+
+; TBC			EQU	$7D83			; per voice TDB (8 bytes)
 
 LCD_COPY		EQU	$7D8B			; copy of current LCD output (32 bytes)
 LCD_BUFFER		EQU	$7DAB			; buffer for pending LCD output (32 bytes)

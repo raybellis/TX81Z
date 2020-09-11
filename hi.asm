@@ -123,18 +123,13 @@ M00FE			EQU	$00FE
 
 M69C1			EQU	$69C1
 M6A19			EQU	$6A19
-M6A67			EQU	$6A67
-M6A9B			EQU	$6A9B
 M6AA6			EQU	$6AA6
 M6AA9			EQU	$6AA9
 M6AAD			EQU	$6AAD
 M6ABE			EQU	$6ABE
 M6AC1			EQU	$6AC1
-M6AC4			EQU	$6AC4
 M6AD5			EQU	$6AD5
 M7570			EQU	$7570
-M7735			EQU	$7735
-M7740			EQU	$7740
 M7750			EQU	$7750
 M7751			EQU	$7751
 M7752			EQU	$7752
@@ -230,11 +225,7 @@ M7D23			EQU	$7D23
 M7D2B			EQU	$7D2B
 M7D33			EQU	$7D33
 M7D3B			EQU	$7D3B
-M7D53			EQU	$7D53
-M7D5A			EQU	$7D5A
-M7D5B			EQU	$7D5B
 M7D62			EQU	$7D62
-M7D63			EQU	$7D63
 M7D6A			EQU	$7D6A
 M7D72			EQU	$7D72
 M7D73			EQU	$7D73
@@ -394,7 +385,7 @@ XROM_VEC		FDB	HI_CALL_00
 			FDB	MIDI_SEND_SENSE
 			FDB	MIDI_SEND
 			FDB	HI_CALL_0D
-			FDB	HI_CALL_0E
+			FDB	SEND_SYSEX_VMEM_HDR
 			FDB	HI_CALL_0F
 			FDB	MIDI_SEND_EOX
 			FDB	HI_CALL_11
@@ -462,7 +453,7 @@ NOTE_START		STAB	M00E0			; save instrument number
 			BEQ	2B
 			BRA	5F
 4			LDAA	M00E0
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			TST	$3F,X
 			PULA
 			BEQ	5F
@@ -677,7 +668,7 @@ F_8406			LDAA	M00E0
 			PSHA
 			PSHB
 			LDAA	M00E0
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			TST	$41,X
 			PULB
 			PULA
@@ -845,7 +836,7 @@ NOTE_STOP		STAB	M00E0
 			TST	PFM_EDIT_ASSIGN
 			BNE	4F
 3			LDAA	M00E0
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			TST	$3F,X
 			BEQ	4F
 			JMP	11F
@@ -1214,7 +1205,9 @@ TEST_NOTE_LIMIT		LDAA	M7772
 			RTS
 
 ;-------
-
+;
+; test note limit for note off?
+;
 F_8831			PSHA
 			LDAA	M7772
 			ANDA	#$04
@@ -1262,7 +1255,7 @@ F_885F			STAB	M00E0
 			TST	PFM_EDIT_ASSIGN
 			BNE	2F
 1			LDAA	M00E0
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			TST	$3F,X
 			BEQ	2F
 			JMP	6F
@@ -1349,7 +1342,7 @@ F_890E			STAB	M00DC
 			ABX
 			PULA
 			PSHX
-			TST	$0B,X
+			TST	$0B,X			; microtune enable (0/1)
 			BEQ	5F
 			LDAB	PFM_EDIT_MICTUN
 			CMPB	#$01
@@ -2778,7 +2771,7 @@ HI_CALL_0F		LDAA	TCSR1
 			CMPB	#$08
 			BNE	1B
 			BRA	8F
-7			JSR	F_95F5
+7			JSR	COPY_NOTE_LIMITS
 8			LDAA	#$FF
 			LDAB	#$08
 			LDX	#M7942
@@ -2840,7 +2833,7 @@ HI_CALL_0F		LDAA	TCSR1
 			LDAA	#12
 			MUL
 			ABX
-			LDAB	$0A,X
+			LDAB	$0A,X			; LFO select (0..3)
 			BEQ	19F
 			CMPB	#$03
 			BCC	20F
@@ -3096,23 +3089,25 @@ F_95E5			JSR	F_95C4
 			RTS
 
 ;-------
-
-F_95F5			CLRB
-1			PSHB
-			LDX	#PFM_EDIT_BUF
-			LDAA	#12
-			MUL
-			ABX
-			LDAA	,X
-			LDX	M0079
-			STAA	,X
-			INX
-			STX	M0079
-			PULB
-			INCB
-			CMPB	#$08
-			BNE	1B
-			RTS
+;
+; Copies per-instrument note limits into table at @($79)
+;
+COPY_NOTE_LIMITS	CLRB				; B <- 0
+1			PSHB				; save B
+			LDX	#PFM_EDIT_BUF		; offset into current performance
+			LDAA	#12			; A <- 12
+			MUL				; -
+			ABX				; -
+			LDAA	,X			; get maximum notes
+			LDX	M0079			; get pointer
+			STAA	,X			; save maximum notes there
+			INX				; increment pointer
+			STX	M0079			; save pointer
+			PULB				; restore B
+			INCB				; increment
+			CMPB	#$08			; count up to 8
+			BNE	1B			; and loop
+			RTS				; and done
 
 ;-------
 
@@ -3447,7 +3442,7 @@ F_993C			LDX	#M7EE9
 			CLRA
 			LDX	#M7F08
 			LDAB	#$08
-			JSR	F_C7F8
+			JSR	RESET_INST_CC
 			RTS
 
 ;-------
@@ -3470,7 +3465,7 @@ F_995A			LDX	#M7F89
 			XGDX
 			LDAB	,X
 			BEQ	4F
-			LDAB	$03,X
+			LDAB	$03,X			; receive channel (omni = 16)
 			CMPB	#$10
 			BNE	3F
 			BSR	F_99DE
@@ -3535,7 +3530,7 @@ F_99DE			CLRB
 
 ;-------
 
-F_99EF			LDD	#M6A67
+F_99EF			LDD	#VOICE_EDIT_BUF
 			ADDD	M0074
 			XGDX
 			LDAB	M0070
@@ -3563,10 +3558,10 @@ F_9A07			TAB
 			CMPA	#$08
 			BCS	1F
 			CLRA
-			BSR	F_9A2F
+			BSR	GET_VOICE_PTR
 			SEC
 			BRA	2F
-1			BSR	F_9A2F
+1			BSR	GET_VOICE_PTR
 			CLC
 2			RTS
 
@@ -3585,10 +3580,14 @@ F_9A1C			LDX	#M793B
 			RTS
 
 ;-------
+;
+; get a pointer to the voice data for voice A
+; uses B and X, destroys A.
+;
 
-F_9A2F			LDAB	#110
+GET_VOICE_PTR		LDAB	#110
 			MUL
-			ADDD	#M6A67
+			ADDD	#VOICE_EDIT_BUF
 			XGDX
 			RTS
 
@@ -3601,7 +3600,7 @@ HI_CALL_11		LDAA	EF2R
 
 ;-------
 
-F_9A41			LDD	#M6A9B
+F_9A41			LDD	#VOICE_EDIT_PARAMS
 			ADDD	M0074
 			XGDX
 			LDAB	$01,X
@@ -3641,13 +3640,13 @@ F_9A41			LDD	#M6A9B
 F_9A87			CLR	>M0072
 			LDAA	M784E
 			BMI	1F
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			LDAA	$3B,X
 			ANDA	#$03
 			STAA	M0072
 1			LDAA	M784F
 			BMI	2F
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			LDAA	$3B,X
 			ANDA	#$03
 			ASLA
@@ -3671,17 +3670,20 @@ F_9AC2			JSR	F_A120
 			LDAA	$3A,X
 			LDX	#M782E
 			STX	M00A7
-			JMP	F_9AD2
+			JMP	F_9AD2			; could've fallen thorough
 
 ;-------
-
-F_9AD2			LDX	M00A7
+; pointer in $A7
+; instrument number in B ?
+;
+F_9AD2
+0			LDX	M00A7
 			LDAB	M0076
 			ABX
 			STAA	,X
 			INC	>M0076
 			DEC	>M007B
-			BNE	F_9AD2
+			BNE	0B
 			RTS
 
 ;-------
@@ -3701,7 +3703,7 @@ F_9AE2			PSHX
 			LSRB
 			ANDB	#$07
 			TBA
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			BRA	2F
 1			PULX
 2			RTS
@@ -3725,7 +3727,7 @@ F_9B02			LDAB	#$36
 			LSRB
 			ANDB	#$07
 			TBA
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			LDAA	$36,X
 			JSR	MUL_660
 			LDAB	$3B,X
@@ -3808,7 +3810,7 @@ F_9C35			LDAB	#$37
 			LSRB
 			ANDB	#$07
 			TBA
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			LDAB	#$37
 			ABX
 			JSR	F_9CF5
@@ -3837,7 +3839,7 @@ F_9C76			LDX	#M784E
 1			LDX	M00A9
 			LDAA	,X
 			BMI	2F
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			LDAA	$39,X
 			JSR	MUL_660
 			PSHX
@@ -4365,8 +4367,8 @@ F_A01B			LDAB	#$3E
 			LDAA	#12
 			MUL
 			ABX
-			LDAB	$07,X
-			SUBB	#$18
+			LDAB	$07,X			; get instrument note shift
+			SUBB	#24			; fix range (-24 .. +24)
 			PULA
 			ABA
 1			LDX	#M791B
@@ -4452,7 +4454,7 @@ F_A120			CLRB
 
 ;-------	fallthrough
 
-F_A121			LDX	#M6A67
+F_A121			LDX	#VOICE_EDIT_BUF
 			ABX
 			XGDX
 			ADDD	M0074
@@ -4822,7 +4824,7 @@ F_A390			LDAB	#$07
 			BPL	13F
 			CLRA
 			BRA	14F
-13			LDX	#M7D5B
+13			LDX	#INST_BREATH
 			ABX
 			LDAA	,X
 			BNE	14F
@@ -5113,7 +5115,7 @@ F_A68F			CLR	>M0097
 			PULX
 			JMP	9F
 2			STAB	M0093
-			LDX	#M7D5B
+			LDX	#INST_BREATH
 			ABX
 			STX	M0089
 			LDAB	,X
@@ -5375,7 +5377,7 @@ F_A94B			TST	>M0091
 			LDAB	M784E
 			BRA	6F
 5			LDAB	M784F
-6			LDX	#M7D53
+6			LDX	#INST_MODULATION
 			ABX
 			STAB	M0089
 			LDAB	,X
@@ -5385,7 +5387,7 @@ F_A94B			TST	>M0091
 			LDAB	M0097
 			ABX
 			LDAA	,X
-			LDX	#M7D5B
+			LDX	#INST_BREATH
 			LDAB	M0089
 			ABX
 			LDAB	,X
@@ -5395,7 +5397,7 @@ F_A94B			TST	>M0091
 			LDAB	M0097
 			ABX
 			LDAA	,X
-			LDX	#M7D63
+			LDX	#INST_FOOT
 			LDAB	M0089
 			ABX
 			LDAB	,X
@@ -5469,7 +5471,7 @@ F_AA1A			TST	>M0091
 			ABX
 			LDAB	,X
 			BMI	6F
-			LDX	#M7D53
+			LDX	#INST_MODULATION
 			ABX
 			STX	M0089
 			LDX	#M7D3B
@@ -6218,7 +6220,7 @@ F_AF6F			XGDX
 			LDAB	M778B
 			LDAA	#110
 			MUL
-			ADDD	#M6A67
+			ADDD	#VOICE_EDIT_BUF
 			XGDX
 			RTS
 
@@ -6491,7 +6493,7 @@ C_B179			LDAA	#$06
 			CLR	M778C
 			CLR	M7790
 			JSR	F_E10E
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 			STX	M00A9
 			LDX	#M69C1
 			JSR	LO_CALL_06
@@ -7316,7 +7318,7 @@ C_B773			RTS
 ;-------
 
 F_B774			AIM	#~ECMI,TCSR3
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 			STX	M00A9
 			LDX	#M6A19
 			JSR	LO_CALL_06
@@ -7338,7 +7340,7 @@ F_B796			AIM	#~ECMI,TCSR3
 
 F_B7A2			STX	M00A9
 			AIM	#~ECMI,TCSR3
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 			JSR	LO_CALL_00
 			JSR	LO_CALL_08
 			JSR	F_E178
@@ -7405,12 +7407,12 @@ F_B820			CLRB
 			LDAA	#12
 			MUL
 			ABX
-			LDAB	$02,X
+			LDAB	$02,X			; A <- voice number LSB
 			JSR	F_AEE0
 			STX	M00A9
 			PULA
 			PSHA
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			JSR	LO_CALL_00
 			PULB
 			INCB
@@ -7424,7 +7426,7 @@ F_B83F			LDAB	M7795
 			STAB	M7773
 			CLR	VOICE_EDITED
 			CLR	VOICE_COMPARE
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 			STX	M00A9
 			JSR	F_AEDD
 			JSR	LO_CALL_06
@@ -7522,7 +7524,7 @@ F_B8E3			DECB
 
 F_B90E			AIM	#~ECMI,TCSR3
 			LDAB	#110
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 			STX	M00A9
 			LDX	#M6AD5
 			JSR	MEMCPY_xB_A9_X
@@ -7935,11 +7937,11 @@ F_BBF0			LDAB	M777E
 			JSR	DELAY_30_x_4500
 2			RTS
 
-D_BC0E			FDB	F_E633
+D_BC0E			FDB	SEND_SYSEX_S1_S2_E0_E1
 			FDB	SEND_SYSEX_SYS0
 			FDB	SEND_SYSEX_SYS1
 			FDB	SEND_SYSEX_SYS2
-			FDB	F_E639
+			FDB	SEND_SYSEX_E0_E1
 
 ;-------
 
@@ -7972,7 +7974,7 @@ F_BC2A			LDX	M7781
 			LDX	#PFM_EDIT_BUF
 			CLRA
 			LDAB	#12
-2			ADDA	,X
+2			ADDA	,X			; maximum notes
 			ABX
 			CPX	#PFM_EDIT_INST_END
 			BNE	2B
@@ -7998,7 +8000,7 @@ F_BC2A			LDX	M7781
 			MUL
 			LDX	#PFM_EDIT_BUF
 			ABX
-			TST	,X
+			TST	,X			; maxmimum notes
 			BNE	8F
 5			JMP	32F
 6			CMPB	#$01
@@ -8158,7 +8160,7 @@ F_BC2A			LDX	M7781
 			BEQ	29F
 28			CPX	#MICROTUNE_FULL_END
 			BCS	30F
-			CPX	#M7750
+			CPX	#M7740 + $10
 			BCC	30F
 29			CMPA	#$20
 			BCS	31F
@@ -8637,7 +8639,7 @@ C_C12D			LDX	#F_A01B
 			BRA	C_C16F
 
 C_C135			LDAB	M778C
-			JSR	F_C81C
+			JSR	CALC_INST_VOLUME
 			AIM	#~ECMI,TCSR3
 			JSR	F_EC17
 			OIM	#ECMI,TCSR3
@@ -8792,7 +8794,7 @@ F_C259			LDAB	M778C
 			LDAA	#12
 			MUL
 			ABX
-			LDAB	$02,X
+			LDAB	$02,X			; voice number
 			PSHB
 			JSR	F_B164
 			JSR	F_AFD9
@@ -8872,7 +8874,7 @@ HI_CALL_19		TST	VOICE_EDITED
 			CLR	VOICE_EDITED
 			TST	VOICE_COMPARE
 			BNE	1F
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 			STX	M00A9
 			LDX	#M6A19
 			JSR	LO_CALL_06
@@ -8887,7 +8889,7 @@ HI_CALL_1B		LDAB	M7773
 			CLR	VOICE_COMPARE
 			JSR	F_AEDD
 			STX	M00A9
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 			JSR	LO_CALL_00
 			JSR	LO_CALL_08
 			JSR	HI_CALL_05
@@ -9473,36 +9475,37 @@ D_C7BF			FCB	$02,$01,$63
 F_C7C2			LDAB	#$08
 			LDX	#M7D8A
 			LDAA	#$80
-			BSR	F_C7F8
+			BSR	RESET_INST_CC
 			LDAB	#$08
-			LDX	#M7D5A
+			LDX	#INST_MODULATION + 7
 			CLRA
-			BSR	F_C7F8
+			BSR	RESET_INST_CC
 			LDAB	#$08
-			LDX	#M7D62
+			LDX	#INST_BREATH + 7
 			CLRA
-			BSR	F_C7F8
+			BSR	RESET_INST_CC
 			LDAB	#$08
 			LDX	#M7D6A
 			LDAA	#$FE
-			BSR	F_C7F8
+			BSR	RESET_INST_CC
 			LDAB	#$08
 			LDX	#M0048
 			LDAA	#$40
-			BSR	F_C7F8
+			BSR	RESET_INST_CC
 			LDAB	#$08
 			LDX	#M0050
 			CLRA
-			BSR	F_C7F8
+			BSR	RESET_INST_CC
 			BSR	F_C7FF
 			RTS
 
 ;--------
 
-F_C7F8			STAA	,X
+RESET_INST_CC
+0			STAA	,X
 			DEX
 			DECB
-			BNE	F_C7F8
+			BNE	0B
 			RTS
 
 ;--------
@@ -9511,25 +9514,31 @@ F_C7FF			LDAB	M7772
 			ANDB	#$04
 			BNE	1F
 			LDAB	#$08
-			LDX	#M7D72
+			LDX	#INST_VOLUME + 7
 			CLRA
-			BSR	F_C7F8
+			BSR	RESET_INST_CC
 			BRA	2F
-1			BSR	F_C813
+1			BSR	CALC_ALL_INST_VOLUMES
 2			RTS
 
 ;-------
+;
+; Remap all 8 instrument's volumes
+;
 
-F_C813			CLRB
-1			BSR	F_C81C
+CALC_ALL_INST_VOLUMES	CLRB
+1			BSR	CALC_INST_VOLUME
 			INCB
 			CMPB	#$08
 			BNE	1B
 			RTS
 
 ;-------
-
-F_C81C			PSHB
+;
+; Remap instrument B's volume from range 0 .. 99
+; to 255 .. 0  (out = ~ in * 660 / 256)
+;
+CALC_INST_VOLUME	PSHB
 			LDX	#PFM_EDIT_BUF
 			LDAA	#12
 			MUL
@@ -9549,15 +9558,15 @@ F_C832			LDX	#M7D83
 			ABX
 			LDAA	#$80
 			STAA	,X
-			LDX	#M7D53
+			LDX	#INST_MODULATION
 			ABX
 			CLRA
 			STAA	,X
-			LDX	#M7D5B
+			LDX	#INST_BREATH
 			ABX
 			CLRA
 			STAA	,X
-			LDX	#M7D63
+			LDX	#INST_FOOT
 			ABX
 			LDAA	#$FE
 			STAA	,X
@@ -9569,7 +9578,7 @@ F_C832			LDX	#M7D83
 			ABX
 			CLRA
 			STAA	,X
-			JSR	F_C81C
+			JSR	CALC_INST_VOLUME
 			RTS
 			PSHA
 			PULA
@@ -10265,7 +10274,7 @@ RX_AFTERTOUCH		TST	SYS_AT
 			BNE	2F
 			RTS
 2			ASLA
-			LDX	#M7D5B
+			LDX	#INST_BREATH
 			JSR	F_D012
 			RTS
 
@@ -10344,7 +10353,7 @@ RX_CTL_CHANGE		TST	>MIDI_RX_DATA_COUNT
 ;-------
 
 RX_CC_MODULATION	ASLA
-			LDX	#M7D53
+			LDX	#INST_MODULATION
 			JSR	F_D012
 			RTS
 
@@ -10353,14 +10362,14 @@ RX_CC_MODULATION	ASLA
 RX_CC_BREATH		TST	SYS_AT
 			BNE	1F
 			ASLA
-			LDX	#M7D5B
+			LDX	#INST_BREATH
 			JSR	F_D012
 1			RTS
 
 ;-------
 
 RX_CC_FOOT		ASLA
-			LDX	#M7D63
+			LDX	#INST_FOOT
 			JSR	F_D012
 			RTS
 
@@ -10652,7 +10661,7 @@ F_D052			STAB	M0073
 			MUL
 			ABX
 			PULB
-			CMPB	$02,X
+			CMPB	$02,X			; voice LSB
 			BEQ	2F
 			STAB	$02,X
 			LDAA	#$01
@@ -10669,7 +10678,7 @@ F_D06A			PSHB
 			JSR	F_AEE0
 			STX	M00A9
 			LDAA	M0073
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			JSR	LO_CALL_00
 			LDAB	M0073
 			STAB	M009F
@@ -11297,7 +11306,7 @@ F_D520			AIM	#~ECMI,TCSR3
 			SUBB	#$05
 			CMPB	#$57
 			BCC	1F
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 			ABX
 			STAA	,X
 1			ADDA	MIDI_RX_CRC
@@ -11369,7 +11378,7 @@ F_D593			AIM	#~ECMI,TCSR3
 
 D_D5A7			FDB	C_D5B7
 			FDB	C_D5D7
-			FDB	C_D619
+			FDB	RECV_SYSEX_SYS0
 			FDB	C_D64B
 			FDB	C_D694
 			FDB	C_D6B4
@@ -11434,31 +11443,31 @@ C_D5D7			TST	>M00C8
 
 ;-------
 
-C_D619			LDAB	MIDI_RX_DATA_COUNT
-			SUBB	#$0F
-			CMPB	#$0B
-			BCC	1F
-			LDX	#SYS_PARAMS		; save in SYS param table
-			ABX
-			STAA	,X
-			ADDA	MIDI_RX_CRC
-			STAA	MIDI_RX_CRC
-			INC	>MIDI_RX_DATA_COUNT
-			RTS
-1			CMPB	#$1B
-			BCC	2F
-			LDX	#M7735
-			ABX
-			STAA	,X
-2			ADDA	MIDI_RX_CRC
-			STAA	MIDI_RX_CRC
-			LDAA	MIDI_RX_DATA_COUNT
-			INCA
-			STAA	MIDI_RX_DATA_COUNT
-			CMPA	#$2A
-			BNE	3F
-			LDAA	#$FA
-			STAA	MIDI_RX_DATA_COUNT
+RECV_SYSEX_SYS0		LDAB	MIDI_RX_DATA_COUNT	; B <- receive count
+			SUBB	#$0F			; subtract header length
+			CMPB	#$0B			; B >= 11 ?
+			BCC	1F			; yes? branch
+			LDX	#SYS_PARAMS		; X <- sys param table
+			ABX				; X <- X + B
+			STAA	,X			; save data
+			ADDA	MIDI_RX_CRC		; add to running CRC
+			STAA	MIDI_RX_CRC		; save to running CRC
+			INC	>MIDI_RX_DATA_COUNT	; increase receive count
+			RTS				; done
+1			CMPB	#$1B			; B >= 27
+			BCC	2F			; yes? branch
+			LDX	#M7740 - 11		; X <- M7740 table (TBC)
+			ABX				; X <- X + B
+			STAA	,X			; save data
+2			ADDA	MIDI_RX_CRC		; add to running CRC
+			STAA	MIDI_RX_CRC		; save to running CRC
+			LDAA	MIDI_RX_DATA_COUNT	; A <- receive count
+			INCA				; A <- A + 1
+			STAA	MIDI_RX_DATA_COUNT	; save receive count
+			CMPA	#$2A			; is it 42 ?
+			BNE	3F			; no, we're done
+			LDAA	#$FA			; A <- $FA
+			STAA	MIDI_RX_DATA_COUNT	; save to receive count to mark EOX
 3			RTS
 
 ;-------
@@ -11522,7 +11531,9 @@ C_D694			LDAB	MIDI_RX_DATA_COUNT
 2			RTS
 
 ;-------
-
+;
+; saves incoming data to performance edit buffer
+;
 C_D6B4			LDAB	MIDI_RX_DATA_COUNT
 			SUBB	#$0F
 			CMPB	#110
@@ -11535,9 +11546,9 @@ C_D6B4			LDAB	MIDI_RX_DATA_COUNT
 			LDAA	MIDI_RX_DATA_COUNT
 			INCA
 			STAA	MIDI_RX_DATA_COUNT
-			CMPA	#$7D
+			CMPA	#125
 			BNE	2F
-			LDAA	#$FA
+			LDAA	#-6
 			STAA	MIDI_RX_DATA_COUNT
 2			RTS
 
@@ -11646,7 +11657,7 @@ D_D764			FDB	C_D7D4
 			LDAA	M7772
 			BITA	#$04
 			BEQ	7F
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 			STX	M00A9
 			LDX	#M69C1
 			JSR	LO_CALL_06
@@ -12895,13 +12906,13 @@ F_E11D			TST	SYS_SYSAVL
 			LDX	#S_TRANSMITTING
 			JSR	LCD_WRITE
 			CLR	>M00C7
-			JSR	HI_CALL_0E
+			JSR	SEND_SYSEX_VMEM_HDR
 1			LDAA	M00C7
 			LDAB	#$4E
 			MUL
 			ADDD	#USER_VOICE
 			XGDX
-			JSR	MIDI_SEND_VOICE
+			JSR	SEND_SYSEX_VMEM
 			LDAB	M00C7
 			INCB
 			STAB	M00C7
@@ -12980,7 +12991,7 @@ F_E178			TST	SYS_SYSAVL
 			CMPB	#$05
 			BCS	10B
 			CLR	>MIDI_TX_CRC
-			LDX	#M6A67
+			LDX	#VOICE_EDIT_BUF
 11			LDAA	,X
 			CPX	#M6AAD
 			BNE	12F
@@ -13013,7 +13024,7 @@ F_E178			TST	SYS_SYSAVL
 			JSR	MIDI_SEND
 			PULX
 			INX
-			CPX	#M6AC4
+			CPX	#VOICE_EDIT_END
 			BNE	14B
 			JSR	MIDI_SEND_EOX
 15			RTS
@@ -13103,7 +13114,7 @@ SEND_76			CLRB
 
 ;-------
 
-HI_CALL_0E		CLRB
+SEND_SYSEX_VMEM_HDR	CLRB
 1			LDX	#S_SYSEX_VMEM_HEADER
 			ABX
 			LDAA	,X
@@ -13127,7 +13138,7 @@ S_SYSEX_VMEM_HEADER	FCB	SYX,MFR_YAMAHA,$04,$20,$00
 
 ;-------
 
-			INCLUDE	"inc/voice_send.asm"
+			INCLUDE	"inc/sendvmem.asm"
 
 ;-------
 
@@ -13280,60 +13291,62 @@ S_SYSEX_MCRTE1		FCB	$7E,$02,$0A
 
 ;-------
 
-SEND_SYSEX_SYS0		TST	SYS_SYSAVL
-			BNE	1F
-			RTS
-1			TST	>M00CC
+SEND_SYSEX_SYS0		TST	SYS_SYSAVL		; is sysex enabled
+			BNE	1F			; yes, carry on...
+			RTS				; no? we're done
+1			TST	>M00CC			
 			BEQ	2F
 			RTS
-2			JSR	HI_CALL_00
-			JSR	HI_CALL_01
-			CLR	>M005A
-			JSR	LCD_CLR_BOTTOM
-			STX	M00A7
-			LDX	#S_TRANSMITTING
-			JSR	LCD_WRITE
-			LDAA	#SYX
-			JSR	MIDI_SEND
-			LDAA	#MFR_YAMAHA
-			JSR	MIDI_SEND
-			LDAA	SYS_MIDTCH
-			JSR	MIDI_SEND
-			CLRB
-3			LDX	#S_SYSEX_SYS0
-			ABX
-			LDAA	,X
-			JSR	MIDI_SEND
-			INCB
-			CMPB	#$0D
-			BCS	3B
-			LDAA	#$3A
-			STAA	MIDI_TX_CRC
-			LDX	#SYS_PARAMS
-4			LDAA	,X
-			PSHX
-			ANDA	#$7F
-			TAB
-			ADDB	MIDI_TX_CRC
-			STAB	MIDI_TX_CRC
-			JSR	MIDI_SEND
-			PULX
-			INX
-			CPX	#M7570
-			BNE	4B
-			LDX	#M7740
-5			LDAA	,X
-			PSHX
-			ANDA	#$7F
-			TAB
-			ADDB	MIDI_TX_CRC
-			STAB	MIDI_TX_CRC
-			JSR	MIDI_SEND
-			PULX
-			INX
-			CPX	#M7750
-			BNE	5B
-			JSR	MIDI_SEND_EOX
+2			JSR	HI_CALL_00		; TBC
+			JSR	HI_CALL_01		; TBC
+			CLR	>M005A			; TBC
+			JSR	LCD_CLR_BOTTOM		; clear the bottom LCD line
+			STX	M00A7			; save pointer to LCD buffer
+			LDX	#S_TRANSMITTING		; X <- display string
+			JSR	LCD_WRITE		; show it
+			LDAA	#SYX			; send SYX
+			JSR	MIDI_SEND		; -
+			LDAA	#MFR_YAMAHA		; send MFR ID
+			JSR	MIDI_SEND		; -
+			LDAA	SYS_MIDTCH		; send basic transmit channel
+			JSR	MIDI_SEND		; -
+
+			CLRB				; B <- 0
+3			LDX	#S_SYSEX_SYS0		; X <- sysex header
+			ABX				; X < X + B
+			LDAA	,X			; send byte at X
+			JSR	MIDI_SEND		; -
+			INCB				; B <- B + 1
+			CMPB	#$0D			; B == 13 ?
+			BCS	3B			; no, go around
+
+			LDAA	#$3A			; A <- pre-calculated seed CRC
+			STAA	MIDI_TX_CRC		; send it
+			LDX	#SYS_PARAMS		; X <- sys params table
+4			LDAA	,X			; get data at X
+			PSHX				; save X
+			ANDA	#$7F			; clear top bit of the data
+			TAB				; B <- A
+			ADDB	MIDI_TX_CRC		; add to running CRC
+			STAB	MIDI_TX_CRC		; and save it
+			JSR	MIDI_SEND		; send the data
+			PULX				; restore X
+			INX				; X <- X + 1
+			CPX	#SYS_PARAMS_END		; reached end of the table?
+			BNE	4B			; no?  go around
+			LDX	#M7740			; X <- table (TBC)
+5			LDAA	,X			; get data at A
+			PSHX				; save X
+			ANDA	#$7F			; clear top bit of the data
+			TAB				; B <- A
+			ADDB	MIDI_TX_CRC		; add to running CRC
+			STAB	MIDI_TX_CRC		; and save it
+			JSR	MIDI_SEND		; send the data
+			PULX				; restore X
+			INX				; X <- X + 1
+			CPX	#M7740 + $10		; reached end of the table?
+			BNE	5B			; no? go around
+			JSR	MIDI_SEND_EOX		; send CRC and EOX
 			RTS
 
 S_SYSEX_SYS0		FCB	$7E,$00,$25
@@ -13449,14 +13462,14 @@ S_SYSEX_SYS2		FCB	$7E,$00,$41
 
 ;-------
 
-F_E639			JSR	SEND_SYSEX_MCRTE0
+SEND_SYSEX_E0_E1	JSR	SEND_SYSEX_MCRTE0
 			JSR	DELAY_30_x_4500
 			JSR	SEND_SYSEX_MCRTE1
 			RTS
 
 ;-------
 
-F_E633			JSR	SEND_SYSEX_SYS1
+SEND_SYSEX_S1_S2_E0_E1	JSR	SEND_SYSEX_SYS1
 			JSR	DELAY_30_x_4500
 			JSR	SEND_SYSEX_SYS2
 			JSR	DELAY_30_x_4500
@@ -13476,7 +13489,10 @@ MIDI_SEND_EOX		LDAA	MIDI_TX_CRC		; get running CRC
 			RTS
 
 ;-------
-
+;
+; adds A to the MIDI send queue
+; modifies X, CCs.
+;
 MIDI_SEND		LDX	PTR_TX_TAIL		; get MIDI TX pointer
 			STAA	,X			; store data
 			CPX	#MIDI_TXBUF_END - 1	; check if we're at buffer end
@@ -13655,7 +13671,7 @@ F_E78F			STAB	M00E0
 			TST	PFM_EDIT_ASSIGN
 			BNE	3F
 2			LDAA	M00E0
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			TST	$3F,X
 			BEQ	3F
 			JMP	7F
@@ -13739,7 +13755,7 @@ F_E821			STAB	M00E0
 			TST	PFM_EDIT_ASSIGN
 			BNE	3F
 2			LDAA	M00E0
-			JSR	F_9A2F
+			JSR	GET_VOICE_PTR
 			TST	$3F,X
 			BEQ	3F
 			JMP	7F
