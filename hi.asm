@@ -130,7 +130,6 @@ M6ABE			EQU	$6ABE
 M6AC1			EQU	$6AC1
 M6AD5			EQU	$6AD5
 M7570			EQU	$7570
-M7750			EQU	$7750
 M7751			EQU	$7751
 M7752			EQU	$7752
 M7753			EQU	$7753
@@ -388,7 +387,7 @@ XROM_VEC		FDB	HI_CALL_00
 			FDB	SEND_SYSEX_VMEM_HDR
 			FDB	HI_CALL_0F
 			FDB	MIDI_SEND_EOX
-			FDB	HI_CALL_11
+			FDB	CALC_EF2R_VALUE
 			FDB	HI_CALL_12
 			FDB	HI_CALL_13
 			FDB	HI_CALL_14
@@ -2648,7 +2647,7 @@ HI_CALL_05		PSHA
 			LDX	#F_A110
 			JSR	F_92E3
 			JSR	HI_CALL_18
-			JSR	HI_CALL_11
+			JSR	CALC_EF2R_VALUE
 			LDAA	M777D
 			CMPA	#$01
 			BNE	2F
@@ -3592,10 +3591,12 @@ GET_VOICE_PTR		LDAB	#110
 			RTS
 
 ;-------
-
-HI_CALL_11		LDAA	EF2R
+;
+; scale EF2R range (0 .. 99) to range (0 .. 255)
+;
+CALC_EF2R_VALUE		LDAA	EF2R
 			JSR	MUL_660
-			STAA	M7750
+			STAA	EF2R_VALUE
 			RTS
 
 ;-------
@@ -6666,7 +6667,7 @@ C_B29D			SUBA	#$14
 			BRA	23F
 
 C_B2A1			STAB	M7774
-			LDX	#M7740
+			LDX	#GREETING
 			LDAB	M778C
 			ABX
 			STX	M7781
@@ -7018,7 +7019,7 @@ C_B51F			LDAA	M7788
 53			STX	M7781
 			JMP	C_B2CB
 
-C_B551			LDX	#M7740
+C_B551			LDX	#GREETING
 			LDAB	M778C
 			ABX
 			STX	M7781
@@ -7901,7 +7902,7 @@ F_BBBC			CLR	>M00A6
 			LDX	#S_GOOD_MORNING
 			STX	M00A9
 			LDAB	#$10
-			LDX	#M7740
+			LDX	#GREETING
 			JSR	MEMCPY_xB_A9_X
 			LDAA	#$01
 			STAA	M00CC
@@ -8160,7 +8161,7 @@ F_BC2A			LDX	M7781
 			BEQ	29F
 28			CPX	#MICROTUNE_FULL_END
 			BCS	30F
-			CPX	#M7740 + $10
+			CPX	#GREETING + $10
 			BCC	30F
 29			CMPA	#$20
 			BCS	31F
@@ -8433,7 +8434,7 @@ C_BF89			LDAB	M7789
 			JMP	C_C207
 8			JMP	C_C0E4
 
-C_BF96			JSR	HI_CALL_11
+C_BF96			JSR	CALC_EF2R_VALUE
 			LDAB	M7789
 			CMPB	#$02
 			BNE	10F
@@ -9111,7 +9112,7 @@ LCD_INIT		LDAA	#$38			; A <- LCD Mode Set
 			LDX	#S_VERSION
 			STX	M00A9
 			LDAB	#$10
-			LDX	#M7740
+			LDX	#GREETING
 			JSR	MEMCPY_xB_A9_X
 			BRA	12F
 9			JSR	READ_SWITCHES
@@ -9125,7 +9126,7 @@ LCD_INIT		LDAA	#$38			; A <- LCD Mode Set
 11			LDX	#S_GOOD_MORNING
 			STX	M00A9
 			LDAB	#$10
-			LDX	#M7740
+			LDX	#GREETING
 			JSR	MEMCPY_xB_A9_X
 			TST	>M00AD
 			BNE	20F
@@ -9145,7 +9146,7 @@ LCD_INIT		LDAA	#$38			; A <- LCD Mode Set
 			PULB
 			CMPB	#$10
 			BCS	16F
-			LDX	#M7740
+			LDX	#GREETING
 			PSHB
 			SUBB	#$10
 			ABX
@@ -9361,7 +9362,7 @@ HI_CALL_09		LDAA	SYS_PBSW
 			ANDA	#$01
 			STAA	SYS_AT
 			CLRB
-4			LDX	#M7740
+4			LDX	#GREETING
 			ABX
 			LDAA	,X
 			CMPA	#$20
@@ -11456,7 +11457,7 @@ RECV_SYSEX_SYS0		LDAB	MIDI_RX_DATA_COUNT	; B <- receive count
 			RTS				; done
 1			CMPB	#$1B			; B >= 27
 			BCC	2F			; yes? branch
-			LDX	#M7740 - 11		; X <- M7740 table (TBC)
+			LDX	#GREETING - 11		; X <- greeting string
 			ABX				; X <- X + B
 			STAA	,X			; save data
 2			ADDA	MIDI_RX_CRC		; add to running CRC
@@ -11802,7 +11803,7 @@ S_MIDI_CSUM_ERROR	FCC	"Midi CSUM Error "
 
 F_D8BB			JSR	HI_CALL_0F
 			JSR	HI_CALL_18
-			JSR	HI_CALL_11
+			JSR	CALC_EF2R_VALUE
 			AIM	#~ECMI,TCSR3
 			JSR	HI_CALL_15
 			JSR	HI_CALL_16
@@ -12938,7 +12939,7 @@ F_E178			TST	SYS_SYSAVL
 			BEQ	3F
 			TST	>M00CC
 			BEQ	4F
-3			JMP	15F			; could be RTS
+3			JMP	15F			; -> RTS
 
 4			CLRB
 5			LDX	#S_SYSEX_SCED
@@ -12948,8 +12949,10 @@ F_E178			TST	SYS_SYSAVL
 			INCB
 			CMPB	#$02
 			BCS	5B
+
 			LDAA	SYS_MIDTCH
 			JSR	MIDI_SEND
+
 6			LDX	#S_SYSEX_SCED
 			ABX
 			LDAA	,X
@@ -12957,8 +12960,10 @@ F_E178			TST	SYS_SYSAVL
 			INCB
 			CMPB	#$0F
 			BCS	6B
+
 			LDAA	#$3D
 			STAA	MIDI_TX_CRC
+
 			LDX	#M6ABE
 7			LDAA	,X
 			PSHX
@@ -13024,7 +13029,7 @@ F_E178			TST	SYS_SYSAVL
 			JSR	MIDI_SEND
 			PULX
 			INX
-			CPX	#VOICE_EDIT_END
+			CPX	#$6AC4
 			BNE	14B
 			JSR	MIDI_SEND_EOX
 15			RTS
@@ -13334,7 +13339,7 @@ SEND_SYSEX_SYS0		TST	SYS_SYSAVL		; is sysex enabled
 			INX				; X <- X + 1
 			CPX	#SYS_PARAMS_END		; reached end of the table?
 			BNE	4B			; no?  go around
-			LDX	#M7740			; X <- table (TBC)
+			LDX	#GREETING		; X <- greeting string
 5			LDAA	,X			; get data at A
 			PSHX				; save X
 			ANDA	#$7F			; clear top bit of the data
@@ -13344,7 +13349,7 @@ SEND_SYSEX_SYS0		TST	SYS_SYSAVL		; is sysex enabled
 			JSR	MIDI_SEND		; send the data
 			PULX				; restore X
 			INX				; X <- X + 1
-			CPX	#M7740 + $10		; reached end of the table?
+			CPX	#GREETING + $10		; reached end of the string
 			BNE	5B			; no? go around
 			JSR	MIDI_SEND_EOX		; send CRC and EOX
 			RTS
@@ -14309,7 +14314,7 @@ F_EC17			LDAA	#$02
 			STAA	M775B
 			TST	EF2D
 			BEQ	6F
-			LDAB	M7750
+			LDAB	EF2R_VALUE
 			CMPB	#$40
 			BCS	5F
 			STAA	M775C
@@ -14319,7 +14324,7 @@ F_EC17			LDAA	#$02
 			MUL
 			STAA	M775C
 			RTS
-6			LDAB	M7750
+6			LDAB	EF2R_VALUE
 			MUL
 			STAA	M775C
 			RTS
@@ -14351,7 +14356,7 @@ F_EC77			LDAA	#$02
 			BRA	6F
 5			LDAA	NOTE_VELOCITY
 6			ASLA
-			LDAB	M7750
+			LDAB	EF2R_VALUE
 			CMPB	#$41
 			BCS	10F
 			CMPA	#$80
@@ -14428,14 +14433,14 @@ F_ED1E			LDAB	M775B
 			MUL
 			TST	EF2D
 			BEQ	1F
-			LDAB	M7750
+			LDAB	EF2R_VALUE
 			CMPB	#$40
 			BCC	2F
 			ASLB
 			ASLB
 			MUL
 			BRA	2F
-1			LDAB	M7750
+1			LDAB	EF2R_VALUE
 			MUL
 2			TAB
 			LDAA	M775C
