@@ -18,6 +18,9 @@ SWITCH_HI		EQU	$009C			; switch state (9 .. 11)
 SWITCH_LO_N		EQU	$009D			; pressed switches (1 .. 8)
 SWITCH_HI_N		EQU	$009E			; pressed switches (9 .. 11)
 
+DPTR			EQU	$00A7			; destination pointer for copy operations
+SPTR			EQU	$00A9			; source pointer for copy operations
+
 PTR_TX			EQU	$00B4			; pointer for next MIDI TX
 PTR_RX			EQU	$00B6			; pointer for pending MIXI RX data
 PTR_TX_TAIL		EQU	$00B8			; pointer for last MIDI TX sent

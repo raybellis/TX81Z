@@ -35,14 +35,14 @@ PUTSTRX
 
 ;-------
 ;
-; Store character B in @(0xA7) and increment pointer
+; Store character B in @DPTR and increment pointer
 ; - no registers modified
 ;
 PUTCHAR			PSHX
-			LDX	M00A7
+			LDX	DPTR
 			STAB	,X
 			INX
-			STX	M00A7
+			STX	DPTR
 			PULX
 			RTS
 
@@ -60,16 +60,16 @@ LCD_WAIT		TST	LCD_CMD
 ; skipping characters that are already showing the
 ; expected output
 ;
-LCD_UPDATE		LDX	#LCD_BUFFER	; set A9 to LCD buffer
-			STX	M00A9
-			LDX	#LCD_COPY	; set A7 to LCD copy buffer
-			STX	M00A7
+LCD_UPDATE		LDX	#LCD_BUFFER	; set SPTR to LCD buffer
+			STX	SPTR
+			LDX	#LCD_COPY	; set DPTR to LCD copy buffer
+			STX	DPTR
 			LDAB	#$80		; initial DDRAM address
-1			LDX	M00A9		; get character and update pointer
+1			LDX	SPTR		; get character and update pointer
 			LDAA	,X
 			INX
-			STX	M00A9
-			LDX	M00A7		; compare with char in copy buffer 
+			STX	SPTR
+			LDX	DPTR		; compare with char in copy buffer 
 			CMPA	,X		;
 			BEQ	2F		; skip if it's unchanged
 			BSR	LCD_WAIT
@@ -78,7 +78,7 @@ LCD_UPDATE		LDX	#LCD_BUFFER	; set A9 to LCD buffer
 			STAA	LCD_DATA
 			STAA	,X		; save char in copy buffer
 2			INX			; update copy buffer pointer
-			STX	M00A7
+			STX	DPTR
 			INCB			; update DDRAM address
 			CMPB	#$D0		; at end of line 2 -> finish
 			BEQ	3F
@@ -94,7 +94,7 @@ LCD_UPDATE		LDX	#LCD_BUFFER	; set A9 to LCD buffer
 ;
 LCD_OUT			PSHX
 			LDX	#LCD_BUFFER
-			STX	M00A7
+			STX	DPTR
 			PULX
 
 ;------- fallthrough
