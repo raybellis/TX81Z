@@ -39,7 +39,7 @@ GET_VOICE_PTR		XGDX				; X <-> D
 			LDAB	VOICE_NUM		; B <- voice number
 			LDAA	#110			; A <- 110
 			MUL				; D <- B * 110
-			ADDD	#VOICE_EDIT_BUF		; D <- D + @voice table
+			ADDD	#VCED			; D <- D + @voice table
 			XGDX				; X <-> D (restores A/B)
 			RTS
 
