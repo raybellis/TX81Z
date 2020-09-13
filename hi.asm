@@ -6095,7 +6095,7 @@ LO_CALL_08		LDAB	#$08
 
 ;-------
 
-LO_CALL_0A		LDAB	#$0A
+SET_NAME_RANGE		LDAB	#$0A
 			STAB	XROM
 			JSR	XROM_CALL
 			RTS
@@ -7327,7 +7327,7 @@ F_B7D6			AIM	#~ECMI,TCSR3
 ;-------	fallthrough
 
 HI_CALL_13		JSR	SEND_SYSEX_PCED
-			JSR	LO_CALL_0A
+			JSR	SET_NAME_RANGE
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			CLR	>M005A
@@ -11695,7 +11695,7 @@ C_D830			LDAA	#8			; 8 instruments
 			ABX				; jump to next instrument
 			DECA				; -
 			BNE	1B			; -
-			JSR	LO_CALL_0A
+			JSR	SET_NAME_RANGE
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			CLR	>M005A

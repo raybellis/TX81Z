@@ -173,7 +173,7 @@ XROM_VEC		FDB	LO_CALL_00
 			FDB	LO_CALL_06
 			FDB	LO_CALL_08
 			FDB	LO_CALL_09
-			FDB	LO_CALL_0A
+			FDB	SET_NAME_RANGE
 			FDB	LO_CALL_0B
 			FDB	LO_CALL_0C
 			FDB	LO_CALL_0D
@@ -763,13 +763,13 @@ LO_CALL_0B		LDX	#PFM_EDIT_BUF
 			STX	DPTR
 			PSHB
 			LDAB	#$0C
-			BSR	CLAMP_xB_A9_to_A7
+			BSR	CLAMP
 			PULB
 			DECB
 			BNE	1B
 			LDAB	#$04
-			BSR	CLAMP_xB_A9_to_A7
-			JSR	LO_CALL_0A
+			BSR	CLAMP
+			JSR	SET_NAME_RANGE
 			LDX	#PFM_EDIT_BUF
 			CLRA
 			LDAB	#$0C
@@ -783,116 +783,134 @@ LO_CALL_0B		LDX	#PFM_EDIT_BUF
 			RTS
 
 ;-------
-
-LO_CALL_0A		LDAB	#$0A
-1			LDAA	#$7F
-			LDX	SPTR
-			CMPA	,X
-			BCC	2F
-			STAA	,X
-2			LDAA	#$1F
-			CMPA	,X
-			BCS	3F
-			LDAA	#$24
-			STAA	,X
-3			INX
-			STX	SPTR
-			DECB
-			BNE	1B
+;
+; Ensure name characters are in range (string at SPTR)
+; uses A, B, X
+;
+SET_NAME_RANGE		LDAB	#10			; B <- 10
+1			LDAA	#$7F			; A <- 127
+			LDX	SPTR			; X <- SPTR
+			CMPA	,X			; compare @X to A (127)
+			BCC	2F			; less?  carry on
+			STAA	,X			; @X <- 127
+2			LDAA	#' ' - 1		; A <- 31 (ASCII space - 1)
+			CMPA	,X			; compare @X to A
+			BCS	3F			; greater?  carry on
+			LDAA	#'$'			; A <- '$'
+			STAA	,X			; @X <- A
+3			INX				; X <- X  + 1
+			STX	SPTR			; SPTR <- X
+			DECB				; B <- B - 1
+			BNE	1B			; not zero, go around
 			RTS
 
 ;-------
 
-D_85F1			FCB	$1F,$1F,$1F,$0F,$0F,$63,$03,$07
+D_CLAMP_VCED		FCB	$1F,$1F,$1F,$0F,$0F,$63,$03,$07
 			FCB	$01,$07,$63,$3F,$06,$07,$07,$63
 			FCB	$63,$63,$63,$01,$03,$07,$03,$30
 			FCB	$01,$0C,$01,$63,$63,$01,$01,$01
 			FCB	$63,$63,$63,$63,$64,$63
 
-D_8716			FCB	$01,$07,$0F,$07,$03,$07,$63,$63
+D_CLAMP_ACED		FCB	$01,$07,$0F,$07,$03,$07,$63,$63
 
 D_871F			FCB	$08,$00,$9F,$10,$7F,$7F,$0E,$30
 			FCB	$63,$03,$03,$01,$0C,$01,$03,$0B
 
 ;-------
 ;
-; Clamp the array @(0xA9) to the values in array @(0xA7)
+; Clamp the array @(SPTR) to the values in array @(DPTR)
+; uses A, B, X, leaves X pointing one beyond SPTR
 ;
-
-CLAMP_xB_A9_to_A7
-0			LDX	DPTR		; p = 0x00a7;
-			LDAA	,X		; a = *p++;
-			INX
-			STX	DPTR
-			LDX	SPTR		; p = 0x00a9;
-			CMPA	,X		; if (*p > a)
-			BCC	1F
-			STAA	,X		; 	*p = a
-1			INX			; ++p
-			STX	SPTR
-			DECB			; --b
-			BNE	0B
+CLAMP
+0			LDX	DPTR			; X <- DPTR
+			LDAA	,X			; A <- @X (clamp value)
+			INX				; X <- X + 1
+			STX	DPTR			; DPTR <- X
+			LDX	SPTR			; X <- SPTR
+			CMPA	,X			; is A > @X ?
+			BCC	1F			; yes?  branch...
+			STAA	,X			; @X <- A
+1			INX				; X <- X + 1
+			STX	SPTR			; SPTR <- X
+			DECB				; B <- B - 1
+			BNE	0B			; B != 0?  branch...
 			RTS
 
 ;-------
+;
+; M009F - voice number
+;
 
-LO_CALL_0D		LDAB	M009F
-			LDAA	#$6E
-			MUL
-			ADDD	#VCED
-			STD	SPTR
-			CLRB
-1			LDX	#D_85F1
-			STX	DPTR
-			PSHB
-			LDAB	#$03
-			JSR	CLAMP_xB_A9_to_A7
-			TST	,X
-			BNE	2F
-			LDAA	#$01
-			STAA	,X
-2			LDAB	#$08
-			JSR	CLAMP_xB_A9_to_A7
-			TIM	#$3C,$00,X
+LO_CALL_0D		LDAB	M009F			; B <- voice number
+			LDAA	#110			; A <- 110
+			MUL				; D <- A * B
+			ADDD	#VCED			; D <- offset into voice table
+			STD	SPTR			; SPTR < D
+			CLRB				; B <- 0
+
+1			LDX	#D_CLAMP_VCED		; X <- table
+			STX	DPTR			; DPTR <- X
+
+			PSHB				; save B (operator number)
+			LDAB	#3			; B <- 3
+			JSR	CLAMP			; clamp first three values
+
+			TST	,X			; examine release rate
+			BNE	2F			; not zero, carry on
+			LDAA	#$01			; set release rate to 1
+			STAA	,X			; -
+
+2			LDAB	#$08			; clamp next eight values
+			JSR	CLAMP			; -
+
+			TIM	#%00111100,$00,X
 			BNE	4F
-			LDAA	#$6E
-			LDAB	M009F
-			MUL
-			ADDD	#ACED_FINE
-			XGDX
-			PULB
-			PSHB
-			LDAA	#$05
-			MUL
-			ABX
-			LDAA	,X
-			CMPA	#$08
-			BCS	3F
-			LDAA	#$07
-3			STAA	,X
-4			LDAB	#$02
-			JSR	CLAMP_xB_A9_to_A7
-			PULB
-			INCB
-			CMPB	#$04
-			BNE	1B
-			LDAB	#$19
-			JSR	CLAMP_xB_A9_to_A7
-			JSR	LO_CALL_0A
-			LDAB	#$04
-5			LDX	#D_8716
-			STX	DPTR
-			PSHB
-			LDAB	#$05
-			JSR	CLAMP_xB_A9_to_A7
-			PULB
-			DECB
-			BNE	5B
+
+			LDAA	#110			; A <- 110
+			LDAB	M009F			; B <- voice number
+			MUL				; D <- A * B
+			ADDD	#ACED_FINE		; D <- offset into voice table
+			XGDX				; X <-> D
+			PULB				; restore B (operator number)
+			PSHB				; and push it again for later
+
+			LDAA	#5			; A <- 5
+			MUL				; D <- A * B
+			ABX				; X <- X + B
+			LDAA	,X			; A <- @X
+			CMPA	#8			; compare to 8
+			BCS	3F			; less?  carry on
+			LDAA	#7			; A <- 7
+3			STAA	,X			; @X <- A
+
+4			LDAB	#$02			; clamp remaining two operator values
+			JSR	CLAMP			; -
+			PULB				; restore B (operator number)
+			INCB				; B <- B + 1
+			CMPB	#$04			; B = 4 ?
+			BNE	1B			; no, go around for next operator
+
+			LDAB	#25			; clamp remaining 25 parameters
+			JSR	CLAMP			; -
+			JSR	SET_NAME_RANGE		; and make sure the name is legal
+
+			LDAB	#$04			; B <- 4
+5			LDX	#D_CLAMP_ACED		; DPTR <- ACED clamping table
+			STX	DPTR			; -
+			PSHB				; save B
+			LDAB	#$05			; clamp five values
+			JSR	CLAMP			; -
+			PULB				; restore B
+			DECB				; B <- B - 1
+			BNE	5B			; not zero, go around
+
 			LDX	SPTR
 			DEX
 			CLR	,X
-			LDAB	#$03
-			JSR	CLAMP_xB_A9_to_A7
+
+			LDAB	#$03			; clamp last three values
+			JSR	CLAMP			; -
 			RTS
 
 ;-------
