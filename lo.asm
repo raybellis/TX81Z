@@ -4321,7 +4321,7 @@ F_A1E0			LDAB	OPERATOR_NUM		; get per-op ACED pointer
 			LDAB	#'='
 			JSR	PUTCHAR
 			JSR	GET_OPERATOR_PTR
-			LDAB	$0B,X
+			LDAB	$0B,X			; B <- coarse frequency
 			LDX	#D_B4EA
 			ABX
 			LDAB	,X
@@ -4387,8 +4387,8 @@ F_A1E0			LDAB	OPERATOR_NUM		; get per-op ACED pointer
 			LDAB	#'='
 			JSR	PUTCHAR
 			JSR	GET_OPERATOR_PTR
-			LDAB	$0B,X
-			ANDB	#$3C
+			LDAB	$0B,X			; B <- coarse frequency
+			ANDB	#%00111100
 			BNE	14F
 			LDAB	#$08
 			BRA	15F
@@ -4402,13 +4402,13 @@ F_A1E0			LDAB	OPERATOR_NUM		; get per-op ACED pointer
 			XGDX
 			PULB
 			CLRA
-			CPX	#$0000
+			CPX	#0
 			BEQ	17F
 16			ASLD
 			DEX
 			BNE	16B
 17			JSR	PUT_DEC_NNNNN
-			LDD	#$487A			; 'Hz'
+			LDD	#('H' << 8) + 'z'
 			STD	LCD_BOTTOM + 14
 			BRA	12B
 
@@ -4423,7 +4423,7 @@ F_A2AC			LDAB	M7774
 			BRA	2F
 1			LDX	#LCD_BOTTOM + 4
 2			STX	DPTR
-			JSR	SET_CGCHAR_SET
+			JSR	SET_CGCHAR_WAVES
 			CLRB
 3			PSHB
 			LDX	#D_OPERATOR_MAP
@@ -4700,11 +4700,11 @@ SHOW_FIXFREQ		LDAB	#'='
 			LDAA	#255
 			JSR	PUT_DEC_NNN
 			BRA	2F
-1			LDD	#$3531			; '51'
+1			LDD	#('5' << 8) + '1'
 			STD	LCD_BOTTOM + 11
 			LDAB	#'0'			; '0'
 			STAB	LCD_BOTTOM + 13
-2			LDD	#$487A			; 'Hz'
+2			LDD	#('H' << 8) + 'z'
 			STD	LCD_BOTTOM + 14
 			JMP	LCD_UPDATE
 3			SUBA	#$01
@@ -4815,7 +4815,7 @@ C_A562			SUBA	#$07
 			JSR	F_B465
 			BRA	29F
 C_A569			PSHA
-			JSR	F_B37F
+			JSR	SET_CG0_ROMAN_II
 			PULB
 			TSTB
 			BEQ	21F
@@ -5059,7 +5059,7 @@ F_A705			TST	M7789
 			ABX
 			LDX	,X
 			JMP	LCD_WRITE
-1			JSR	F_B37F
+1			JSR	SET_CG0_ROMAN_II
 			LDAB	#':'
 			JSR	F_A1C4
 			TSTA
@@ -6100,13 +6100,13 @@ DVEC_STD_PFM_NAMES	FDB	S_PFM_SINGLE
 
 ;-------
 
-F_B22C			PSHA
-			LDAB	#$40
-			LDX	#CG_B2E0
-1			JSR	SET_CGCHAR
-			CMPB	#$50
-			BNE	1B
-			PULB
+F_B22C			PSHA				; save A
+			LDAB	#$40			; set CGCHARs 0 and 1
+			LDX	#CG_ARROW_SE		; to the SE and SW arrow
+1			JSR	SET_CGCHAR		; -
+			CMPB	#$50			; -
+			BNE	1B			; -
+			PULB				; B <- original A
 			CMPB	#$08
 			BCS	2F
 			CLRB
@@ -6126,7 +6126,7 @@ C_B24A			LDX	#LCD_BOTTOM + 6
 			JSR	PUTSTRX
 			JMP	14F
 
-C_B258			LDD	#$3300
+C_B258			LDD	#'3' << 8
 			STD	LCD_BUFFER + 8
 			LDX	#LCD_BOTTOM + 8
 			STX	DPTR
@@ -6134,7 +6134,7 @@ C_B258			LDD	#$3300
 			JSR	PUTSTRX
 			BRA	14F
 
-C_B26B			LDD	#$3400
+C_B26B			LDD	#'4' << 8
 			STD	LCD_BUFFER + 10
 			LDX	#LCD_BOTTOM + 8
 			STX	DPTR
@@ -6185,23 +6185,23 @@ C_B2C4			LDX	#LCD_BUFFER + 8
 14			RTS
 
 ; CGCHAR
-CG_B2E0			FCB	%00000000
-			FCB	%00000000
-			FCB	%00010000
-			FCB	%00001001
-			FCB	%00000101
-			FCB	%00000001
-			FCB	%00001111
-			FCB	%00000000
+CG_ARROW_SE		FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00010000		; |   #    |
+			FCB	%00001001		; |    #  #|
+			FCB	%00000101		; |     # #|
+			FCB	%00000001		; |       #|
+			FCB	%00001111		; |    ####|
+			FCB	%00000000		; |        |
 ; CGCHAR
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000001
-			FCB	%00010010
-			FCB	%00010100
-			FCB	%00010000
-			FCB	%00011110
-			FCB	%00000000
+CG_ARROW_SW		FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000001		; |       #|
+			FCB	%00010010		; |   #  # |
+			FCB	%00010100		; |   # #  |
+			FCB	%00010000		; |   #    |
+			FCB	%00011110		; |   #### |
+			FCB	%00000000		; |        |
 
 S_ALG_1			FCC	"4~3~2~1~"
 			FCB	$00
@@ -6221,137 +6221,148 @@ S_PLUS_MINUS		FCC	"+-+-+-+"
 			FCB	$00
 
 ;-------
+;
+; sets the CGCHARs with bitmaps showing the TX's built-in waveforms
+; X = pointer to bitmaps
+; on exit A destroyed
+;
 
-SET_CGCHAR_SET		LDAB	#$40
-			LDX	#D_CGCHAR_SET
+SET_CGCHAR_WAVES	LDAB	#$40
+			LDX	#CG_WAVES
 1			BSR	SET_CGCHAR
 			CMPB	#$80
 			BNE	1B
 			RTS
 
-SET_CGCHAR		CLRA
-1			PSHA
-			LDAA	,X
-			JSR	LCD_DO_CMD_DATA
-			INX
-			INCB
-			PULA
-			INCA
-			CMPA	#$08
-			BNE	1B
-			RTS
+;-------
+;
+; set a single LCD CGCAR
+; B = initial address ($40 = CGCHAR 0)
+; X = pointer to bitmap
+;
+; on exit B and X point to the next character, A is destroyed
+;
+SET_CGCHAR		CLRA				; A <- 0
+1			PSHA				; save A
+			LDAA	,X			; A <- @X
+			JSR	LCD_DO_CMD_DATA		; send data
+			INX				; X <- X + 1
+			INCB				; B <- B + 1
+			PULA				; restore A
+			INCA				; A <- A + 1
+			CMPA	#$08			; A == 8?
+			BNE	1B			; no?  go around
+			RTS				; done
 
-D_CGCHAR_SET
-; CGCHAR 0
-			FCB	%00000100
-			FCB	%00001010
-			FCB	%00010001
-			FCB	%00010000
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
-; CGCHAR 1
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000001
-			FCB	%00010001
-			FCB	%00001010
-			FCB	%00000100
-			FCB	%00000000
+CG_WAVES
+			FCB	%00000100		; |     #  |
+			FCB	%00001010		; |    # # |
+			FCB	%00010001		; |   #   #|
+			FCB	%00010000		; |   #    |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
 
-; CGCHAR 2
-			FCB	%00000100
-			FCB	%00000100
-			FCB	%00001010
-			FCB	%00010001
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
-; CGCHAR 3
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00010001
-			FCB	%00001010
-			FCB	%00000100
-			FCB	%00000100
-			FCB	%00000000
-; CGCHAR 4
-			FCB	%00001000
-			FCB	%00010100
-			FCB	%00010100
-			FCB	%00010101
-			FCB	%00000101
-			FCB	%00000101
-			FCB	%00000010
-			FCB	%00000000
-; CGCHAR 5
-			FCB	%00001000
-			FCB	%00001000
-			FCB	%00010100
-			FCB	%00010101
-			FCB	%00000101
-			FCB	%00000010
-			FCB	%00000010
-			FCB	%00000000
-; CGCHAR 6
-			FCB	%00001010
-			FCB	%00010101
-			FCB	%00010101
-			FCB	%00010101
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
-; CGCHAR 7
-			FCB	%00001010
-			FCB	%00001010
-			FCB	%00010101
-			FCB	%00010101
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
-			FCB	%00000000
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000001		; |       #|
+			FCB	%00010001		; |   #   #|
+			FCB	%00001010		; |    # # |
+			FCB	%00000100		; |     #  |
+			FCB	%00000000		; |        |
 
-F_B37F			LDX	#CG_B386
+			FCB	%00000100		; |     #  |
+			FCB	%00000100		; |     #  |
+			FCB	%00001010		; |    # # |
+			FCB	%00010001		; |   #   #|
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00010001		; |   #   #|
+			FCB	%00001010		; |    # # |
+			FCB	%00000100		; |     #  |
+			FCB	%00000100		; |     #  |
+			FCB	%00000000		; |        |
+
+			FCB	%00001000		; |    #   |
+			FCB	%00010100		; |   # #  |
+			FCB	%00010100		; |   # #  |
+			FCB	%00010101		; |   # # #|
+			FCB	%00000101		; |     # #|
+			FCB	%00000101		; |     # #|
+			FCB	%00000010		; |      # |
+			FCB	%00000000		; |        |
+
+			FCB	%00001000		; |    #   |
+			FCB	%00001000		; |    #   |
+			FCB	%00010100		; |   # #  |
+			FCB	%00010101		; |   # # #|
+			FCB	%00000101		; |     # #|
+			FCB	%00000010		; |      # |
+			FCB	%00000010		; |      # |
+			FCB	%00000000		; |        |
+
+			FCB	%00001010		; |    # # |
+			FCB	%00010101		; |   # # #|
+			FCB	%00010101		; |   # # #|
+			FCB	%00010101		; |   # # #|
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+
+			FCB	%00001010		; |    # # |
+			FCB	%00001010		; |    # # |
+			FCB	%00010101		; |   # # #|
+			FCB	%00010101		; |   # # #|
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+			FCB	%00000000		; |        |
+
+SET_CG0_ROMAN_II	LDX	#CG_ROMAN_II
 			LDAB	#$40
 			BRA	SET_CGCHAR
 
 ; CGCHAR 0
-CG_B386			FCB	%00011111
-			FCB	%00001010
-			FCB	%00001010
-			FCB	%00001010
-			FCB	%00001010
-			FCB	%00001010
-			FCB	%00011111
-			FCB	%00000000
+CG_ROMAN_II		FCB	%00011111		; |   #####|
+			FCB	%00001010		; |    # # |
+			FCB	%00001010		; |    # # |
+			FCB	%00001010		; |    # # |
+			FCB	%00001010		; |    # # |
+			FCB	%00001010		; |    # # |
+			FCB	%00011111		; |   #####|
+			FCB	%00000000		; |        |
 
-F_B38E			LDX	#CG_B398
+SET_CG_NEGATIVE		LDX	#CG_NEGATIVE
 			LDAB	#$40
 			BSR	SET_CGCHAR
 			JMP	SET_CGCHAR
 
-CG_B398			FCB	%00000010
-			FCB	%00000101
-			FCB	%00000001
-			FCB	%00011001
-			FCB	%00000010
-			FCB	%00000100
-			FCB	%00000111
-			FCB	%00000000
+CG_NEGATIVE		FCB	%00000010		; |      # |
+			FCB	%00000101		; |     # #|
+			FCB	%00000001		; |       #|
+			FCB	%00011001		; |   ##  #|
+			FCB	%00000010		; |      # |
+			FCB	%00000100		; |     #  |
+			FCB	%00000111		; |     ###|
+			FCB	%00000000		; |        |
 
-			FCB	%00000010
-			FCB	%00000110
-			FCB	%00000010
-			FCB	%00011010
-			FCB	%00000010
-			FCB	%00000010
-			FCB	%00000111
-			FCB	%00000000
+			FCB	%00000010		; |      # |
+			FCB	%00000110		; |     ## |
+			FCB	%00000010		; |      # |
+			FCB	%00011010		; |   ## # |
+			FCB	%00000010		; |      # |
+			FCB	%00000010		; |      # |
+			FCB	%00000111		; |     ###|
+			FCB	%00000000		; |        |
 
 ;-------
 ;
@@ -6460,7 +6471,7 @@ F_B432			LDX	#S_ON
 ;-------
 
 F_B43F			PSHB
-			JSR	F_B38E
+			JSR	SET_CG_NEGATIVE
 			PULB
 			LDX	DPTR
 			LDAA	#$2D
