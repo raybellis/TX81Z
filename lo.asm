@@ -174,9 +174,9 @@ XROM_VEC		FDB	LO_CALL_00
 			FDB	LO_CALL_08
 			FDB	LO_CALL_09
 			FDB	SET_NAME_RANGE
-			FDB	LO_CALL_0B
+			FDB	SET_PCED_RANGE
 			FDB	LO_CALL_0C
-			FDB	LO_CALL_0D
+			FDB	SET_VCED_RANGE
 
 ;-------
 
@@ -747,7 +747,7 @@ LO_CALL_08		LDAB	#$08
 ;-------
 
 LO_CALL_09		CLR	>M009F
-1			JSR	LO_CALL_0D
+1			JSR	SET_VCED_RANGE
 			LDAB	M009F
 			INCB
 			STAB	M009F
@@ -756,30 +756,31 @@ LO_CALL_09		CLR	>M009F
 
 ;-------		fallthrough
 
-LO_CALL_0B		LDX	#PFM_EDIT_BUF
-			LDAB	#$08
-			STX	SPTR
-1			LDX	#D_871F
-			STX	DPTR
-			PSHB
-			LDAB	#$0C
-			BSR	CLAMP
-			PULB
-			DECB
-			BNE	1B
-			LDAB	#$04
-			BSR	CLAMP
-			JSR	SET_NAME_RANGE
-			LDX	#PFM_EDIT_BUF
-			CLRA
-			LDAB	#$0C
-2			ADDA	,X
-			CMPA	#$09
-			BCS	3F
-			CLR	,X
-3			ABX
-			CPX	#PFM_EDIT_INST_END
-			BNE	2B
+SET_PCED_RANGE		LDX	#PFM_EDIT_BUF		;
+			LDAB	#$08			; B <- 8
+			STX	SPTR			; SPTR <- PCED
+1			LDX	#D_CLAMP_PCED		;
+			STX	DPTR			; DPTR <- PCED range table
+			PSHB				; save B
+			LDAB	#$0C			; clamp 12 values
+			BSR	CLAMP			; -
+			PULB				; restore B
+			DECB				; B <- B - 1
+			BNE	1B			; not zero?  go around
+			LDAB	#$04			; clamp remaining 4 values
+			BSR	CLAMP			; -
+			JSR	SET_NAME_RANGE		; ensure name is in range
+
+			LDX	#PFM_EDIT_BUF		; X <- PCED
+			CLRA				; A <- 0
+			LDAB	#$0C			; B <- 12
+2			ADDA	,X			; A <- A + max notes
+			CMPA	#$09			; compare A to 9
+			BCS	3F			; less? we're OK
+			CLR	,X			; max notes <- 0
+3			ABX				; go to next instrument
+			CPX	#PFM_EDIT_INST_END	; until we're at the end of the table
+			BNE	2B			; or go around
 			RTS
 
 ;-------
@@ -814,7 +815,7 @@ D_CLAMP_VCED		FCB	$1F,$1F,$1F,$0F,$0F,$63,$03,$07
 
 D_CLAMP_ACED		FCB	$01,$07,$0F,$07,$03,$07,$63,$63
 
-D_871F			FCB	$08,$00,$9F,$10,$7F,$7F,$0E,$30
+D_CLAMP_PCED		FCB	$08,$00,$9F,$10,$7F,$7F,$0E,$30
 			FCB	$63,$03,$03,$01,$0C,$01,$03,$0B
 
 ;-------
@@ -842,7 +843,7 @@ CLAMP
 ; M009F - voice number
 ;
 
-LO_CALL_0D		LDAB	M009F			; B <- voice number
+SET_VCED_RANGE		LDAB	M009F			; B <- voice number
 			LDAA	#110			; A <- 110
 			MUL				; D <- A * B
 			ADDD	#VCED			; D <- offset into voice table
@@ -905,7 +906,7 @@ LO_CALL_0D		LDAB	M009F			; B <- voice number
 			DECB				; B <- B - 1
 			BNE	5B			; not zero, go around
 
-			LDX	SPTR
+			LDX	SPTR			; clears last param of Operator 1 ?
 			DEX
 			CLR	,X
 
@@ -1743,7 +1744,7 @@ F_8D3E			JSR	LCD_CLR_BOTTOM
 			LDX	#PFM_EDIT_BUF
 			STX	DPTR
 			JSR	LO_CALL_05
-			JSR	LO_CALL_0B
+			JSR	SET_PCED_RANGE
 			LDAA	#$01
 			STAA	PFM_EDITED
 			BRA	27F
