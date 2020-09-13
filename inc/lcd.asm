@@ -29,9 +29,14 @@ PUTSTRX
 			INX
 			BRA	0B		; and go around again
 
-		IFC	&BANK,HI
+;-------
+;
+; the high bank ROM has an extra NUL byte here
+;
+
+	IFC	&BANK,HI
 			FCB	$00
-		ENDIF
+	ENDIF
 
 ;-------
 ;

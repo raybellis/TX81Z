@@ -159,7 +159,9 @@ POLL_ENABLE		EQU	$776C			; set to 0 to skip polling
 OP_ENABLE		EQU	$776E			;
 OP_ENABLE_END		EQU	OP_ENABLE + 4		;
 
-; VOICE_NUM		EQU	$778B			; index into voice edit table
+OPERATOR_NUM		EQU	$777B			; current operator number
+
+VOICE_NUM		EQU	$778B			; current voice number
 
 PFM_EDITED		EQU	$7791			; Performance data changed
 VOICE_EDITED		EQU	$7792			; Voice data changed
@@ -174,6 +176,7 @@ INST_VOLUME		EQU	$7D6B			; scaled 0..255 (8 bytes)
 
 LCD_COPY		EQU	$7D8B			; copy of current LCD output (32 bytes)
 LCD_BUFFER		EQU	$7DAB			; buffer for pending LCD output (32 bytes)
+LCD_BOTTOM		EQU	LCD_BUFFER + 16
 
 MIDI_TXBUF		EQU	$7DCC			; .. $7E0B (64 bytes)
 MIDI_TXBUF_END		EQU	MIDI_TXBUF + 64
