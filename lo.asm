@@ -1146,7 +1146,7 @@ LO_CALL_01		JSR	F_8EBE
 			STX	DPTR
 			INCA
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			JSR	LCD_UPDATE
 16			LDAA	M00CD
 			JSR	F_903F
@@ -1508,7 +1508,7 @@ F_8C82			LDAB	M7789
 			STX	DPTR
 			INCA
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			JSR	LCD_UPDATE
 1			JSR	F_93D6
 			LDAA	M00D3
@@ -1636,7 +1636,7 @@ F_8D3E			JSR	LCD_CLR_BOTTOM
 			STX	DPTR
 			INCA
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			JSR	LCD_UPDATE
 8			JSR	READ_SWITCHES
 			CMPB	#$02
@@ -1688,7 +1688,7 @@ F_8D3E			JSR	LCD_CLR_BOTTOM
 			LDAA	M7EE8
 			INCA
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			JSR	LCD_UPDATE
 18			CLRA
 			STAA	M00CD
@@ -2963,7 +2963,7 @@ F_9756			STAA	,X
 			PULA
 			LDX	#LCD_BUFFER + 3
 			STX	DPTR
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			JSR	LCD_UPDATE
 2			BRA	2B
 
@@ -3207,7 +3207,7 @@ F_9914			TST	>M00D9
 			CLRB
 			LDX	#LCD_BUFFER + 12
 			STX	DPTR
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			JSR	LCD_UPDATE
 			JSR	READ_SWITCHES
 			TSTB
@@ -3427,28 +3427,26 @@ PUTSTR_OFFSET		SET	SO_32_VOICE_ - $80
 
 ;-------
 ;
-; output a three digit decimal from A to the LCD output buffer
-; - uses B
+; printf "%3d", A
 ;
-PUT_DIGIT_3		CLR	>M00AB			; clear leading space indicator
+PUT_DEC_NNN		CLR	>M00AB			; clear leading space indicator
 			LDAB	#100			; B <- divisor
-			BSR	_PUT_DIGIT_DIV		; output one digit
+			BSR	_PUT_DEC_DIV		; output one digit
 
 ;-------	fallthrough
 ;
-; output a two digit decimal from A to the LCD output buffer
-; converts leading zeroes with space if B = 0
+; printf (B ? "%02d" : "%2d"), A
 ;
-PUT_DIGIT_2		STAB	M00AB			; remember if digits were output
+;
+PUT_DEC_NN		STAB	M00AB			; remember if digits were output
 			LDAB	#10			; B <- divisor
-			BSR	_PUT_DIGIT_DIV		; output one digit
+			BSR	_PUT_DEC_DIV		; output one digit
 
 ;-------	fallthrough
 ;
-; output a single (decimal) digit from A to the LCD output buffer
-; - uses B
+; printf "%c", A + '0'
 ;
-PUT_DIGIT_1		ADDA	#'0'			; assume input is in range, convert to ASCII
+PUTDIGIT		ADDA	#'0'			; assume input is in range, convert to ASCII
 			TAB				; B <- A
 			BRA	3F			; output the digit directly
 
@@ -3458,14 +3456,15 @@ PUT_DIGIT_1		ADDA	#'0'			; assume input is in range, convert to ASCII
 ;
 ;     A = dividend
 ;     B = divisor
+;
 ; M00AB = 0 to replace zeroes with space
 ; M00AC used to store divisor
 ;
-_PUT_DIGIT_DIV		STAB	M00AC			; save divisor
+_PUT_DEC_DIV		STAB	M00AC			; save divisor
 			LDAB	#'0'			; B <- initial quotient ('0' ASCII)
 1			CMPA	M00AC			; compare A with divisor
 			BCS	2F			; it's smaller? branch...
-			INCB				; increase quotient
+			INCB				; increment quotient
 			SUBA	M00AC			; A <- (A - divisor)
 			BRA	1B			; and start over
 2			CMPB	#'0'			; check if result is 0 (remainder is still in A)
@@ -3480,19 +3479,18 @@ _PUT_DIGIT_DIV		STAB	M00AC			; save divisor
 
 ;-------
 ;
-; outputs the 1000's and 100's digits of the number in D
-; with leading zeroes
+; printf "%02d", D / 100
 ;
-_PUT_1000_100		CLR	>M00AB			; 1000's count
+PUT_DEC_NN__		CLR	>M00AB			; 1000's count
 			CLR	>M00AC			;  100's count
 1			SUBD	#1000			; D <- D - 1000
 			BCS	2F			; D < 0 ?  branch...
-			INC	>M00AB			; increase 1000's count
+			INC	>M00AB			; increment 1000's count
 			BRA	1B			; go around
 2			ADDD	#1000			; D <- D + 1000 (i.e. positive again)
 3			SUBD	#100			; D <- D - 100
 			BCS	4F			; D < 0 ?  branch...
-			INC	>M00AC			; increase 100's count
+			INC	>M00AC			; increment 100's count
 			BRA	3B			; go around
 4			ADDD	#100			; D <- D + 100 (i.e. positive again)
 			PSHB				; save B (2 digit remainder)
@@ -3502,30 +3500,32 @@ _PUT_1000_100		CLR	>M00AB			; 1000's count
 			ADDB	M00AC			; B <- B + 10's count
 			TBA				; A <- B
 			LDAB	#1			; don't omit leading zeroes
-			JSR	PUT_DIGIT_2		; display two digits
+			JSR	PUT_DEC_NN		; display two digits
 			PULA				; restore A (2 digit remainder)
 			RTS				; done
 
 ;-------
-
-PUT_DIGIT_5		PSHA				; save A
+;
+; printf "%5d", D
+;
+PUT_DEC_NNNNN		PSHA				; save A
 			PSHB				; and B (D)
 			CLR	>M00AB			; 10000's count
 1			SUBD	#10000			; D <- D - 10000
 			BCS	2F			; D < 0 ?  branch...
-			INC	>M00AB			; increase 10000's count
+			INC	>M00AB			; increment 10000's count
 			BRA	1B			; go around
 2			ADDD	#10000			; D <- D + 10000 (positive again)
 			XGDX				; D <-> X
 			LDAA	M00AB			; A <- 10000's count
 			BEQ	3F			; 0?  branch...
-			JSR	PUT_DIGIT_1		; output the digit
+			JSR	PUTDIGIT		; output the digit
 			BRA	4F			; carry on
 3			LDAB	#' '			; otherwise output space
 			JSR	PUTCHAR			; -
 4			XGDX				; D <-> X again
-			JSR	_PUT_1000_100		; output the 1000's and 100's digits (with leading zeroes)
-			JSR	PUT_DIGIT_2		; and the 10's and units digits
+			JSR	PUT_DEC_NN__		; output the 1000's and 100's digits (with leading zeroes)
+			JSR	PUT_DEC_NN		; and the 10's and units digits
 			PULB				; get the original number back into X
 			PULA				; -
 			XGDX				; -
@@ -3533,7 +3533,7 @@ PUT_DIGIT_5		PSHA				; save A
 			CPX	#1000			; X >= 1000?
 			BCC	8F			; yes, we're done
 			LDD	DPTR			; D <- current LCD buffer offset
-			SUBD	#4			; D <- 4 (thousands digit)
+			SUBD	#4			; D <- 4 (move back to thousands digit)
 			STD	DPTR			; save D
 			LDAB	#' '			; output a space
 			JSR	PUTCHAR			; -
@@ -3554,36 +3554,40 @@ PUT_DIGIT_5		PSHA				; save A
 8			RTS				; done
 
 ;-------
-
-F_9C86			PSHX
-			XGDX
-			JSR	_PUT_1000_100
-			PULX
-			CPX	#1000
-			BCC	1F
-			LDAB	#' '
-			STAB	LCD_BUFFER + 27		; hacky position
-1			LDAB	#'.'
-			JSR	PUTCHAR
-			JSR	PUT_DIGIT_2
-			RTS
+;
+; printf "%2d.%02d", D / 100, D % 100
+;
+PUT_DEC_NN_NN		PSHX				; save X
+			XGDX				; X <-> D
+			JSR	PUT_DEC_NN__		; output 1000s and 100s digits
+			PULX				; restore X
+			CPX	#1000			; is X >= 1000?
+			BCC	1F			; yes?  branch
+			LDAB	#' '			; hacky direct LCD buffer overwrite
+			STAB	LCD_BUFFER + 27		; of first digit from above
+1			LDAB	#'.'			; output a decimal point
+			JSR	PUTCHAR			; -
+			JSR	PUT_DEC_NN		; and the remaining two digits (with zeroes)
+			RTS				; -
 
 ;-------
-
-F_9C9F			CLR	>M00AC
-1			SUBD	#100
-			BCS	2F
-			INC	>M00AC
-			BRA	1B
-2			ADDD	#100
-			PSHB
-			LDAA	M00AC
-			JSR	PUT_DIGIT_1
-			PULA
-			LDAB	#'.'
-			JSR	PUTCHAR
-			JSR	PUT_DIGIT_2
-			RTS
+;
+; printf "%d.%02d", D / 100, D % 100
+;
+PUT_DEC_N_NN		CLR	>M00AC			; 100's count
+1			SUBD	#100			; D <- D - 100
+			BCS	2F			; D < 0 ?  branch...
+			INC	>M00AC			; increment 100's count
+			BRA	1B			; go around
+2			ADDD	#100			; D <- D + 100 (positive again)
+			PSHB				; save B (remainder - 0 .. 99)
+			LDAA	M00AC			; A <- 100's count
+			JSR	PUTDIGIT		; output the digit
+			PULA				; A <- remainder
+			LDAB	#'.'			; output a decimal point
+			JSR	PUTCHAR			; -
+			JSR	PUT_DEC_NN		; output two digits
+			RTS				; done
 
 ;-------
 ;
@@ -3613,7 +3617,7 @@ TAG_PFM_EDITED		TST	PFM_EDITED
 ;
 ; Fill @DPTR with B space characters
 ;
-PUT_SPACES		LDAA	#$20
+PUT_SPACES		LDAA	#' '
 			LDX	DPTR
 1			STAA	,X
 			INX
@@ -3725,7 +3729,7 @@ C_9D94			LDAB	#'P'			; case 14
 			STX	DPTR
 			INCA
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			LDAB	#CH_RIGHT
 			JSR	PUTCHAR
 			LDAA	M7795
@@ -3734,7 +3738,7 @@ C_9D94			LDAB	#'P'			; case 14
 			STX	DPTR
 			INCA
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 14			BRA	16F
 
 C_9DD0			LDAB	#'P'			; case 22
@@ -3785,7 +3789,7 @@ C_9E2F			JSR	SHOW_OP_ENABLE
 			LDAA	M777C
 			ANDA	#$03
 			INCA
-			JSR	PUT_DIGIT_1
+			JSR	PUTDIGIT
 			LDAB	#CH_RIGHT
 			JSR	PUTCHAR
 			LDAA	M7794
@@ -3793,7 +3797,7 @@ C_9E2F			JSR	SHOW_OP_ENABLE
 			LDX	#LCD_BUFFER + 30
 			STX	DPTR
 			INCA
-			JSR	PUT_DIGIT_1
+			JSR	PUTDIGIT
 20			JMP	LCD_UPDATE
 
 C_9E61			LDAB	M7774
@@ -3834,7 +3838,7 @@ C_9E9E			LDX	#LCD_BUFFER + 1
 			LSRA
 			JSR	F_B4D6
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			JMP	LCD_UPDATE
 
 C_9EC0			TST	M7795
@@ -4118,7 +4122,7 @@ C_A017			LDAB	M7789
 11			LDAB	#'+'
 			JSR	PUTCHAR
 12			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			PULX
 			LDD	,X
 			SUBA	#$0D
@@ -4126,7 +4130,7 @@ C_A017			LDAB	M7789
 			ASLB
 			LSRD
 			LSRD
-			JSR	PUT_DIGIT_5
+			JSR	PUT_DEC_NNNNN
 			BRA	16F
 
 C_A098			CLRB
@@ -4169,9 +4173,9 @@ C_A0D5			LDAA	M778A
 			INCA
 			CMPA	#$0A
 			BCS	1F
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			BRA	2F
-1			JSR	PUT_DIGIT_1
+1			JSR	PUTDIGIT
 2			LDAB	#':'
 			JSR	PUTCHAR
 			LDAB	M778A
@@ -4221,7 +4225,7 @@ C_A13A			LDX	#S__PGM
 			LDAA	M778A
 			INCA
 			CLRB
-			JSR	PUT_DIGIT_3
+			JSR	PUT_DEC_NNN
 			LDX	#S__EQUALS__
 			JSR	PUTSTRX
 			LDX	M7781
@@ -4239,7 +4243,7 @@ C_A13A			LDX	#S__PGM
 			JSR	PUTCHAR
 			SUBA	#$9F
 			LDAB	#$01
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 3			CLRB
 
 ;-------	fallthrough
@@ -4298,7 +4302,7 @@ F_A1C7			LDX	M7781
 
 F_A1CD			BSR	F_A1C2
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			JMP	LCD_UPDATE
 
 ;-------
@@ -4380,7 +4384,7 @@ F_A1E0			LDAB	M777B
 			CPX	#$0056
 			BNE	11F
 10			INX
-11			JSR	F_9C86
+11			JSR	PUT_DEC_NN_NN
 12			JMP	LCD_UPDATE
 13			PSHX
 			LDX	#S_FIX
@@ -4408,7 +4412,7 @@ F_A1E0			LDAB	M777B
 16			ASLD
 			DEX
 			BNE	16B
-17			JSR	PUT_DIGIT_5
+17			JSR	PUT_DEC_NNNNN
 			LDD	#$487A			; 'Hz'
 			STD	LCD_BUFFER + 30
 			BRA	12B
@@ -4484,11 +4488,11 @@ F_A2AC			LDAB	M7774
 			LDAB	#'W'
 			JSR	PUTCHAR
 			INCA
-			JSR	PUT_DIGIT_1
+			JSR	PUTDIGIT
 			PULX
 			STX	DPTR
 			BRA	11F
-10			JSR	PUT_DIGIT_3
+10			JSR	PUT_DEC_NNN
 11			PULB
 			INCB
 			CMPB	#$04
@@ -4506,14 +4510,14 @@ F_A351			LDAB	#' '
 			BHI	1F
 			BMI	2F
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			BRA	4F
 1			LDAB	#'+'
 			BRA	3F
 2			NEGA
 			LDAB	#'-'
 3			JSR	PUTCHAR
-			JSR	PUT_DIGIT_1
+			JSR	PUTDIGIT
 4			RTS
 
 ;-------
@@ -4622,7 +4626,7 @@ F_A3E4			LDAB	#'='
 			LDAA	$3D,X
 			LDX	#LCD_BUFFER + 20
 			STX	DPTR
-			JSR	PUT_DIGIT_1
+			JSR	PUTDIGIT
 1000			JMP	LCD_UPDATE
 
 ;--------
@@ -4631,7 +4635,7 @@ F_A424			JSR	F_A1C2
 
 1001			INCA
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			BRA	1000B
 
 ;-------
@@ -4644,12 +4648,12 @@ F_A42E			LDAB	#'='
 			BNE	1F
 			LDAA	$3C,X
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			BRA	1000B
 1			LDAA	$34,X
 			PSHA
 			INCA
-			JSR	PUT_DIGIT_1
+			JSR	PUTDIGIT
 			PULA
 			JSR	F_B22C
 			BRA	1000B
@@ -4699,7 +4703,7 @@ F_A494			LDAB	#'='
 			BHI	3F
 			BEQ	1F
 			LDAA	#$FF
-			JSR	PUT_DIGIT_3
+			JSR	PUT_DEC_NNN
 			BRA	2F
 1			LDD	#$3531			; '51'
 			STD	LCD_BUFFER + 27
@@ -4716,7 +4720,7 @@ F_A494			LDAB	#'='
 			BRA	4B
 5			TBA
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			LDAB	#'K'
 			JSR	PUTCHAR
 			BRA	2B
@@ -4791,7 +4795,7 @@ F_A4DE			CLRB
 			PULA
 			RTS
 
-C_A532			JSR	PUT_DIGIT_3
+C_A532			JSR	PUT_DEC_NNN
 			JMP	29F
 C_A538			JSR	F_AF91
 			JMP	29F
@@ -4852,7 +4856,7 @@ C_A599			TSTA
 23			LDAA	M784F
 			BMI	32F
 24			INCA
-			JSR	PUT_DIGIT_3
+			JSR	PUT_DEC_NNN
 			BRA	29F
 25			LDX	#S_VIB
 26			JSR	PUTSTRX
@@ -4918,7 +4922,7 @@ F_A600			TST	>M00A3
 			BRA	10F
 5			LDAA	$08,X
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			PULX
 			LDAA	$08,X
 			PSHX
@@ -4990,7 +4994,7 @@ F_A699			JSR	F_A1C2
 			JSR	PUTSTRX
 			BRA	1000F
 1			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 1000			JMP	LCD_UPDATE
 
 ;-------
@@ -5026,7 +5030,7 @@ F_A6D4			JSR	F_A1C2
 			TAB
 			INCB
 			CLRA
-			JSR	F_9C9F
+			JSR	PUT_DEC_N_NN
 			LDAB	#'s'
 			JSR	PUTCHAR
 			BRA	1000B
@@ -5046,7 +5050,7 @@ F_A6E4			JSR	F_A1C2
 			LDAB	#'G'
 			JSR	PUTCHAR
 			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			BRA	1000B
 
 ;-------
@@ -5750,7 +5754,7 @@ F_AF91			CMPA	#$A0
 3			JSR	PUTCHAR
 			ADDA	#$21
 C_AFAA			LDAB	#$01
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 			RTS
 
 ;-------
@@ -5761,7 +5765,7 @@ SHOW_OP_ENABLE		LDAB	#'E'
 			LDX	#OP_ENABLE
 1			LDAA	,X
 			ANDA	#$01
-			JSR	PUT_DIGIT_1
+			JSR	PUTDIGIT
 			INX
 			CPX	#OP_ENABLE_END
 			BNE	1B
@@ -5821,7 +5825,7 @@ F_AFED			TST	M7788
 			JSR	F_B53E
 			LDAA	$34,X
 			INCA
-			JSR	PUT_DIGIT_1
+			JSR	PUTDIGIT
 			BRA	13F
 5			LDX	#LCD_BUFFER + 6
 			STX	DPTR
@@ -6498,7 +6502,7 @@ F_B465			BHI	1F
 			LDAB	#'-'
 3			JSR	PUTCHAR
 			CLRB
-			JMP	PUT_DIGIT_2
+			JMP	PUT_DEC_NN
 
 ;-------
 
@@ -6515,7 +6519,7 @@ F_B47B			LDAA	PFM_EDIT_MICTUN
 			CMPA	#$0A
 			BCC	7F
 			PSHA
-			JSR	PUT_DIGIT_1
+			JSR	PUTDIGIT
 			PULA
 			CMPA	#$02
 			BCS	8F
@@ -6539,7 +6543,7 @@ F_B47B			LDAA	PFM_EDIT_MICTUN
 			STD	LCD_BUFFER + 14
 			BRA	8F
 7			CLRB
-			JSR	PUT_DIGIT_2
+			JSR	PUT_DEC_NN
 8			RTS
 
 S_OCT			FCC	"Oct."
