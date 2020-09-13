@@ -1816,7 +1816,7 @@ F_8ED4			LDAA	M6A0A
 F_8EF2			LDX	#LCD_BUFFER + 9
 			STX	DPTR
 			LDAB	#$07
-			JSR	PUTSPACES
+			JSR	PUT_SPACES
 			LDX	#LCD_BUFFER + 11
 			STX	DPTR
 			LDX	#1F
@@ -3430,134 +3430,139 @@ PUTSTR_OFFSET		SET	SO_32_VOICE_ - $80
 ; output a three digit decimal from A to the LCD output buffer
 ; - uses B
 ;
-PUT_DIGIT_3		CLR	>M00AB
-			LDAB	#100
-			BSR	_PUT_DIGIT_DIV
+PUT_DIGIT_3		CLR	>M00AB			; clear leading space indicator
+			LDAB	#100			; B <- divisor
+			BSR	_PUT_DIGIT_DIV		; output one digit
 
 ;-------	fallthrough
 ;
 ; output a two digit decimal from A to the LCD output buffer
-; - uses B
+; converts leading zeroes with space if B = 0
 ;
-PUT_DIGIT_2		STAB	M00AB
-			LDAB	#10
-			BSR	_PUT_DIGIT_DIV
+PUT_DIGIT_2		STAB	M00AB			; remember if digits were output
+			LDAB	#10			; B <- divisor
+			BSR	_PUT_DIGIT_DIV		; output one digit
 
 ;-------	fallthrough
 ;
 ; output a single (decimal) digit from A to the LCD output buffer
 ; - uses B
 ;
-PUT_DIGIT_1		ADDA	#'0'
-			TAB
-			BRA	3F
+PUT_DIGIT_1		ADDA	#'0'			; assume input is in range, convert to ASCII
+			TAB				; B <- A
+			BRA	3F			; output the digit directly
 
-;-------	fallthrough (almost)
+;-------
 ;
 ; Helper for above functions - performs division to find each digit
 ;
-;     A = number to display
+;     A = dividend
 ;     B = divisor
-; M00AB = dividend
+; M00AB = 0 to replace zeroes with space
+; M00AC used to store divisor
 ;
-_PUT_DIGIT_DIV		STAB	M00AC		; save divisor
-			LDAB	#'0'		; start with a quotient of zero (ASCII)
-1			CMPA	M00AC		; compare A with divisor
-			BCS	2F
-			INCB			; increase quotient
-			SUBA	M00AC		; subtract divisor from A
-			BRA	1B		; and start over
-2			CMPB	#'0'
-			BNE	3F		; digit not-zero? output it
-			TST	>M00AB
-			BNE	3F
-			LDAB	#' '		; replace with space
+_PUT_DIGIT_DIV		STAB	M00AC			; save divisor
+			LDAB	#'0'			; B <- initial quotient ('0' ASCII)
+1			CMPA	M00AC			; compare A with divisor
+			BCS	2F			; it's smaller? branch...
+			INCB				; increase quotient
+			SUBA	M00AC			; A <- (A - divisor)
+			BRA	1B			; and start over
+2			CMPB	#'0'			; check if result is 0 (remainder is still in A)
+			BNE	3F			; no?  branch to output
+			TST	>M00AB			; check leading space indicator
+			BNE	3F			; non-zero?  branch to output
+			LDAB	#' '			; replace zero with space, non-zero if digits were output
 
-3			JSR	PUTCHAR
-			SUBB	#$20
-			RTS
+3			JSR	PUTCHAR			; output the character
+			SUBB	#' '			; subtract 32 - leaves 0 if we're space filling
+			RTS				; and done
+
+;-------
+;
+; outputs the 1000's and 100's digits of the number in D
+; with leading zeroes
+;
+_PUT_1000_100		CLR	>M00AB			; 1000's count
+			CLR	>M00AC			;  100's count
+1			SUBD	#1000			; D <- D - 1000
+			BCS	2F			; D < 0 ?  branch...
+			INC	>M00AB			; increase 1000's count
+			BRA	1B			; go around
+2			ADDD	#1000			; D <- D + 1000 (i.e. positive again)
+3			SUBD	#100			; D <- D - 100
+			BCS	4F			; D < 0 ?  branch...
+			INC	>M00AC			; increase 100's count
+			BRA	3B			; go around
+4			ADDD	#100			; D <- D + 100 (i.e. positive again)
+			PSHB				; save B (2 digit remainder)
+			LDAA	M00AB			; A <- 1000's count
+			LDAB	#10			; B <- 10
+			MUL				; D <- A * B (i.e. 10 * 1000's count)
+			ADDB	M00AC			; B <- B + 10's count
+			TBA				; A <- B
+			LDAB	#1			; don't omit leading zeroes
+			JSR	PUT_DIGIT_2		; display two digits
+			PULA				; restore A (2 digit remainder)
+			RTS				; done
 
 ;-------
 
-F_9BFA			CLR	>M00AB
-			CLR	>M00AC
-1			SUBD	#1000
-			BCS	2F
-			INC	>M00AB
-			BRA	1B
-2			ADDD	#1000
-3			SUBD	#100
-			BCS	4F
-			INC	>M00AC
-			BRA	3B
-4			ADDD	#100
-			PSHB
-			LDAA	M00AB
-			LDAB	#10
-			MUL
-			ADDB	M00AC
-			TBA
-			LDAB	#1
-			JSR	PUT_DIGIT_2
-			PULA
-			RTS
+PUT_DIGIT_5		PSHA				; save A
+			PSHB				; and B (D)
+			CLR	>M00AB			; 10000's count
+1			SUBD	#10000			; D <- D - 10000
+			BCS	2F			; D < 0 ?  branch...
+			INC	>M00AB			; increase 10000's count
+			BRA	1B			; go around
+2			ADDD	#10000			; D <- D + 10000 (positive again)
+			XGDX				; D <-> X
+			LDAA	M00AB			; A <- 10000's count
+			BEQ	3F			; 0?  branch...
+			JSR	PUT_DIGIT_1		; output the digit
+			BRA	4F			; carry on
+3			LDAB	#' '			; otherwise output space
+			JSR	PUTCHAR			; -
+4			XGDX				; D <-> X again
+			JSR	_PUT_1000_100		; output the 1000's and 100's digits (with leading zeroes)
+			JSR	PUT_DIGIT_2		; and the 10's and units digits
+			PULB				; get the original number back into X
+			PULA				; -
+			XGDX				; -
 
-;-------
-
-F_9C2A			PSHA
-			PSHB
-			CLR	>M00AB
-1			SUBD	#10000
-			BCS	2F
-			INC	>M00AB
-			BRA	1B
-2			ADDD	#10000
-			XGDX
-			LDAA	M00AB
-			BEQ	3F
-			JSR	PUT_DIGIT_1
-			BRA	4F
-3			LDAB	#' '
-			JSR	PUTCHAR
-4			XGDX
-			JSR	F_9BFA
-			JSR	PUT_DIGIT_2
-			PULB
-			PULA
-			XGDX
-			CPX	#1000
-			BCC	8F
-			LDD	DPTR
-			SUBD	#$0004
-			STD	DPTR
-			LDAB	#' '
-			JSR	PUTCHAR
-			CPX	#100
-			BCC	6F
-			JSR	PUTCHAR
-			CPX	#$0A
-			BCC	5F
-			JSR	PUTCHAR
-			LDAB	#$01
-			BRA	7F
-5			LDAB	#$02
-			BRA	7F
-6			LDAB	#$03
-7			LDX	DPTR
-			ABX
-			STX	DPTR
-8			RTS
+			CPX	#1000			; X >= 1000?
+			BCC	8F			; yes, we're done
+			LDD	DPTR			; D <- current LCD buffer offset
+			SUBD	#4			; D <- 4 (thousands digit)
+			STD	DPTR			; save D
+			LDAB	#' '			; output a space
+			JSR	PUTCHAR			; -
+			CPX	#100			; X >= 100 ?
+			BCC	6F			; yes, we're (almost) done
+			JSR	PUTCHAR			; output another space
+			CPX	#$0A			; X >=  10 ?
+			BCC	5F			; yes, we're (almot) done
+			JSR	PUTCHAR			; output another space
+			LDAB	#$01			; B <- 1
+			BRA	7F			; branch
+5			LDAB	#$02			; B <- 2
+			BRA	7F			; branch
+6			LDAB	#$03			; B <- 3
+7			LDX	DPTR			; X <- buffer offset
+			ABX				; X <- X + B
+			STX	DPTR			; save buffer offset
+8			RTS				; done
 
 ;-------
 
 F_9C86			PSHX
 			XGDX
-			JSR	F_9BFA
+			JSR	_PUT_1000_100
 			PULX
 			CPX	#1000
 			BCC	1F
-			LDAB	#$20
-			STAB	LCD_BUFFER + 27
+			LDAB	#' '
+			STAB	LCD_BUFFER + 27		; hacky position
 1			LDAB	#'.'
 			JSR	PUTCHAR
 			JSR	PUT_DIGIT_2
@@ -3606,9 +3611,9 @@ TAG_PFM_EDITED		TST	PFM_EDITED
 
 ;------
 ;
-; Fill @(0xA7) with B space characters
+; Fill @DPTR with B space characters
 ;
-PUTSPACES		LDAA	#$20
+PUT_SPACES		LDAA	#$20
 			LDX	DPTR
 1			STAA	,X
 			INX
@@ -4121,7 +4126,7 @@ C_A017			LDAB	M7789
 			ASLB
 			LSRD
 			LSRD
-			JSR	F_9C2A
+			JSR	PUT_DIGIT_5
 			BRA	16F
 
 C_A098			CLRB
@@ -4403,7 +4408,7 @@ F_A1E0			LDAB	M777B
 16			ASLD
 			DEX
 			BNE	16B
-17			JSR	F_9C2A
+17			JSR	PUT_DIGIT_5
 			LDD	#$487A			; 'Hz'
 			STD	LCD_BUFFER + 30
 			BRA	12B
@@ -4490,8 +4495,8 @@ F_A2AC			LDAB	M7774
 			BNE	3B
 			JMP	LCD_UPDATE
 
-D_A341			FCB	$01,$00,$03,$02,$2D,$00,$2D,$02
-			FCB	$2D,$04,$2D,$05,$2D,$06,$2D,$07
+D_A341			FCB	$01,$00,$03,$02,'-',$00,'-',$02
+			FCB	'-',$04,'-',$05,'-',$06,'-',$07
 
 ;-------
 
@@ -4818,16 +4823,16 @@ C_A569			PSHA
 			CMPB	#$01
 			BNE	16F
 			LDAB	#$02
-			JSR	PUTSPACES
+			JSR	PUT_SPACES
 			LDAB	#'I'
 			BRA	19F
 16			CMPB	#$02
 			BNE	17F
 			LDAB	#$02
-			JSR	PUTSPACES
+			JSR	PUT_SPACES
 			BRA	18F
 17			LDAB	#$01
-			JSR	PUTSPACES
+			JSR	PUT_SPACES
 			LDAB	#'I'
 			JSR	PUTCHAR
 18			CLRB
@@ -4882,11 +4887,11 @@ S_DASHDASHDASH		FCC	"---"
 ;-------
 
 PUT_SP_STAR_SP		LDAB	#1
-			JSR	PUTSPACES
+			JSR	PUT_SPACES
 			LDAB	#'*'
 			JSR	PUTCHAR
 			LDAB	#1
-			JSR	PUTSPACES
+			JSR	PUT_SPACES
 			RTS
 
 ;-------
