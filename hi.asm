@@ -6079,8 +6079,12 @@ LO_CALL_06		STX	DPTR
 			RTS
 
 ;-------
+;
+; invokes Lo bank function zero, but saves X
+; to DPTR first
+;
 
-LO_CALL_00		STX	DPTR
+LOAD_VOICE_X		STX	DPTR
 			CLRB
 			STAB	XROM
 			JSR	XROM_CALL
@@ -6102,7 +6106,7 @@ SET_NAME_RANGE		LDAB	#$0A
 
 ;-------
 
-LO_CALL_09		LDAB	#$09
+SET_ALL_RANGES		LDAB	#$09
 			STAB	XROM
 			JSR	XROM_CALL
 			RTS
@@ -6125,26 +6129,35 @@ LO_CALL_05		STX	DPTR
 
 ;-------
 
-F_AEDD			LDAB	M7773
+GET_PVOICE_PTR		LDAB	M7773
 
 ;-------	fallthrough
+;
+; returns address of the (compact) voice data for the
+; patch number in B
+;
+; NB: final pointer is referenced from the low bank, and $D1C0 is
+;     the expected location of the 128 ROM presets
+;
 
-F_AEE0			CMPB	#$A0
-			BCC	2F
-			CMPB	#$20
-			BCC	4F
-			LDAA	#$4E
-			MUL
-			ADDD	#USER_VOICE
-1			XGDX
-			BRA	3F
-2			LDX	#INIT_VOICE
-3			RTS
-4			SUBB	#$20
-			LDAA	#$4E
-			MUL
-			ADDD	#$D1C0
-			BRA	1B
+GET_PVOICE_PTR_B	CMPB	#160			; compare B to 160
+			BCC	2F			; >= ?  branch
+			CMPB	#32			; compare B to 32
+			BCC	4F			; >= ?  branch
+			LDAA	#78			; A <- 78
+			MUL				; D <- B * 78
+			ADDD	#USER_VOICE		;    + pointer to RAM voices
+1			XGDX				; X <-> D
+			BRA	3F			; done (could be RTS)
+
+2			LDX	#INIT_VOICE		; point to default voice
+3			RTS				; done
+
+4			SUBB	#32			; B <- B - 32 (0 .. 127)
+			LDAA	#78			; A <- 78
+			MUL				; D <- B * 78
+			ADDD	#$D1C0			;    + pointer to ROM voices
+			BRA	1B			; and done
 
 ;-------
 
@@ -7286,12 +7299,12 @@ F_B787			CMPB	M7773
 F_B796			AIM	#~ECMI,TCSR3
 			JSR	HI_CALL_19
 			CLR	VOICE_COMPARE
-5			JSR	F_AEDD
+5			JSR	GET_PVOICE_PTR
 
 F_B7A2			STX	SPTR
 			AIM	#~ECMI,TCSR3
 			LDX	#VCED
-			JSR	LO_CALL_00
+			JSR	LOAD_VOICE_X
 			JSR	LO_CALL_08
 			JSR	F_E178
 			JSR	HI_CALL_00
@@ -7358,12 +7371,12 @@ F_B820			CLRB
 			MUL
 			ABX
 			LDAB	$02,X			; A <- voice number LSB
-			JSR	F_AEE0
+			JSR	GET_PVOICE_PTR_B
 			STX	SPTR
 			PULA
 			PSHA
 			JSR	GET_VOICE_PTR_A
-			JSR	LO_CALL_00
+			JSR	LOAD_VOICE_X
 			PULB
 			INCB
 			CMPB	#$08
@@ -7378,7 +7391,7 @@ F_B83F			LDAB	M7795
 			CLR	VOICE_COMPARE
 			LDX	#VCED
 			STX	SPTR
-			JSR	F_AEDD
+			JSR	GET_PVOICE_PTR
 			JSR	LO_CALL_06
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
@@ -8839,15 +8852,15 @@ HI_CALL_19		TST	VOICE_EDITED
 HI_CALL_1B		LDAB	M7773
 			JSR	HI_CALL_19
 			CLR	VOICE_COMPARE
-			JSR	F_AEDD
+			JSR	GET_PVOICE_PTR
 			STX	SPTR
 			LDX	#VCED
-			JSR	LO_CALL_00
+			JSR	LOAD_VOICE_X
 			JSR	LO_CALL_08
 			JSR	HI_CALL_05
-			LDD	#$0101
-			STD	OP_ENABLE
-			STD	OP_ENABLE + 2
+			LDD	#$0101			; enable all operators
+			STD	OP_ENABLE		; -
+			STD	OP_ENABLE + 2		; -
 			RTS
 
 ;-------
@@ -9620,7 +9633,7 @@ F_C95A			AIM	#~ECMI,TCSR3
 			JSR	F_C8E9
 			LDAB	#$0B
 			STAB	>XROM
-			JSR	XROM_CALL		; invoke LO_CALL_0B (from low bank)
+			JSR	XROM_CALL		; invoke SET_PCED_RANGE (from low bank)
 			RTS
 
 ;-------
@@ -10627,11 +10640,11 @@ F_D06A			PSHB
 			LDAB	M0073
 			JSR	F_D099
 			PULB
-			JSR	F_AEE0
+			JSR	GET_PVOICE_PTR_B
 			STX	SPTR
 			LDAA	M0073
 			JSR	GET_VOICE_PTR_A
-			JSR	LO_CALL_00
+			JSR	LOAD_VOICE_X
 			LDAB	M0073
 			STAB	M009F
 			LDAB	#$0C

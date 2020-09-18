@@ -164,7 +164,7 @@ XROM_VEC2		FDB	hdlr_RST
 
 ; XROM jump table
 
-XROM_VEC		FDB	LO_CALL_00
+XROM_VEC		FDB	LOAD_VOICE
 			FDB	LO_CALL_01
 			FDB	LO_CALL_02
 			FDB	LO_CALL_03
@@ -172,127 +172,146 @@ XROM_VEC		FDB	LO_CALL_00
 			FDB	LO_CALL_05
 			FDB	LO_CALL_06
 			FDB	LO_CALL_08
-			FDB	LO_CALL_09
+			FDB	SET_ALL_RANGES
 			FDB	SET_NAME_RANGE
 			FDB	SET_PCED_RANGE
 			FDB	LO_CALL_0C
 			FDB	SET_VCED_RANGE
 
 ;-------
+;
+; load a voice from packed memory into the VCED / ACED
+; from SPTR to DPTR
+;
+LOAD_VOICE		LDAB	#4			; B <- 4 (operator count)
 
-LO_CALL_00		LDAB	#$04
-1			PSHB
-			LDAB	#$06
-			JSR	MEMCPY
-			LDX	SPTR
-			LDAA	,X
-			STAA	M009F
-			LDAB	$03,X
-			INX
-			STX	SPTR
-			LDX	DPTR
-			PSHB
-			ANDB	#$07
-			STAB	$06,X
-			PULB
-			ANDB	#$18
-			LSRB
-			LSRB
-			LSRB
-			STAB	,X
-			ANDA	#$07
-			STAA	$03,X
-			LDAA	M009F
-			ANDA	#$38
-			LSRA
-			LSRA
-			LSRA
-			STAA	$01,X
-			LDAA	M009F
-			ROLA
-			ROLA
-			ROLA
-			ANDA	#$01
-			STAA	$02,X
-			LDAB	#$04
-			ABX
-			LDAB	#$02
-			JSR	MEMCPYX
-			LDX	SPTR
-			INX
-			STX	SPTR
-			LDX	DPTR
-			INX
-			STX	DPTR
-			PULB
-			DECB
-			BNE	1B
-			STX	DPTR
-			LDX	SPTR
-			LDAA	,X
-			INX
-			STX	SPTR
-			LDX	DPTR
-			PSHA
-			ANDA	#$07
-			STAA	,X
-			INX
-			PULA
-			LSRA
-			LSRA
-			LSRA
-			PSHA
-			ANDA	#$07
-			STAA	,X
-			PULA
-			ANDA	#$08
-			LSRA
-			LSRA
-			LSRA
-			STAA	$05,X
-			INX
-			LDAB	#$04
-			JSR	MEMCPYX
-			LDX	SPTR
-			LDAA	,X
-			INX
-			STX	SPTR
-			LDX	DPTR
-			INX
-			PSHA
-			ANDA	#$03
-			STAA	,X
-			PULA
-			LSRA
-			LSRA
-			PSHA
-			ANDA	#$03
-			STAA	$02,X
-			PULA
-			LSRA
-			LSRA
-			STAA	$01,X
-			INX
-			INX
-			INX
-			LDAB	#$01
-			JSR	MEMCPYX
-			TST	SYS_CMBIN
-			BNE	2F
-			LDAB	#$0E
-			ABX
-			STX	DPTR
-			LDX	SPTR
-			LDAB	#$0A
-			ABX
-			STX	SPTR
-			JMP	3F
-2			LDX	SPTR
-			LDAA	,X
-			INX
-			STX	SPTR
-			LDX	DPTR
-			STAA	$01,X
+			;
+			; Copy the per-operator data
+			;
+1			PSHB				; save B
+			LDAB	#6			; copy first first bytes verbatim
+			JSR	MEMCPY			; NB: increases SPTR and DPTR
+			LDX	SPTR			; X <- SPTR (+6)
+			LDAA	,X			; A <- @X (+6: AME|EBS|KVS)
+			STAA	M009F			; M <- A
+			LDAB	$03,X			; B <- @(X + 3) (+9: RS|DET)
+			INX				; X <- X + 1
+			STX	SPTR			; SPTR <- X (+7)
+			LDX	DPTR			; X <- DPTR (+6)
+			PSHB				; save B
+			ANDB	#%00000111		; mask bottom 3 bits of B (DET)
+			STAB	$06,X			; save to DPTR + 6 (+12: DET)
+			PULB				; restore B
+			ANDB	#%00011000		; mask next two bits (RS)
+			LSRB				; shift to bottom
+			LSRB				; -
+			LSRB				; -
+			STAB	,X			; save to @DPTR (+6: RS)
+			ANDA	#%00000111		; bottom three bits of A (from +6 : KVS)
+			STAA	$03,X			; save to X + 3 (+9: KVS)
+			LDAA	M009F			; get A back from memory
+			ANDA	#%00111000		; mask next three bits (EBS)
+			LSRA				; shift to bottom
+			LSRA				; -
+			LSRA				; -
+			STAA	$01,X			; save to X + 1 (+7: EBS)
+			LDAA	M009F			; get A back from memory
+			ROLA				; shift three times
+			ROLA				; -
+			ROLA				; -
+			ANDA	#%00000001		; take bottom bit (AME)
+			STAA	$02,X			; save to X + 2 (+8: AME)
+			LDAB	#4			; X <- X + 4 (+10)
+			ABX				; -
+			LDAB	#$02			; -
+			JSR	MEMCPYX			; copy 2 more bytes (SPTR: +9, DPTR: +12)
+			LDX	SPTR			; inc SPTR (+10)
+			INX				; -
+			STX	SPTR			; -
+			LDX	DPTR			; inc DPTR (+13)
+			INX				; -
+			STX	DPTR			; -
+			PULB				; restore original B
+			DECB				; B <- B - 1
+			BNE	1B			; go around (4 times)
+
+			;
+			; copy the first chunk of non-operator voice parameters
+			;
+			STX	DPTR			; DPTR <- X (+52) [not necessary]
+			LDX	SPTR			; X <- SPTR (+40)
+			LDAA	,X			; A <- @X (+52)
+			INX				; inc SPTR (+41)
+			STX	SPTR			; -
+			LDX	DPTR			; X <- DPTR (+52)
+			PSHA				; save A
+			ANDA	#%00000111		; bottom three bits of A
+			STAA	,X			; save to X (+52: ALG)
+			INX				; X <- X + 1 (+53)
+			PULA				; restore A
+			LSRA				; right shift 3x
+			LSRA				; -
+			LSRA				; -
+			PSHA				; save A
+			ANDA	#%00000111		; mask next three bits
+			STAA	,X			; save to X (+53: Feedback)
+			PULA				; restore A (NB: already shifted 3x)
+			ANDA	#$08			; mask remaining bit
+			LSRA				; right shift 3x
+			LSRA				; -
+			LSRA				; -
+			STAA	$05,X			; save to X + 5 (58: LFO Sync)
+			INX				; X <- X + 1 (+54)
+			LDAB	#$04			; copy 4 bytes
+			JSR	MEMCPYX			; (SPTR: +45, DPTR, X: +58)
+			LDX	SPTR			; X <- SPTR (+45)
+			LDAA	,X			; A <- X (+45: PMS|AMS|LFW)
+			INX				; X <- X + 1 (+46)
+			STX	SPTR			; SPTR <- X (+46)
+			LDX	DPTR			; X <- DPTR (+58)
+			INX				; X <- X + 1 (+59)
+			PSHA				; save A
+			ANDA	#%00000011		; bottom three bits of A
+			STAA	,X			; save to X (+59: LFO Wave)
+			PULA				; restore A
+			LSRA				; shift right 2x
+			LSRA				; -
+			PSHA				; save A
+			ANDA	#%00000011		; next two bits
+			STAA	$02,X			; save to X + 2 (+61: AMS)
+			PULA				; restore A
+			LSRA				; shift right 2x (3 bits left)
+			LSRA				; -
+			STAA	$01,X			; save to X + 1 (+60: P Mod Sens)
+			INX				; X <- X + 3 (+62)
+			INX				; -
+			INX				; -
+			LDAB	#$01			; copy 1 byte (D: +62 <- S: +46 - transpose)
+			JSR	MEMCPYX			; (SPTR: +47, DPTR, X: +63)
+			TST	SYS_CMBIN		; test the System Combine setting
+			BNE	2F			; non-zero?  skip next block
+
+			;
+			; skip over the Voice Function Data
+			;
+			LDAB	#14			; B <- 14
+			ABX				; X <- X + B (+77)
+			STX	DPTR			; DPTR <- X (+77)
+			LDX	SPTR			; X <- SPTR (+47)
+			LDAB	#10			; B <- 10
+			ABX				; X <- X + B (+57)
+			STX	SPTR			; SPTR <- X (+57)
+			JMP	3F			; skip forward
+
+			;
+			; extract Voice Function Data
+			;
+2			LDX	SPTR			; X <- SPTR (+47)
+			LDAA	,X			; A <- @X (+47: PBR)
+			INX				; X <- X + 1 (+48)
+			STX	SPTR			; SPTR <- X (+48)
+			LDX	DPTR			; X <- DPTR (+63)
+			STAA	$01,X			; save A to X + 1 (+64: Pitch bend range)
 			LDX	SPTR
 			LDAA	,X
 			INX
@@ -331,8 +350,10 @@ LO_CALL_00		LDAB	#$04
 			STX	DPTR
 			LDAB	#$06
 			JSR	MEMCPY
+
 3			LDAB	#$0A
 			JSR	MEMCPY
+
 			LDAB	#$04
 4			PSHB
 			LDX	SPTR
@@ -725,6 +746,7 @@ LO_CALL_08		LDAB	#$08
 			PULB
 			DECB
 			BNE	1B
+
 			LDAB	#$01
 			JSR	MEMCPY
 			LDX	SPTR
@@ -745,8 +767,11 @@ LO_CALL_08		LDAB	#$08
 			JMP	MEMCPYX
 
 ;-------
-
-LO_CALL_09		CLR	>M009F
+;
+; calls SET_VCED_RANGE for all 8 voices and then
+; fall through to a call to SET_PCED_RANGE
+;
+SET_ALL_RANGES		CLR	>M009F
 1			JSR	SET_VCED_RANGE
 			LDAB	M009F
 			INCB
@@ -1756,11 +1781,11 @@ F_8D3E			JSR	LCD_CLR_BOTTOM
 			STX	SPTR
 			LDX	#VCED
 			STX	DPTR
-			JSR	LO_CALL_00
+			JSR	LOAD_VOICE
 			TST	>M00D7
 			BNE	26F
 			JSR	CLEAR_ACED
-26			JSR	LO_CALL_09
+26			JSR	SET_ALL_RANGES
 			JSR	HI_CALL_05
 			LDAA	#$01
 			STAA	VOICE_EDITED
@@ -2001,7 +2026,7 @@ F_90D5			LDX	#M6A0B
 			STX	M0077
 			LDX	#M6A04
 			STX	M0079
-			LDAB	#$0B
+			LDAB	#11
 			JSR	BCOPY
 			RTS
 
@@ -2011,7 +2036,7 @@ F_90E5			LDX	#M6A0B
 			STX	M0077
 			LDX	#M6A0A
 			STX	M0079
-			LDAB	#$03
+			LDAB	#3
 			JSR	BCOPY
 			RTS
 
@@ -3653,7 +3678,7 @@ LO_CALL_0C		TST	>M0056
 			BEQ	1F
 			JMP	C_9E9E
 1			LDAB	M7772
-			CMPB	#$17
+			CMPB	#23
 			BCS	2F
 			CLRB
 2			JSR	JMPOFFB
