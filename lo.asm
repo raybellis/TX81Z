@@ -312,112 +312,122 @@ LOAD_VOICE		LDAB	#4			; B <- 4 (operator count)
 			STX	SPTR			; SPTR <- X (+48)
 			LDX	DPTR			; X <- DPTR (+63)
 			STAA	$01,X			; save A to X + 1 (+64: Pitch bend range)
-			LDX	SPTR
-			LDAA	,X
-			INX
-			STX	SPTR
-			LDX	DPTR
-			PSHA
-			ANDA	#$01
-			STAA	$02,X
-			PULA
-			LSRA
-			PSHA
-			ANDA	#$01
-			STAA	$06,X
-			PULA
-			LSRA
-			PSHA
-			ANDA	#$01
-			STAA	$05,X
-			PULA
-			LSRA
-			PSHA
-			ANDA	#$01
-			STAA	,X
-			PULA
-			LSRA
-			ANDA	#$01
-			STAA	$07,X
-			INX
-			INX
-			INX
-			LDAB	#$02
-			JSR	MEMCPYX
-			INX
-			INX
-			INX
-			STX	DPTR
-			LDAB	#$06
-			JSR	MEMCPY
+			LDX	SPTR			; X <- SPTR (+48)
+			LDAA	,X			; A <- @X (+48: CH|MO|SU|PO|PM)
+			INX				; X <- X + 1 (+49)
+			STX	SPTR			; SPTR <- X (+49)
+			LDX	DPTR			; X <- DPTR (+63)
+			PSHA				; save A
+			ANDA	#%00000001		; mask bottom bit
+			STAA	$02,X			; save to X + 2 (+65: Full time porta)
+			PULA				; restore A
+			LSRA				; right shift it
+			PSHA				; save it again
+			ANDA	#%00000001		; mask next bit
+			STAA	$06,X			; save to X + 6 (+69: Portamento)
+			PULA				; restore A
+			LSRA				; right shift it
+			PSHA				; save it again
+			ANDA	#%00000001		; mask next bit
+			STAA	$05,X			; save to X + 5 (+68: Sustain)
+			PULA				; restore A
+			LSRA				; right shift it
+			PSHA				; save it again
+			ANDA	#%00000001		; mask next bit
+			STAA	,X			; save to X (+63: Poly mode)
+			PULA				; restore A
+			LSRA				; right shift it
+			ANDA	#%00000001		; mask next bit
+			STAA	$07,X			; save to X + 7 (+70: Chorus)
+			INX				; X <- X + 3 (+66)
+			INX				; -
+			INX				; -
+			LDAB	#$02			; copy 2 more bytes from SPTR (+49) to X (+66)
+			JSR	MEMCPYX			; (SPTR: +51, DPTR, X: +68)
+			INX				; X <- X + 3 (+71)
+			INX				; -
+			INX				; -
+			STX	DPTR			; DPTR <- X (+71)
+			LDAB	#$06			; copy 6 more bytes from SPTR (+51) to DPTR (+71)
+			JSR	MEMCPY			; (SPTR: +57, DPTR: +77)
 
-3			LDAB	#$0A
-			JSR	MEMCPY
+3			LDAB	#$0A			; copy 10 bytes (name)
+			JSR	MEMCPY			; (SPTR: +67, DPTR: +87)
 
-			LDAB	#$04
-4			PSHB
-			LDX	SPTR
-			LDAA	,X
-			INX
-			STX	SPTR
-			LDX	DPTR
-			PSHA
-			ANDA	#$07
-			STAA	$01,X
-			PULA
-			LSRA
-			LSRA
-			LSRA
-			PSHA
-			ANDA	#$01
-			STAA	,X
-			PULA
-			LSRA
-			ANDA	#$03
-			STAA	$04,X
-			INX
-			INX
-			STX	DPTR
-			LDX	SPTR
-			LDAA	,X
-			INX
-			STX	SPTR
-			LDX	DPTR
-			PSHA
-			ANDA	#$0F
-			STAA	,X
-			PULA
-			LSRA
-			LSRA
-			LSRA
-			LSRA
-			ANDA	#$07
-			STAA	$01,X
-			INX
-			INX
-			INX
-			STX	DPTR
-			PULB
-			DECB
-			BNE	4B
-			TST	SYS_CMBIN
-			BNE	5F
-			LDX	DPTR
-			LDAB	#$03
-			ABX
-			STX	DPTR
-			LDX	SPTR
-			ABX
-			STX	SPTR
+			;
+			; copy voice additional parameters (ACED)
+			; 2 source bytes and 5 destination bytes per operator
+			;
+			LDAB	#4			; B <- 4
+
+4			PSHB				; and save it
+			LDX	SPTR			; X <- SPTR (+67 first time around)
+			LDAA	,X			; A <- @X (+67: EGSFT|FIX|FIXRG)
+			INX				; X <- X + 1 (+68)
+			STX	SPTR			; SPTR <- X (+68)
+			LDX	DPTR			; X <- DPTR (+87 first time around)
+			PSHA				; save A
+			ANDA	#%00000111		; take bottom 3 bits
+			STAA	$01,X			; save A to X + 1 (+88: fixed range)
+			PULA				; restore A
+			LSRA				; shift right 3 bits
+			LSRA				; -
+			LSRA				; -
+			PSHA				; save it again
+			ANDA	#%00000001		; take next bit
+			STAA	,X			; save A to X (+87: FIX)
+			PULA				; restore A
+			LSRA				; shift right 1 bit
+			ANDA	#%00000011		; take remaining 3 bits
+			STAA	$04,X			; save to X + 4 (+91: Shift)
+			INX				; X <- X + 2 (+89)
+			INX				; -
+			STX	DPTR			; DPTR <- X (+89)
+			LDX	SPTR			; X <- SPTR (+68)
+			LDAA	,X			; A <- @X (+68: OPW|FINE)
+			INX				; X <- X + 1 (+69)
+			STX	SPTR			; SPTR <- X (+69)
+			LDX	DPTR			; X <- DPTR (+89)
+			PSHA				; save A
+			ANDA	#%00001111		; mask bottom 4 bits
+			STAA	,X			; save A to X (+89: FIN Ratio)
+			PULA				; restore A
+			LSRA				; shift right 4 bits
+			LSRA				; -
+			LSRA				; -
+			LSRA				; -
+			ANDA	#%00000111		; mask remaining 3 bits
+			STAA	$01,X			; save A to X + 1 (+90: Operator Waveform)
+			INX				; X <- X + 3 (+92)
+			INX				; -
+			INX				; -
+			STX	DPTR			; DPTR <- X (+92)
+			PULB				; restore B
+			DECB				; B <- B - 1
+			BNE	4B			; non-zero?  go around
+
+			TST	SYS_CMBIN		; test the System Combine setting
+			BNE	5F			; non-zero?  skip next block
+
+			LDX	DPTR			; DPTR <- DPTR + 3
+			LDAB	#3			; -
+			ABX				; -
+			STX	DPTR			; -
+			LDX	SPTR			; SPTR <- SPTR + 3
+			ABX				; -
+			STX	SPTR			; -
+
 			LDAA	M7772
-			ANDA	#$04
+			ANDA	#%00000100
 			BNE	6F
-			LDAA	#$01
-			STAA	VOICE_EDITED
-			BRA	6F
-5			LDAB	#$03
-			JSR	MEMCPY
-6			RTS
+
+			LDAA	#1			; flag voice as edited
+			STAA	VOICE_EDITED		; -
+			BRA	6F			; done
+
+5			LDAB	#$03			; copy last three bytes (reverb, FC pitch and ampl)
+			JSR	MEMCPY			; -
+6			RTS				; done
 
 ;-------
 
