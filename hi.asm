@@ -91,7 +91,6 @@ M00C0			EQU	$00C0
 M00C1			EQU	$00C1
 M00C2			EQU	$00C2
 M00C3			EQU	$00C3
-M00C7			EQU	$00C7
 M00C8			EQU	$00C8
 M00C9			EQU	$00C9
 M00CB			EQU	$00CB
@@ -153,7 +152,6 @@ M7779			EQU	$7779
 M777A			EQU	$777A
 M777C			EQU	$777C
 M777D			EQU	$777D
-M777E			EQU	$777E
 M777F			EQU	$777F
 M7780			EQU	$7780
 M7781			EQU	$7781
@@ -175,8 +173,6 @@ M7796			EQU	$7796
 M77A6			EQU	$77A6
 M77B6			EQU	$77B6
 M77C6			EQU	$77C6
-M77CE			EQU	$77CE
-M77EE			EQU	$77EE
 M780E			EQU	$780E
 M781E			EQU	$781E
 M782E			EQU	$782E
@@ -366,16 +362,16 @@ XROM_VEC		FDB	HI_CALL_00
 			FDB	HI_CALL_01
 			FDB	HI_CALL_02
 			FDB	HI_CALL_03
-			FDB	HI_CALL_04
+			FDB	HI_CALL_04		; no-op
 			FDB	HI_CALL_05
-			FDB	HI_CALL_06
+			FDB	HI_CALL_06		; no-op
 			FDB	MIDI_INIT_RX
 			FDB	MIDI_INIT
 			FDB	HI_CALL_09
-			FDB	HI_CALL_0A
+			FDB	HI_CALL_0A		; no-op
 			FDB	MIDI_SEND_SENSE
 			FDB	MIDI_SEND
-			FDB	HI_CALL_0D
+			FDB	HI_CALL_0D		; no-op
 			FDB	SEND_SYSEX_VMEM_HDR
 			FDB	HI_CALL_0F
 			FDB	SEND_SYSEX_END
@@ -2463,10 +2459,15 @@ HI_CALL_01		PSHA
 HI_CALL_00		PSHA
 			PSHB
 			PSHX
-			AIM	#~IRQ1E,RP5CR
+			AIM	#~IRQ1E,RP5CR		; disable OPZ IRQ
 			AIM	#~EOCI1,TCSR1
+
 			CLR	>M00EF
 			BSR	F_915E
+
+			;
+			; store 0 .. 7 in turn to OPZ register $08
+			;
 			LDAA	#$08
 			CLRB
 1			SEI
@@ -2477,15 +2478,20 @@ HI_CALL_00		PSHA
 			INCB
 			CMPB	#$08
 			BNE	1B
+
 			LDAA	#$01
 			STAA	M777D
-			OIM	#IRQ1E,RP5CR
+
+			OIM	#IRQ1E,RP5CR		; enable OPZ IRQ
 			PULX
 			PULB
 			PULA
 			RTS
 
 ;-------
+;
+; call F_9169 for each voice
+;
 
 F_915E			CLRB
 1			PSHB
@@ -2498,48 +2504,67 @@ F_915E			CLRB
 
 ;------
 
-F_9169			PSHB
-			CLRA
-			ADDB	#$E0
-1			PSHA
-			LDAA	#$FE
-			SEI
-			OPZ_POLL
-			OPZ_OUT_A
-			CLI
-			ADDB	#$08
-			PULA
-			INCA
-			CMPA	#$04
-			BNE	1B
-			PULB
-			CLRA
-2			PSHA
-			PSHB
-			LDX	#M77EE
-			ABX
-			LDAA	,X
-			ANDA	#$E8
-			ADDB	#$C0
-			SEI
-			OPZ_POLL
-			OPZ_OUT_A
-			CLI
-			PULB
-			ADDB	#$08
-			PULA
-			INCA
-			CMPA	#$04
-			BNE	2B
+F_9169			PSHB				; save B (voice number?)
+
+			;
+			; store $FE in OPZ registers $E0 + B, $E8 + B, $F0 + B, $F8 + B
+			; D1L:4 = $F | RR:4 = $E
+			;
+			CLRA				; A <- 0
+			ADDB	#$E0			; B <- B + $E0
+1			PSHA				; save A
+			LDAA	#$FE			; A <- $FE
+			SEI				; output to OPZ
+			OPZ_POLL			; -
+			OPZ_OUT_A			; -
+			CLI				; -
+			ADDB	#$08			; B <- B + $08
+			PULA				; restore A
+			INCA				; increment it
+			CMPA	#$04			; is it 4 ?
+			BNE	1B			; no?  go around...
+
+			PULB				; get original B back (voice number?)
+
+			;
+			; set OPZ registers $C0 + B, $C8 + B, $D0 + B, $D8 + B to
+			; the values stored in 77EE + B, 77F6 + B, etc masked
+			; with  %11101000
+			;
+			; DT2:2 | _:1 | D2R:5
+			;
+			CLRA				; A <- 0
+2			PSHA				; save A
+			PSHB				; save B
+			LDX	#OPZ_C0_REG_COPY	; A = @($77EE + B)
+			ABX				;
+			LDAA	,X			;
+			ANDA	#%11101000		; mask A bits
+			ADDB	#$C0			; B <- B + $C0
+			SEI				; output to OPZ
+			OPZ_POLL			; -
+			OPZ_OUT_A			; -
+			CLI				; -
+			PULB				; restore B
+			ADDB	#$08			; B <- B + 8
+			PULA				; restore A
+			INCA				; increment it
+			CMPA	#$04			; is it 4 ?
+			BNE	2B			; no?  go around
 			RTS
 
 ;-------
 
 F_91B0			TBA
 			PSHA
+
+			;
+			; set D1L and RR for each operator for voice A
+			; from contents of OPZ_E0_REG_COPY
+			;
 			CLRB
 1			PSHB
-			LDX	#M77CE
+			LDX	#OPZ_E0_REG_COPY
 			TAB
 			ABX
 			LDAB	,X
@@ -2555,10 +2580,15 @@ F_91B0			TBA
 			INCB
 			CMPB	#$04
 			BNE	1B
+
+			;
+			; set DT2 and D2R for each operator for voice A
+			; from contents of OPZ_C0_REG_COPY
+			;
 			PULA
 			CLRB
 2			PSHB
-			LDX	#M77EE
+			LDX	#OPZ_C0_REG_COPY
 			TAB
 			ABX
 			LDAB	,X
@@ -3946,11 +3976,11 @@ F_9D25			LDAB	M006F
 			BEQ	4F
 			TAB
 			SUBB	#$C0
-			LDX	#M77EE
+			LDX	#OPZ_C0_REG_COPY
 			BRA	3F
 2			TAB
 			SUBB	#$E0
-			LDX	#M77CE
+			LDX	#OPZ_E0_REG_COPY
 3			ABX
 			LDAB	M0072
 			STAB	,X
@@ -4697,7 +4727,7 @@ D_A2F0			FCB	$00,$01,$02,$04,$05,$06,$08,$09
 			FCB	$6A,$6C,$6D,$6E,$70,$71,$72,$74
 			FCB	$75,$76,$78,$79,$7A,$7C,$7D,$7E
 
-D_OPERATOR_MAP			FCB	$03,$01,$02,$00
+D_OPERATOR_MAP		FCB	$03,$01,$02,$00
 
 ;-------
 
@@ -6071,17 +6101,18 @@ C_AE50			CMPB	#$0B
 			INCLUDE	"inc/memcpy.asm"
 
 ;-------
-
+;
+; invokes low bank function 6, but saves X to DPTR first
+;
 LO_CALL_06		STX	DPTR
-			LDAB	#$06
+			LDAB	#6
 			STAB	XROM
 			JSR	XROM_CALL
 			RTS
 
 ;-------
 ;
-; invokes Lo bank function zero, but saves X
-; to DPTR first
+; invokes low bank function 0, but saves X to DPTR first
 ;
 
 LOAD_VOICE_X		STX	DPTR
@@ -6162,9 +6193,9 @@ GET_PVOICE_PTR_B	CMPB	#160			; compare B to 160
 ;-------
 
 F_AEFF			LDAB	M7779
-			CMPB	#$18
+			CMPB	#24
 			BCC	1F
-			LDAA	#$4C
+			LDAA	#76
 			MUL
 			ADDD	#USER_PFM
 			XGDX
@@ -6273,7 +6304,7 @@ C_AFF9			LDAA	SYS_MLOCK
 			ASLA
 			ORAA	M7772
 			STAA	M7772
-18			JSR	F_E10E
+18			JSR	F_E10E			; no-op
 19			RTS
 
 C_B00C			LDAA	#$07
@@ -6290,7 +6321,7 @@ C_B016			LDAA	VOICE_EDITED
 			STAA	M7772
 			LDAA	#$01
 			STAA	VOICE_COMPARE
-			JSR	F_E10E
+			JSR	F_E10E			; no-op
 			TST	SYS_CMBIN
 			BNE	22F
 			LDAB	#$01
@@ -6300,7 +6331,7 @@ C_B016			LDAA	VOICE_EDITED
 			BRA	19B
 22			JMP	F_B774
 23			CLR	VOICE_COMPARE
-			JSR	F_E10E
+			JSR	F_E10E			; no-op
 			TST	SYS_CMBIN
 			BNE	24F
 			LDAB	#$01
@@ -6310,7 +6341,7 @@ C_B016			LDAA	VOICE_EDITED
 			BRA	25F
 24			JSR	F_C2BC
 25			LDX	M7781
-			JMP	F_E10C
+			JMP	F_E10C			; RTS
 
 C_B066			TST	VOICE_COMPARE
 			BNE	33F
@@ -6320,7 +6351,7 @@ C_B06E			CLR	M7772
 			LDAA	#$FF
 			STAA	M7790
 			CLR	>M009A
-			JSR	F_E10E
+			JSR	F_E10E			; no-op
 			LDAB	M7775
 			JMP	F_B1DD
 
@@ -6331,7 +6362,7 @@ F_B084			LDAA	#$01
 			LDAA	#$FF
 			STAA	M7790
 			CLR	>M009A
-			JSR	F_E10E
+			JSR	F_E10E			; no-op
 			LDAB	M7776
 			JMP	F_B1DD
 
@@ -6348,8 +6379,8 @@ C_B09E			TST	VOICE_COMPARE
 			LDD	#$0101
 			STD	OP_ENABLE
 			STD	OP_ENABLE + 2
-			JSR	F_E10F
-			JSR	F_E10E
+			JSR	F_E10F			; no-op
+			JSR	F_E10E			; no-op
 33			RTS
 
 ;-------
@@ -6358,7 +6389,7 @@ C_B0C0			LDAA	#$02
 			STAA	M7772
 			CLR	M778C
 			CLR	M7790
-			JSR	F_E10E
+			JSR	F_E10E			; no-op
 			LDX	#M69C1
 			TST	SYS_CMBIN
 			BNE	1F
@@ -6419,7 +6450,7 @@ C_B136			LDAA	#$04
 			LDAA	#$FF
 			STAA	M7790
 			CLR	>M009A
-			JSR	F_E10E
+			JSR	F_E10E			; no-op
 			LDAB	M7777
 			JMP	F_B1DD
 
@@ -6432,7 +6463,7 @@ C_B14E			LDAA	#$05
 			LDAA	#$FF
 			STAA	M7790
 			CLR	>M009A
-			JSR	F_E10E
+			JSR	F_E10E			; no-op
 			LDAB	M7778
 			JMP	F_B1DD
 
@@ -6446,7 +6477,7 @@ C_B168			BSR	F_B1C6
 			STAA	M7772
 			CLR	M778C
 			CLR	M7790
-			JSR	F_E10E
+			JSR	F_E10E			; no-op
 			RTS
 
 ;-------
@@ -6455,7 +6486,7 @@ C_B179			LDAA	#$06
 			STAA	M7772
 			CLR	M778C
 			CLR	M7790
-			JSR	F_E10E
+			JSR	F_E10E			; no-op
 			LDX	#VCED
 			STX	SPTR
 			LDX	#M69C1
@@ -6613,7 +6644,7 @@ C_B26F			STAB	M7774
 			BRA	C_B230
 
 F_B284			STAB	OPERATOR_NUM
-			JSR	F_E110
+			JSR	F_E110			; no-op
 			LDAB	M7774
 			CMPB	#$08
 			BEQ	16F
@@ -6651,7 +6682,7 @@ C_B2BD			LDAB	#$03
 			STD	M7781
 			LDAB	$02,X
 C_B2CB			STAB	M7783
-			CLR	M777E
+			CLR	MENU_VALUE
 			CLR	>M00A5
 			JMP	C_B560
 
@@ -6784,7 +6815,7 @@ C_B38A			LDAB	M7789
 			SUBB	#$04
 			JMP	C_B230
 15			STAB	OPERATOR_NUM
-			JSR	F_E110
+			JSR	F_E110			; no-op
 			LDAB	M7789
 			ADDB	#$07
 			BRA	C_B383
@@ -6803,7 +6834,7 @@ F_B3C3			LDAB	#$06
 
 F_B3DC			SUBB	#$01
 			STAB	OPERATOR_NUM
-			JSR	F_E110
+			JSR	F_E110			; no-op
 			LDAB	#$08
 			BRA	C_B383
 19			LDAB	#$07
@@ -6812,7 +6843,7 @@ F_B3DC			SUBB	#$01
 C_B3EC			JSR	F_B6A8
 			STAA	OPERATOR_NUM
 			PSHB
-			JSR	F_E110
+			JSR	F_E110			; no-op
 			PULA
 			TSTA
 			BEQ	24F
@@ -6867,7 +6898,7 @@ C_B43F			LDAB	M778C
 			JMP	C_B230
 
 F_B460			STAB	OPERATOR_NUM
-			JSR	F_E110
+			JSR	F_E110			; no-op
 			LDAB	M7789
 			ADDB	#$0E
 30			JMP	C_B383
@@ -6882,7 +6913,7 @@ C_B46E			LDAB	M778C
 			JMP	C_B230
 
 F_B481			STAB	OPERATOR_NUM
-			JSR	F_E110
+			JSR	F_E110			; no-op
 			LDAB	M7789
 			ADDB	#$14
 			BRA	30B
@@ -7027,7 +7058,7 @@ F_B563			LDAA	M7783
 			LDAA	#$24
 			STAA	,X
 5			LDX	M7781
-			JSR	F_E10C
+			JSR	F_E10C			; no-op
 			RTS
 6			LDAA	M778C
 			CMPA	#$04
@@ -7396,7 +7427,7 @@ F_B83F			LDAB	M7795
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			JSR	F_91FE
-			JMP	F_E113
+			JMP	F_E113			; RTS
 
 ;-------
 
@@ -7460,7 +7491,7 @@ COPY_OPERATOR_EG	LDAB	M7794			; DPTR <- offset to operator M7794
 			JSR	F_92DB
 			LDX	#F_9F00
 			JSR	F_92DB
-			JSR	F_E114
+			JSR	F_E114			; no-op
 			RTS
 
 ;-------
@@ -7600,11 +7631,11 @@ C_B9BB			CLR	M778C
 C_B9BE			SUBB	#$05
 			BRA	6B
 
-C_B9C2			CLR	M777E
+C_B9C2			CLR	MENU_VALUE
 			LDAB	#$06
 			BRA	6B
 
-C_B9C9			CLR	M777E
+C_B9C9			CLR	MENU_VALUE
 			LDAB	#$07
 			BRA	6B
 
@@ -7658,12 +7689,12 @@ C_BA19			TST	>M00A5
 			BRA	9B
 22			CMPA	#$01
 			BEQ	24F
-			LDAA	M777E
+			LDAA	MENU_VALUE
 			INCA
 			CMPA	#$05
 			BCS	23F
 			CLRA
-23			STAA	M777E
+23			STAA	MENU_VALUE
 			JMP	9B
 24			STAA	M00A5
 			JMP	9B
@@ -7706,14 +7737,14 @@ C_BA5F			LDAB	M7789
 			BNE	3F
 			CMPA	#$01
 			BEQ	2F
-			LDAA	M777E
+			LDAA	MENU_VALUE
 			INCA
 			CMPA	#$05
 			BCS	1F
 			CLRA
-1			STAA	M777E
+1			STAA	MENU_VALUE
 			BRA	10F
-2			JSR	F_BBF0
+2			JSR	SETUP_TRANSMIT
 			BRA	10F
 3			CMPB	#$0B
 			BNE	5F
@@ -7739,17 +7770,18 @@ C_BA5F			LDAB	M7789
 			BNE	10F
 			JSR	SEND_SYSEX_PMEM
 			BRA	10F
+
 7			CMPA	#$01
 			BEQ	9F
-			LDAA	M777E
+			LDAA	MENU_VALUE
 			INCA
 			CMPA	#$05
 			BCS	8F
 			CLRA
-8			STAA	M777E
+8			STAA	MENU_VALUE
 			BRA	10F
-9			JSR	F_E115
-			JSR	F_BC18
+9			JSR	F_E115			; no-op
+			JSR	VOICE_TRANSMIT
 10			SEC
 			RTS
 
@@ -7765,19 +7797,19 @@ C_BADD			CMPA	#$01
 			BEQ	3F
 			CMPA	#$08
 			BCS	4F
-			LDAA	M777E
+			LDAA	MENU_VALUE
 			INCA
 			CMPA	#$05
 			BCS	2F
 			CLRA
-2			STAA	M777E
+2			STAA	MENU_VALUE
 			BRA	4F
-3			LDAA	M777E
+3			LDAA	MENU_VALUE
 			INCA
 			ANDA	#$01
-			STAA	M777E
+			STAA	MENU_VALUE
 			LDX	M7781
-			JSR	F_E10C
+			JSR	F_E10C			; RTS
 4			SEC
 			RTS
 
@@ -7883,8 +7915,16 @@ D_BBE4			FCB	$05,$03,$0B,$05,$01,$0F,$0C,$0A
 			FCB	$03,$02,$0B,$03
 
 ;-------
-
-F_BBF0			LDAB	M777E
+;
+; send a subset of the system set via SysEx
+;
+; 0 -> PC + EF + MC
+; 1 -> SY
+; 2 -> PC
+; 3 -> EF
+; 4 -> MC
+;
+SETUP_TRANSMIT		LDAB	MENU_VALUE
 			CMPB	#$05
 			BCS	1F
 			CLRB
@@ -7910,13 +7950,13 @@ D_BC0E			FDB	SEND_SYSEX_S1_S2_E0_E1
 
 ;-------
 
-F_BC18			TST	M777E
+VOICE_TRANSMIT		TST	MENU_VALUE
 			BEQ	1F
-			LDAB	#$03
+			LDAB	#3
 			STAB	XROM
-			JSR	XROM_CALL		; invoke LO_CALL_03 (from low bank)
+			JSR	XROM_CALL		; invoke SEND_PRESET_BANK (from low bank)
 			BRA	2F
-1			JSR	F_E11D
+1			JSR	SEND_USER_BANK
 2			RTS
 
 ;-------
@@ -8565,7 +8605,7 @@ C_C0B1			LDAB	M7789
 ;-------
 
 C_C0E4			LDX	M7781
-			JSR	F_E10C
+			JSR	F_E10C			; RTS
 			SEC
 			BRA	3F
 
@@ -8773,14 +8813,14 @@ F_C259			LDAB	M778C
 F_C274			CMPB	#$1E
 			BEQ	2F
 			JSR	HI_CALL_1A
-			JSR	F_E111
+			JSR	F_E111			; no-op
 			CLRA
 			STAA	OPERATOR_NUM
 1			JSR	F_B082
 			RTS
 2			JSR	F_C291
-			JSR	F_E112
-			JSR	F_E10F
+			JSR	F_E112			; no-op
+			JSR	F_E10F			; no-op
 			BRA	1B
 
 ;-------
@@ -10997,7 +11037,7 @@ F_D33D			JSR	HI_CALL_00
 			JSR	LCD_WAIT
 			STAB	LCD_CMD
 			CLR	>M00CC
-			JSR	F_E11D
+			JSR	SEND_USER_BANK
 			JSR	F_C95A
 			JSR	F_C972
 			RTS
@@ -12827,6 +12867,7 @@ MIDI_SEND_SENSE		RTS
 ;-------
 
 F_E10C			RTS
+
 			RTS
 
 F_E10E			RTS
@@ -12854,12 +12895,14 @@ HI_CALL_04		RTS
 HI_CALL_0A		RTS
 
 			RTS
+
 			RTS
+
 			RTS
 
 ;-------
 
-F_E11D			TST	SYS_SYSAVL
+SEND_USER_BANK		TST	SYS_SYSAVL
 			BEQ	2F
 			TST	>M00CC
 			BNE	2F
@@ -12870,17 +12913,17 @@ F_E11D			TST	SYS_SYSAVL
 			STX	DPTR
 			LDX	#S_TRANSMITTING
 			JSR	LCD_WRITE
-			CLR	>M00C7
+			CLR	>SYSEX_INDEX
 			JSR	SEND_SYSEX_VMEM_HDR
-1			LDAA	M00C7
+1			LDAA	SYSEX_INDEX
 			LDAB	#$4E
 			MUL
 			ADDD	#USER_VOICE
 			XGDX
 			JSR	SEND_SYSEX_VMEM
-			LDAB	M00C7
+			LDAB	SYSEX_INDEX
 			INCB
-			STAB	M00C7
+			STAB	SYSEX_INDEX
 			CMPB	#$20
 			BNE	1B
 			JSR	SEND_SYSEX_END
@@ -13016,22 +13059,22 @@ SEND_SYSEX_PMEM		TST	SYS_SYSAVL
 			STX	DPTR
 			LDX	#S_TRANSMITTING
 			JSR	LCD_WRITE
-			CLR	>M00C7
+			CLR	>SYSEX_INDEX
 			JSR	SEND_SYSEX_PMEM_HDR
-1			LDAA	M00C7
-			CMPA	#$18
+1			LDAA	SYSEX_INDEX
+			CMPA	#24
 			BCS	2F
 			LDX	#D_PFM_SINGLE
 			BRA	3F
-2			LDAB	#$4C
+2			LDAB	#76
 			MUL
 			ADDD	#USER_PFM
 			XGDX
 3			JSR	SEND_76
-			LDAB	M00C7
+			LDAB	SYSEX_INDEX
 			INCB
-			STAB	M00C7
-			CMPB	#$20
+			STAB	SYSEX_INDEX
+			CMPB	#32
 			BNE	1B
 			JSR	SEND_SYSEX_END
 4			RTS
@@ -13077,7 +13120,7 @@ SEND_76			CLRB
 			INX
 			PULB
 			INCB
-			CMPB	#$4C
+			CMPB	#76
 			BNE	1B
 			RTS
 
@@ -13430,19 +13473,23 @@ S_SYSEX_SYS2		FCB	$7E,$00,$41
 			FCC	'LM  8976S2'
 
 ;-------
-
+;
+; send microtune Octave (MCRTE0) and full keyboard (MCRTE1)
+;
 SEND_SYSEX_E0_E1	JSR	SEND_SYSEX_MCRTE0
 			JSR	DELAY_30_x_4500
 			JSR	SEND_SYSEX_MCRTE1
 			RTS
 
 ;-------
-
+;
+; send program change table (SYS1), effect data (SYS2) + microtuning data
+;
 SEND_SYSEX_S1_S2_E0_E1	JSR	SEND_SYSEX_SYS1
 			JSR	DELAY_30_x_4500
 			JSR	SEND_SYSEX_SYS2
 			JSR	DELAY_30_x_4500
-			JSR	SEND_SYSEX_MCRTE0
+			JSR	SEND_SYSEX_MCRTE0	; ##OPT## jump to SEND_SYSEX_E0_E1
 			JSR	DELAY_30_x_4500
 			JSR	SEND_SYSEX_MCRTE1
 			RTS
@@ -13937,7 +13984,7 @@ HI_CALL_16		LDAA	M776B
 ;-------
 
 F_E9C9			LDAA	M776B
-			BITA	#$10
+			BITA	#%00010000
 			BNE	1F
 			BITA	#$02
 			BNE	5F
@@ -13957,7 +14004,7 @@ F_E9C9			LDAA	M776B
 			INCA
 			STAA	$14,X
 			LDAA	M776B
-			ORAA	#$01
+			ORAA	#%00000001
 			STAA	M776B
 3			INCB
 			CMPB	#$04

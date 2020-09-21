@@ -5,7 +5,12 @@
 ;-------
 ;
 ; Outputs the string from @(X) which is terminated
-; by any character < 0x20
+; by any character < 0x20 (which is left in B)
+;
+; the terminating character is used as an offset into
+; the function table at T_SHOW_FUNCS (in the low bank)
+; that is used to format and show the value associated
+; with the parameter.
 ;
 ; Values >= 0x80 are pointers into a string table
 ; at PUTSTR_OFFSET which must be defined in the main

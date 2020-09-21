@@ -37,7 +37,6 @@ M00A5			EQU	$00A5
 M00A6			EQU	$00A6
 M00AB			EQU	$00AB
 M00AC			EQU	$00AC
-M00C7			EQU	$00C7
 M00CC			EQU	$00CC
 M00CD			EQU	$00CD
 M00CE			EQU	$00CE
@@ -80,7 +79,6 @@ M7774			EQU	$7774
 M7779			EQU	$7779
 M777A			EQU	$777A
 M777C			EQU	$777C
-M777E			EQU	$777E
 M777F			EQU	$777F
 M7781			EQU	$7781
 M7784			EQU	$7784
@@ -167,7 +165,7 @@ XROM_VEC2		FDB	hdlr_RST
 XROM_VEC		FDB	LOAD_VOICE
 			FDB	LO_CALL_01
 			FDB	LO_CALL_02
-			FDB	LO_CALL_03
+			FDB	SEND_PRESET_BANK
 			FDB	LO_CALL_04
 			FDB	LO_CALL_05
 			FDB	LO_CALL_06
@@ -430,7 +428,9 @@ LOAD_VOICE		LDAB	#4			; B <- 4 (operator count)
 6			RTS				; done
 
 ;-------
-
+;
+; probably voice save (VCED / ACED) to VMEM (TBC)
+;
 LO_CALL_06		LDAB	#$04
 1			PSHB
 			LDAB	#$06
@@ -582,7 +582,9 @@ LO_CALL_06		LDAB	#$04
 			RTS
 
 ;-------
-
+;
+; probably LOAD_PFM
+;
 LO_CALL_05		LDAB	#$08
 1			PSHB
 			LDX	SPTR
@@ -687,7 +689,9 @@ LO_CALL_05		LDAB	#$08
 			JMP	MEMCPYX
 
 ;-------
-
+;
+; probably SAVE_PFM
+;
 LO_CALL_08		LDAB	#$08
 1			PSHB
 			LDX	SPTR
@@ -955,7 +959,7 @@ SET_VCED_RANGE		LDAB	M009F			; B <- voice number
 
 ;-------
 
-LO_CALL_03		TST	SYS_SYSAVL
+SEND_PRESET_BANK	TST	SYS_SYSAVL
 			BEQ	2F
 			TST	>M00CC
 			BNE	2F
@@ -966,21 +970,21 @@ LO_CALL_03		TST	SYS_SYSAVL
 			STX	DPTR
 			LDX	#S_TRANSMITTING
 			JSR	LCD_WRITE
-			CLR	>M00C7
+			CLR	>SYSEX_INDEX
 			JSR	SEND_SYSEX_VMEM_HDR
-1			LDAA	M777E
+1			LDAA	MENU_VALUE
 			DECA
 			LDAB	#$20
 			MUL
-			ADDB	M00C7
+			ADDB	SYSEX_INDEX
 			LDAA	#$4E
 			MUL
 			ADDD	#PRESET_VOICE
 			XGDX
 			JSR	SEND_SYSEX_VMEM
-			LDAB	M00C7
+			LDAB	SYSEX_INDEX
 			INCB
-			STAB	M00C7
+			STAB	SYSEX_INDEX
 			CMPB	#$20
 			BNE	1B
 			JSR	SEND_SYSEX_END
@@ -993,8 +997,8 @@ S_TRANSMITTING		FCC	"Transmitting!!  "
 
 LO_CALL_04		LDAA	#$01
 			STAA	PFM_EDITED
-			LDAA	M777E
-			LDAB	#$4C
+			LDAA	MENU_VALUE
+			LDAB	#76
 			MUL
 			ADDD	#STANDARD_PFM
 			XGDX
@@ -1139,15 +1143,16 @@ LO_CALL_01		JSR	F_8EBE
 			FCB	4F - *
 			FCB	3F - *
 
-2			JMP	F_8D3E		; case 3, 7
-3			JMP	C_8B4A		; case 2, 6, 10
-4			JMP	C_8ABD		; case 1, 5, 9
-5			LDAB	M777E		; case 8
+2			JMP	F_8D3E			; case 3, 7
+3			JMP	C_8B4A			; case 2, 6, 10
+4			JMP	C_8ABD			; case 1, 5, 9
+
+5			LDAB	MENU_VALUE		; case 8
 			ADDB	#$03
 			BRA	9F
-6			LDAB	#$02		; case 4
+6			LDAB	#$02			; case 4
 			BRA	9F
-7			TST	M777E		; case 0
+7			TST	MENU_VALUE		; case 0
 			BEQ	8F
 			CLRB
 			BRA	9F
@@ -1258,7 +1263,7 @@ LO_CALL_01		JSR	F_8EBE
 			BRA	29F
 28			CMPA	#$05		; case 7
 29			BNE	16B
-30			JSR	HI_CALL_06	; case 4, 6
+30			JSR	HI_CALL_06	; case 4, 6 (no-op)
 			LDAA	M00D7
 			CMPA	#$02
 			BEQ	31F
@@ -1275,16 +1280,16 @@ LO_CALL_01		JSR	F_8EBE
 35			LDAA	M00D7
 			CMPA	#$02
 			BCS	36F
-			LDAA	M777E
+			LDAA	MENU_VALUE
 			DECA
 			CMPA	#$05
 			BCS	37F
 			LDAA	#$04
 			BRA	37F
-36			LDAA	M777E
+36			LDAA	MENU_VALUE
 			INCA
 			ANDA	#$01
-37			STAA	M777E
+37			STAA	MENU_VALUE
 			BRA	34B
 
 DVEC_M8A6E		FDB	S_INT
@@ -1383,17 +1388,17 @@ C_8ABD			JSR	LCD_CLR_BOTTOM
 			STX	DPTR
 			LDX	#S_VERIFY_COMPLETED
 			JSR	LCD_WRITE
-			JSR	HI_CALL_0D
+			JSR	HI_CALL_0D		; no-op
 			CLI
 			LDAA	#$01
 			STAA	M00CE
-6			LDAA	M777E
+6			LDAA	MENU_VALUE
 			ANDA	#$0F
 			DECA
 			CMPA	#$05
 			BCS	7F
 			LDAA	#$04
-7			STAA	M777E
+7			STAA	MENU_VALUE
 			RTS
 8			JMP	C_8CE9
 9			JMP	C_8D03
@@ -1474,7 +1479,7 @@ C_8B4A
 			OIM	#ECMI,TCSR3
 23			JMP	C_8CF5
 24			JSR	HI_CALL_1B
-			JSR	HI_CALL_04
+			JSR	HI_CALL_04		; no-op
 			JMP	C_8CF5
 25			JMP	C_8D03
 26			JSR	LCD_CLR_BOTTOM
@@ -1486,7 +1491,7 @@ C_8B4A
 
 ;------
 
-F_8C1C			LDAB	M777E
+F_8C1C			LDAB	MENU_VALUE
 			ASLB
 			LDX	#1F
 			ABX
@@ -1522,10 +1527,10 @@ F_8C34			LDAB	M00D7
 			BRA	6F
 5			CMPA	#$05		; case 7
 6			BNE	11F
-7			LDAB	M777E		; case 6
+7			LDAB	MENU_VALUE		; case 6
 			ANDB	#$0F
 			BNE	12F
-			LDAB	M777E
+			LDAB	MENU_VALUE
 			LDAA	M00D7
 			CMPA	#$05
 			BNE	8F
@@ -1536,7 +1541,7 @@ F_8C34			LDAB	M00D7
 			ORAB	#$40
 			BRA	10F
 9			ORAB	#$80
-10			STAB	M777E
+10			STAB	MENU_VALUE
 			ANDB	#$E0
 			CMPB	#$E0
 			BEQ	12F
@@ -1611,9 +1616,9 @@ C_8CE9			LDX	#LCD_BOTTOM + 12
 
 C_8CF5			LDAA	#$01
 			STAA	M00CE
-			LDAA	M777E
+			LDAA	MENU_VALUE
 			ANDA	#$0F
-			STAA	M777E
+			STAA	MENU_VALUE
 			CLC
 			RTS
 
@@ -1621,9 +1626,9 @@ C_8CF5			LDAA	#$01
 
 C_8D03			CLI
 			CLR	>M00CE
-			LDAA	M777E
+			LDAA	MENU_VALUE
 			ANDA	#$0F
-			STAA	M777E
+			STAA	MENU_VALUE
 			CLC
 			RTS
 
@@ -1645,7 +1650,7 @@ F_8D11			LDAB	M7789
 			BRA	4F
 3			CMPB	#$08
 			BNE	1B
-			LDAB	M777E
+			LDAB	MENU_VALUE
 			ANDB	#$0F
 			BEQ	4F
 			ADDB	#$03
@@ -1808,7 +1813,7 @@ F_8D3E			JSR	LCD_CLR_BOTTOM
 			STX	DPTR
 			LDX	#S_LOAD_COMPLETED
 			JSR	LCD_WRITE
-			JSR	HI_CALL_0A
+			JSR	HI_CALL_0A		; no-op
 			CLI
 			LDAA	#$01
 			STAA	M00CE
@@ -2000,7 +2005,7 @@ F_903F			LDX	#M69C1
 			LDAB	#$10
 			JSR	BCOPY
 			LDAB	#$2E
-			JMP	MEMCLR_xB_79
+			JMP	BZERO
 5			LDAB	#$40		; case 5
 			MUL
 			ADDD	#PROG_CHANGES
@@ -2008,13 +2013,13 @@ F_903F			LDX	#M69C1
 6			LDAB	#64
 			JSR	BCOPY
 			LDAB	#9
-			JMP	MEMCLR_xB_79
+			JMP	BZERO
 7			LDX	#EFFECTS_PARAMS	; case 6
 			STX	M0077
 			LDAB	#55
 			JSR	BCOPY
 			LDAB	#18
-			JMP	MEMCLR_xB_79
+			JMP	BZERO
 8			TSTA			; case 7
 			BNE	9F
 			LDX	#MICROTUNE_OCT
@@ -2022,7 +2027,7 @@ F_903F			LDX	#M69C1
 			LDAB	#24
 			JSR	BCOPY
 			LDAB	#49
-			JMP	MEMCLR_xB_79
+			JMP	BZERO
 9			DECA
 			LDAB	#64
 			MUL
@@ -2179,7 +2184,7 @@ F_9196			CLRB
 			INX
 			STX	M0079
 			INCB
-			TST	M777E
+			TST	MENU_VALUE
 			BNE	9F
 			CMPB	#$55
 			BRA	10F
@@ -2208,7 +2213,7 @@ BCOPY
 
 ;-------
 
-MEMCLR_xB_79		CLRA
+BZERO			CLRA
 1			LDX	M0079
 			STAA	,X
 			INX
@@ -3904,7 +3909,7 @@ C_9EC0			TST	M7795
 			JSR	F_AF7D
 			LDX	#LCD_BOTTOM + 5
 			STX	DPTR
-			JSR	F_AFD8
+			JSR	PUT_VOICE_NAME
 			JMP	LCD_UPDATE
 C_9EEC			LDAB	M7774
 			CMPB	#$0B
@@ -3929,76 +3934,76 @@ C_9EEC			LDAB	M7774
 C_9F1A			LDAB	M7774
 
 			JSR	JMPOFF1
-			FCB	C_A005 - *
+			FCB	GETSTR_T1 - *		; case 0 .. 10
 			FCB	$0B
-			FCB	1F - *
+			FCB	1F - *			; case 11 .. 19
 			FCB	$14
-			FCB	C_9F43 - *
+			FCB	C_9F43 - *		; case 20 .. 30
 			FCB	$1F
-			FCB	1F - *
+			FCB	1F - *			; case 31 .. 39
 			FCB	$28
-			FCB	C_9F47 - *
+			FCB	C_9F47 - *		; case 40
 			FCB	$29
-			FCB	C_9F54 - *
+			FCB	C_9F54 - *		; case 41 .. 47
 			FCB	$30
-			FCB	C_9F60 - *
+			FCB	C_9F60 - *		; case 48
 			FCB	$31
-			FCB	C_9F54 - *
+			FCB	C_9F54 - *		; case 49 .. 50
 			FCB	$33
-			FCB	C_9F4B - *
+			FCB	C_9F4B - *		; case 51
 			FCB	$34
-			FCB	C_9F64 - * 
+			FCB	C_9F64 - * 		; case 52
 			FCB	$35
-			FCB	1F - *
+			FCB	1F - *			; case 53 .. 59
 			FCB	$3C
-			FCB	C_9F54 - *
+			FCB	C_9F54 - *		; case 60
 			FCB	$3D
-			FCB	C_9F6C - *
+			FCB	C_9F6C - *		; case 61
 			FCB	$3E
-			FCB	C_9F68 - *
+			FCB	C_9F68 - *		; case 62
 			FCB	$3F
-			FCB	1F - *
+			FCB	1F - *			; case 63 .. 69
 			FCB	$46
-			FCB	C_9F70 - *
+			FCB	C_9F70 - *		; case 70
 			FCB	$47
-			FCB	1F - *
+			FCB	1F - *			; default
 			FCB	$00
 
 1			RTS
 
-C_9F43			SUBB	#$09
+C_9F43			SUBB	#9			; 20 .. 30 -> 11 .. 21
 			BRA	13F
 
-C_9F47			LDAB	#$16
+C_9F47			LDAB	#22			; 40 -> 22
 			BRA	13F
 
-C_9F4B			LDAB	#$17
+C_9F4B			LDAB	#23			; 51 -> 23
 			LDAA	M778C
 			CMPA	#$06
 			BRA	6F
 
-C_9F54			LDAB	#$17
+C_9F54			LDAB	#23
 			LDAA	M778C
-			CMPA	#$04
+			CMPA	#4
 6			BCS	7F
 			INCB
 7			BRA	13F
 
-C_9F60			LDAB	#$19
+C_9F60			LDAB	#25			; 48 -> 25
 			BRA	13F
 
-C_9F64			LDAB	#$1A
+C_9F64			LDAB	#26			; 52 -> 26
 			BRA	13F
 
-C_9F68			LDAB	#$0D
+C_9F68			LDAB	#13			; 62 -> 13
 			BRA	13F
 
-C_9F6C			LDAB	#$1B
+C_9F6C			LDAB	#27			; 61 -> 27
 			BRA	13F
 
-C_9F70			LDAB	#$1C
+C_9F70			LDAB	#28			; 70 -> 28
 
-13			JMP	C_A005
+13			JMP	GETSTR_T1
 
 C_9F75			LDAB	M7774
 			LDAA	M7789
@@ -4008,41 +4013,41 @@ C_9F75			LDAB	M7774
 			STAA	M7789
 
 1			JSR	JMPOFF1
-			FCB	2F - *
+			FCB	2F - *			; case 0 .. 1 (no-op)
 			FCB	$02
-			FCB	C_9FF9 - *
+			FCB	GETSTR_T2 - *		; case 2
 			FCB	$03
-			FCB	C_9FCB - *
+			FCB	C_9FCB - *		; case 3
 			FCB	$04
-			FCB	C_9FCF - *
+			FCB	C_9FCF - *		; case 4
 			FCB	$05
-			FCB	2F - *
+			FCB	2F - *			; case 5 .. 6 (no-op)
 			FCB	$07
-			FCB	C_9FD7 - *
+			FCB	C_9FD7 - *		; case 7
 			FCB	$08
-			FCB	2F - *
+			FCB	2F - *			; case 8 (no-op)
 			FCB	$09
-			FCB	C_9FDB - *
+			FCB	C_9FDB - *		; case 9
 			FCB	$0A
-			FCB	C_9FDF - *
+			FCB	C_9FDF - *		; case 10
 			FCB	$0B
-			FCB	2F - *
+			FCB	2F - *			; case 11 .. 20 (no-op)
 			FCB	$15
-			FCB	C_9FE3 - *
+			FCB	C_9FE3 - *		; case 21
 			FCB	$16
-			FCB	2F - *
+			FCB	2F - *			; case 22 .. 23 (no-op)
 			FCB	$18
-			FCB	C_9FE7 - *
+			FCB	C_9FE7 - *		; case 24
 			FCB	$19
-			FCB	C_9FEB - *
+			FCB	C_9FEB - *		; case 25
 			FCB	$1A
-			FCB	C_9FEF - *
+			FCB	C_9FEF - *		; case 26
 			FCB	$1B
-			FCB	C_9FF3 - *
+			FCB	C_9FF3 - *		; case 27
 			FCB	$1C
-			FCB	C_9FF7 - *
+			FCB	C_9FF7 - *		; case 28
 			FCB	$1D
-			FCB	2F - *
+			FCB	2F - *			; default (no-op)
 			FCB	$00
 
 2			RTS
@@ -4062,56 +4067,57 @@ C_9FAC			LDAA	M7774
 			JMP	C_A017
 
 C_9FCB			ADDA	#$06
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FCF			SUBA	#$03
 			BPL	C_9FCF
 			ADDA	#$0D
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FD7			ADDA	#$0D
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FDB			ADDA	#$13
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FDF			ADDA	#$15
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FE3			ADDA	#$25
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FE7			ADDA	#$32
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FEB			ADDA	#$3D
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FEF			ADDA	#$41
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FF3			LDAA	#$44
-			BRA	C_9FF9
+			BRA	GETSTR_T2
 
 C_9FF7			ADDA	#$45
 
-C_9FF9			TAB
-			CMPB	#$49
-			BCS	1F
-			CLRB
-1			ASLB
-			LDX	#DVEC_STRINGS_2
+GETSTR_T2		TAB				; B <- A
+			CMPB	#73			; compare to 73
+			BCS	1F			; less?  carry on
+			CLRB				; B <- 0
+1			ASLB				; B <- B * 2
+			LDX	#T_STRINGS_2		; X <- second string table
 			BRA	4F
 
-C_A005			CMPB	#$1D
-			BCS	3F
-			CLRB
-3			ASLB
-			LDX	#DVEC_STRINGS
-4			ABX
-			LDX	,X
-			JSR	PUTSTRX
-			JMP	C_A174
+GETSTR_T1		CMPB	#29			; compare B to 29
+			BCS	3F			; less?  carry on
+			CLRB				; B <- 0
+3			ASLB				; B <- B * 2
+			LDX	#T_STRINGS_1		; X <- first string table
+
+4			ABX				; X <- X + B
+			LDX	,X			; X <- @X
+			JSR	PUTSTRX			; display the string
+			JMP	CALL_SHOW
 
 C_A017			LDAB	M7789
 			BEQ	6F
@@ -4119,8 +4125,8 @@ C_A017			LDAB	M7789
 			BEQ	7F
 			JMP	C_A0D5
 6			LDAB	M778A
-			ADDB	#$3C
-			JSR	F_B43F
+			ADDB	#60
+			JSR	SHOW_NOTE		; show absolute note name
 			LDX	DPTR
 			INX
 			INX
@@ -4131,7 +4137,7 @@ C_A017			LDAB	M7789
 			LDX	#MICROTUNE_OCT
 			BRA	8F
 7			LDAB	M778A
-			JSR	F_B43F
+			JSR	SHOW_NOTE		; show transpose
 			LDX	DPTR
 			INX
 			INX
@@ -4151,7 +4157,7 @@ C_A017			LDAB	M7789
 			BRA	10F
 9			LDAB	,X
 10			PSHX
-			JSR	F_B43F
+			JSR	SHOW_NOTE		; show transpose
 			LDX	DPTR
 			INX
 			INX
@@ -4197,8 +4203,8 @@ C_A098			CLRB
 			CMPB	#$31
 			BCC	14F
 			ADDB	M7789
-			ADDB	#$24
-			JSR	F_B43F
+			ADDB	#36			; show note in range C1 ..
+			JSR	SHOW_NOTE		; -
 			LDX	DPTR
 			INX
 			INX
@@ -4216,7 +4222,7 @@ C_A098			CLRB
 			INCB
 			BRA	13B
 16			CLRB
-			JMP	C_A174
+			JMP	CALL_SHOW
 
 C_A0D5			LDAA	M778A
 			INCA
@@ -4255,7 +4261,7 @@ C_A0D5			LDAA	M778A
 			LDD	,X
 			STD	LCD_BOTTOM + 14
 7			CLRB
-			BRA	C_A174
+			BRA	CALL_SHOW
 
 DVEC_SCALE_NAMES	FDB     S_EQUAL
 			FDB     S_PURE_MAJOR
@@ -4296,69 +4302,74 @@ C_A13A			LDX	#S__PGM
 3			CLRB
 
 ;-------	fallthrough
+;
+; Calls function B from the T_SHOW_FUNCS table
+;
 
-C_A174			CMPB	#$20
+CALL_SHOW		CMPB	#32
 			BCS	1F
 			CLRB
-1			LDX	#CVEC_A182
+1			LDX	#T_SHOW_FUNCS
 			ASLB
 			ABX
 			LDX	,X
 			JMP	,X
 
-CVEC_A182		FDB     LCD_UPDATE
-			FDB     F_A1CD
-			FDB     F_A1D6
-			FDB     F_A1E0
-			FDB     F_A2AC
-			FDB     F_A370
-			FDB     F_A37E
-			FDB     F_A3B0
-			FDB     F_A3BF
-			FDB     F_A3D2
-			FDB     F_A3E4
-			FDB     F_A424
-			FDB     F_A386
-			FDB     SHOW_NOTESW
-			FDB     F_A3A5
-			FDB     F_A452
-			FDB     F_A42E
-			FDB     F_A485
-			FDB     SHOW_FIXFREQ
-			FDB     F_A4DE
-			FDB     F_A4DA
-			FDB     F_A600
-			FDB     F_A66E
-			FDB     F_A67D
-			FDB     F_A699
-			FDB     F_A6AE
-			FDB     F_A6CA
-			FDB     F_A6D4
-			FDB     F_A6E4
-			FDB     F_A705
-			FDB     F_A74A
-			FDB     F_A75A
+T_SHOW_FUNCS		FDB     LCD_UPDATE		; #00
+			FDB     SHOW_PTR_NN		; #01
+			FDB     SHOW_PTR_ON_OFF		; #02
+			FDB     F_A1E0			; #03
+			FDB     F_A2AC			; #04
+			FDB     SHOW_MIDDLE_C		; #05
+			FDB     SHOW_MASTER_TUNE	; #06
+			FDB     SHOW_MONO_POLY		; #07
+			FDB     SHOW_PORTA_MODE		; #08
+			FDB     SHOW_LFO_MODE		; #09
+			FDB     F_A3E4			; #10
+			FDB     SHOW_MIDI_CHAN		; #11
+			FDB     SHOW_PITCH_SHIFT	; #12
+			FDB     SHOW_NOTESW		; #13
+			FDB     SHOW_VOICE_NAME		; #14
+			FDB     F_A452			; #15
+			FDB     F_A42E			; #16
+			FDB     SHOW_MIDI_OMNI		; #17
+			FDB     SHOW_FIXFREQ		; #18
+			FDB     F_A4DE			; #19
+			FDB     F_A4DA			; #20
+			FDB     F_A600			; #21
+			FDB     SHOW_ASSIGN_MODE	; #22
+			FDB     SHOW_FX_TYPE		; #23
+			FDB     SHOW_REVERB_RATE	; #24
+			FDB     SHOW_PCHANGE_MODE	; #25
+			FDB     SHOW_BC_P_BIAS		; #26
+			FDB     SHOW_DELAY_TIME		; #27
+			FDB     SHOW_OFF_NORM_GLOBAL	; #28
+			FDB     SHOW_PAN_SOURCE		; #29
+			FDB     SHOW_CHORD_KEY_ON	; #30
+			FDB     SHOW_DATA_SEL		; #31
 
 ;-------
 
-F_A1C2			LDAB	#'='
-F_A1C4			JSR	PUTCHAR
-F_A1C7			LDX	M7781
+PUT_EQ_LOOKUP_PTR	LDAB	#'='
+
+PUT_DELIM_LOOKUP_PTR	JSR	PUTCHAR
+
+LOOKUP_PTR		LDX	M7781
 			LDAA	,X
 			RTS
 
 ;-------
 
-F_A1CD			BSR	F_A1C2
+SHOW_PTR_NN		BSR	PUT_EQ_LOOKUP_PTR
 			CLRB
 			JSR	PUT_DEC_NN
 			JMP	LCD_UPDATE
 
 ;-------
 
-F_A1D6			LDAB	#':'
-			BSR	F_A1C4
-			JSR	F_B432
+SHOW_PTR_ON_OFF	LDAB	#':'
+			BSR	PUT_DELIM_LOOKUP_PTR
+			JSR	SHOW_ON_OFF
 			JMP	LCD_UPDATE
 
 ;-------
@@ -4571,29 +4582,29 @@ F_A351			LDAB	#' '
 
 ;-------
 
-F_A370			JSR	F_A1C2
+SHOW_MIDDLE_C		JSR	PUT_EQ_LOOKUP_PTR
 			LDAB	VCED_TRANSPOSE
-			ADDB	#$24
-			JSR	F_B43F
+			ADDB	#36			; show note in range C1 ..
+			JSR	SHOW_NOTE		; -
 1			JMP	LCD_UPDATE
 
 ;-------
 
-F_A37E			JSR	F_A1C2
-			JSR	F_B463
+SHOW_MASTER_TUNE	JSR	PUT_EQ_LOOKUP_PTR
+			JSR	PUT_DEC_NN_OFFSET64
 			BRA	1B
 
 ;-------
 
-F_A386			JSR	F_A1C2
-			SUBA	#$18
-			JSR	F_B465
+SHOW_PITCH_SHIFT	JSR	PUT_EQ_LOOKUP_PTR
+			SUBA	#24
+			JSR	PUT_DEC_NN_SIGN
 			BRA	1B
 
 ;-------
 
 SHOW_NOTESW		LDAB	#':'
-			JSR	F_A1C4
+			JSR	PUT_DELIM_LOOKUP_PTR
 			TAB
 			ASLB
 			LDX	#T_NOTESW_NAMES
@@ -4607,14 +4618,14 @@ T_NOTESW_NAMES		FDB	S_NOTE_ALL
 
 ;-------
 
-F_A3A5			LDX	#LCD_BOTTOM + 6
+SHOW_VOICE_NAME		LDX	#LCD_BOTTOM + 6
 			STX	DPTR
-			JSR	F_AFD8
+			JSR	PUT_VOICE_NAME
 			JMP	LCD_UPDATE
 
 ;-------
 
-F_A3B0			JSR	F_A1C7
+SHOW_MONO_POLY		JSR	LOOKUP_PTR
 			LDX	#S_MONO_MODE
 			TSTA
 			BNE	1000F
@@ -4623,9 +4634,9 @@ F_A3B0			JSR	F_A1C7
 
 ;-------
 
-F_A3BF			TST	VCED_POLYMODE
+SHOW_PORTA_MODE		TST	VCED_POLYMODE
 			BEQ	1F
-			JSR	F_A1C7
+			JSR	LOOKUP_PTR
 			LDX	#S_FINGERED_PORTA
 			TSTA
 			BNE	1000B
@@ -4634,11 +4645,11 @@ F_A3BF			TST	VCED_POLYMODE
 
 ;-------
 
-F_A3D2			JSR	F_A1C2
-			CMPA	#$04
+SHOW_LFO_MODE		JSR	PUT_EQ_LOOKUP_PTR
+			CMPA	#4
 			BCS	1F
 			CLRA
-1			LDX	#DVEC_LFO_MODE
+1			LDX	#T_LFO_MODE
 			TAB
 			ASLB
 			ABX
@@ -4680,7 +4691,7 @@ F_A3E4			LDAB	#'='
 
 ;--------
 
-F_A424			JSR	F_A1C2
+SHOW_MIDI_CHAN		JSR	PUT_EQ_LOOKUP_PTR
 
 1001			INCA
 			CLRB
@@ -4714,9 +4725,9 @@ F_A452			LDAB	M7774
 			BNE	3F
 			LDX	#LCD_BOTTOM + 13
 			STX	DPTR
-			LDAB	M777E
+			LDAB	MENU_VALUE
 			BNE	1F
-			LDAB	#$49
+			LDAB	#'I'
 			BRA	2F
 1			DECB
 			ADDB	#'A'
@@ -4724,7 +4735,7 @@ F_A452			LDAB	M7774
 			JMP	LCD_UPDATE
 3			LDX	#LCD_BOTTOM + 12
 			STX	DPTR
-			TST	M777E
+			TST	MENU_VALUE
 			BNE	4F
 			LDX	#S_TX
 			BRA	1002F
@@ -4733,7 +4744,7 @@ F_A452			LDAB	M7774
 
 ;-------
 
-F_A485			JSR	F_A1C2
+SHOW_MIDI_OMNI		JSR	PUT_EQ_LOOKUP_PTR
 			CMPA	#$10
 			BEQ	1F
 			JMP	1001B
@@ -4754,9 +4765,9 @@ SHOW_FIXFREQ		LDAB	#'='
 			LDAA	#255
 			JSR	PUT_DEC_NNN
 			BRA	2F
-1			LDD	#('5' << 8) + '1'
+1			LDD	#('5' << 8) + '1'	; output '51'
 			STD	LCD_BOTTOM + 11
-			LDAB	#'0'			; '0'
+			LDAB	#'0'			; output '0'
 			STAB	LCD_BOTTOM + 13
 2			LDD	#('H' << 8) + 'z'
 			STD	LCD_BOTTOM + 14
@@ -4857,16 +4868,16 @@ C_A53E			CMPA	#$10
 			BRA	C_A532
 
 C_A54E			SUBA	#$18
-			JSR	F_B465
+			JSR	PUT_DEC_NN_SIGN
 			BRA	29F
 C_A555			TAB
-			JSR	F_B43F
+			JSR	SHOW_NOTE
 			LDD	DPTR
 			ADDD	#$03
 			STD	DPTR
 			BRA	29F
 C_A562			SUBA	#$07
-			JSR	F_B465
+			JSR	PUT_DEC_NN_SIGN
 			BRA	29F
 C_A569			PSHA
 			JSR	SET_CG0_ROMAN_II
@@ -4916,7 +4927,7 @@ C_A5C3			TSTA
 			LDX	DPTR
 			INX
 			STX	DPTR
-28			JSR	F_B432
+28			JSR	SHOW_ON_OFF
 29			LDX	DPTR
 			INX
 			STX	DPTR
@@ -5009,7 +5020,7 @@ F_A600			TST	>M00A3
 
 ;-------
 
-F_A66E			JSR	F_A1C2
+SHOW_ASSIGN_MODE	JSR	PUT_EQ_LOOKUP_PTR
 			LDX	#S_NORM
 			TSTA
 			BEQ	1F
@@ -5018,25 +5029,27 @@ F_A66E			JSR	F_A1C2
 
 ;-------
 
-F_A67D			JSR	F_A1C2
+SHOW_FX_TYPE		JSR	PUT_EQ_LOOKUP_PTR
 			TAB
 			CMPB	#$04
 			BCS	1F
 			LDAB	#$03
 1			ASLB
-			LDX	#DVEC_FX_TYPE
+			LDX	#T_FX_TYPE
 			ABX
 			LDX	,X
 			JMP	LCD_WRITE
 
-DVEC_FX_TYPE		FDB	S_OFF
+T_FX_TYPE		FDB	S_OFF
 			FDB	S_FX_DELAY
 			FDB	S_FX_PAN
 			FDB	S_FX_CHORD
 
 ;-------
-
-F_A699			JSR	F_A1C2
+;
+; 0 -> "off", otherwise show A
+;
+SHOW_REVERB_RATE	JSR	PUT_EQ_LOOKUP_PTR
 			TSTA
 			BNE	1F
 			LDX	#S_OFF
@@ -5048,15 +5061,15 @@ F_A699			JSR	F_A1C2
 
 ;-------
 
-F_A6AE			JSR	F_A1C2
+SHOW_PCHANGE_MODE	JSR	PUT_EQ_LOOKUP_PTR
 			TAB
 			ASLB
-			LDX	#DVEC_A6BC
+			LDX	#T_PCHANGE_MODE
 			ABX
 			LDX	,X
 			JMP	LCD_WRITE
 
-DVEC_A6BC		FDB	S_OFF
+T_PCHANGE_MODE		FDB	S_OFF
 			FDB	S_COM
 			FDB	S_IND
 
@@ -5067,15 +5080,19 @@ S_IND			FCC	"ind"
 			FCB	$00
 
 ;-------
-
-F_A6CA			JSR	F_A1C2
-			SUBA	#$32
-			JSR	F_B465
+;
+; range -50 .. +50
+;
+SHOW_BC_P_BIAS		JSR	PUT_EQ_LOOKUP_PTR
+			SUBA	#50
+			JSR	PUT_DEC_NN_SIGN
 			BRA	1000B
 
 ;-------
-
-F_A6D4			JSR	F_A1C2
+;
+; range 0.00 - 1.28s
+;
+SHOW_DELAY_TIME		JSR	PUT_EQ_LOOKUP_PTR
 			TAB
 			INCB
 			CLRA
@@ -5085,8 +5102,12 @@ F_A6D4			JSR	F_A1C2
 			BRA	1000B
 
 ;-------
-
-F_A6E4			JSR	F_A1C2
+;
+; 0 = off
+; 1 = norm
+; 2 = G1 .. G16
+;
+SHOW_OFF_NORM_GLOBAL	JSR	PUT_EQ_LOOKUP_PTR
 			CMPA	#$02
 			BCC	3F
 			TSTA
@@ -5104,54 +5125,55 @@ F_A6E4			JSR	F_A1C2
 
 ;-------
 
-F_A705			TST	M7789
+SHOW_PAN_SOURCE		TST	M7789
 			BNE	1F
-			JSR	F_A1C2
+			JSR	PUT_EQ_LOOKUP_PTR
 			TAB
 			ASLB
-			LDX	#DVEC_PAN_SOURCE
+			LDX	#T_PAN_SOURCE
 			ABX
 			LDX	,X
 			JMP	LCD_WRITE
+
 1			JSR	SET_CG0_ROMAN_II
 			LDAB	#':'
-			JSR	F_A1C4
+			JSR	PUT_DELIM_LOOKUP_PTR
 			TSTA
 			BNE	2F
-			LDAB	#'I'
+			LDAB	#'I'			; output "I->II"
 			JSR	PUTCHAR
 			LDAB	#CH_RIGHT
 			JSR	PUTCHAR
 			CLRB
 			JSR	PUTCHAR
 			BRA	3F
-2			CLRB
+2			CLRB				; output "II->I"
 			JSR	PUTCHAR
-			LDAB	#$7E
+			LDAB	#CH_RIGHT
 			JSR	PUTCHAR
 			LDAB	#'I'
 			JSR	PUTCHAR
 3			JMP	LCD_UPDATE
 
-DVEC_PAN_SOURCE		FDB	S_PAN_LFO
+T_PAN_SOURCE		FDB	S_PAN_LFO
 			FDB	S_PAN_VELOCITY
 			FDB	S_PAN_NOTE
 
 ;--------
 
-F_A74A			LDX	#LCD_BOTTOM + 13
+SHOW_CHORD_KEY_ON	LDX	#LCD_BOTTOM + 13
 			STX	DPTR
 			LDAB	M7789
-			ADDB	#$3C
-			JSR	F_B43F
+			ADDB	#60
+			JSR	SHOW_NOTE
 			JMP	LCD_UPDATE
 
 ;--------
 
-F_A75A			LDX	#LCD_BOTTOM + 12
+SHOW_DATA_SEL		LDX	#LCD_BOTTOM + 12
 			STX	DPTR
 			LDX	#DVEC_A76C
-			LDAB	M777E
+			LDAB	MENU_VALUE
 			ASLB
 			ABX
 			LDX	,X
@@ -5165,114 +5187,114 @@ DVEC_A76C		FDB	S_AL_3
 
 ;-------
 
-DVEC_LFO_MODE		FDB	S_SAW_UP
+T_LFO_MODE		FDB	S_SAW_UP
 			FDB	S_SQUARE
 			FDB	S_TRIANGL
 			FDB	S_S_HOLD
 
-DVEC_STRINGS		FDB	S_ALG
-			FDB	S_FEEDBACK_OP4
-			FDB	S_EDIT_LFO
-			FDB	S_SENSITIVITY
-			FDB	S_EDIT_FREQUENCY
-			FDB	S_OSW
-			FDB	S_DET
-			FDB	S_EDIT_EG
-			FDB	S_OUT
-			FDB	S_SCALING
-			FDB	S___FUNCTION
-			FDB	S_MASTER_TUNE
-			FDB	S_MIDI_CONTROL_
-			FDB	S_MEM_PROTECT
-			FDB	S_COMBINE
-			FDB	S_CASS_CONTROL_
-			FDB	S_EDIT_EFFECT_1_
-			FDB	S_EDIT_EFFECT_2_
-			FDB	S_EDIT_EFFECT_3_
-			FDB	S_MICRO_TUNE_
-			FDB	S_INIT_VOICE_1
-			FDB	S_RECALL_EDIT_1
-			FDB	S_ASSIGN_MODE
-			FDB	S_SLASH_SLASH_RIGHT
-			FDB	S_LEFT_SLASH_SLASH
-			FDB	S_VOL
-			FDB	S_EFFECT_SEL
-			FDB	S_INIT_PERFRM_
-			FDB	S_TEST_ENTRY
+T_STRINGS_1		FDB	S_ALG			; #00
+			FDB	S_FEEDBACK_OP4		; #01
+			FDB	S_EDIT_LFO		; #02
+			FDB	S_SENSITIVITY		; #03
+			FDB	S_EDIT_FREQUENCY	; #04
+			FDB	S_OSW			; #05
+			FDB	S_DET			; #06
+			FDB	S_EDIT_EG		; #07
+			FDB	S_OUT			; #08
+			FDB	S_SCALING		; #09
+			FDB	S___FUNCTION		; #10
+			FDB	S_MASTER_TUNE		; #11
+			FDB	S_MIDI_CONTROL_		; #12
+			FDB	S_MEM_PROTECT		; #13
+			FDB	S_COMBINE		; #14
+			FDB	S_CASS_CONTROL_		; #15
+			FDB	S_EDIT_EFFECT_1_	; #16
+			FDB	S_EDIT_EFFECT_2_	; #17
+			FDB	S_EDIT_EFFECT_3_	; #18
+			FDB	S_MICRO_TUNE_		; #19
+			FDB	S_INIT_VOICE_1		; #20
+			FDB	S_RECALL_EDIT_1		; #21
+			FDB	S_ASSIGN_MODE		; #22
+			FDB	S_SLASH_SLASH_RIGHT	; #23
+			FDB	S_LEFT_SLASH_SLASH	; #24
+			FDB	S_VOL			; #25
+			FDB	S_EFFECT_SEL		; #26
+			FDB	S_INIT_PERFRM_		; #27
+			FDB	S_TEST_ENTRY		; #28
 
-DVEC_STRINGS_2		FDB	S_WAVE
-			FDB	S_SPEED
-			FDB	S_DELAY
-			FDB	S_P_MOD_DEPTH
-			FDB	S_A_MOD_DEPTH
-			FDB	S_SYNC
-			FDB	S_P_MOD_SENS
-			FDB	S_AMS
-			FDB	S_EBS
-			FDB	S_KVS
-			FDB	S_FIX_RANGE
-			FDB	S_CRS
-			FDB	S_FIN
-			FDB	S_AR
-			FDB	S_D1R
-			FDB	S_D1L
-			FDB	S_D2R
-			FDB	S_RR
-			FDB	S_SHFT
-			FDB	S_RS
-			FDB	S_LS
-			FDB	S_CH7
-			FDB	S_P_BEND_RANGE
-			FDB	S_CH8
-			FDB	S_PORTA_TIME
-			FDB	S_FC_VOLUME
-			FDB	S_FC_PITCH
-			FDB	S_FC_AMPLITUDE
-			FDB	S_MW_PITCH
-			FDB	S_MW_AMPLITUDE
-			FDB	S_BC_PITCH
-			FDB	S_BC_AMPLITUDE
-			FDB	S_BC_P_BIAS
-			FDB	S_BC_EG_BIAS
-			FDB	S_MIDDLE_C
-			FDB	S_REVERB_RATE
-			FDB	S_NAME
-			FDB	S_BASIC_RECV_CH
-			FDB	S_TRANSMIT_CH
-			FDB	S_P_CHANGE
-			FDB	S_CONT_CHANGE
-			FDB	S_ATOUCH_BC
-			FDB	S_PITCHBEND
-			FDB	S_NOTE_ON_OFF
-			FDB	S_EXCLUSIVE
-			FDB	S_VOICE_TRANS
-			FDB	S_PERFRM_TRANSMIT
-			FDB	S_SETUP_TRANS
-			FDB	S_INIT_P_CNG_TABLE
-			FDB	S_EDIT_P_CNG_TABLE
-			FDB	S_SAVE_32_VOICE
-			FDB	S_VERIFY_2
-			FDB	S_LOAD_32_VOICE
-			FDB	S_LOAD_1_VOICE
-			FDB	S_SAVE_24_PERFRM
-			FDB	S_VERIFY_24_PERFRM
-			FDB	S_LOAD_24_PERFRM
-			FDB	S_LOAD_1_PERFRM
-			FDB	S_SAVE_SETUP
-			FDB	S_VERIFY_SETUP
-			FDB	S_LOAD_SETUP
-			FDB	S_DELAY_TIME
-			FDB	S_PITCH_SHIFT
-			FDB	S_FEEDBACK
-			FDB	S_LEVEL
-			FDB	S_SELECT
-			FDB	S_DIRECTION
-			FDB	S_PAN_RANGE
-			FDB	S_KEY_ON_NOTE
-			FDB	S_OCTAVE
-			FDB	S_INIT_OCTAVE
-			FDB	S_EDIT_FULL_KBD
-			FDB	S_INIT_FULL_KBD
+T_STRINGS_2		FDB	S_WAVE			; #00
+			FDB	S_SPEED			; #01
+			FDB	S_DELAY			; #02
+			FDB	S_P_MOD_DEPTH		; #03
+			FDB	S_A_MOD_DEPTH		; #04
+			FDB	S_SYNC			; #05
+			FDB	S_P_MOD_SENS		; #06
+			FDB	S_AMS			; #07
+			FDB	S_EBS			; #08
+			FDB	S_KVS			; #09
+			FDB	S_FIX_RANGE		; #10
+			FDB	S_CRS			; #11
+			FDB	S_FIN			; #12
+			FDB	S_AR			; #13
+			FDB	S_D1R			; #14
+			FDB	S_D1L			; #15
+			FDB	S_D2R			; #16
+			FDB	S_RR			; #17
+			FDB	S_SHFT			; #18
+			FDB	S_RS			; #19
+			FDB	S_LS			; #20
+			FDB	S_CH7			; #21
+			FDB	S_P_BEND_RANGE		; #22
+			FDB	S_CH8			; #23
+			FDB	S_PORTA_TIME		; #24
+			FDB	S_FC_VOLUME		; #25
+			FDB	S_FC_PITCH		; #26
+			FDB	S_FC_AMPLITUDE		; #27
+			FDB	S_MW_PITCH		; #28
+			FDB	S_MW_AMPLITUDE		; #29
+			FDB	S_BC_PITCH		; #30
+			FDB	S_BC_AMPLITUDE		; #31
+			FDB	S_BC_P_BIAS		; #32
+			FDB	S_BC_EG_BIAS		; #33
+			FDB	S_MIDDLE_C		; #34
+			FDB	S_REVERB_RATE		; #35
+			FDB	S_NAME			; #36
+			FDB	S_BASIC_RECV_CH		; #37
+			FDB	S_TRANSMIT_CH		; #38
+			FDB	S_P_CHANGE		; #39
+			FDB	S_CONT_CHANGE		; #40
+			FDB	S_ATOUCH_BC		; #41
+			FDB	S_PITCHBEND		; #42
+			FDB	S_NOTE_ON_OFF		; #43
+			FDB	S_EXCLUSIVE		; #44
+			FDB	S_VOICE_TRANS		; #45
+			FDB	S_PERFRM_TRANSMIT	; #46
+			FDB	S_SETUP_TRANS		; #47
+			FDB	S_INIT_P_CNG_TABLE	; #48
+			FDB	S_EDIT_P_CNG_TABLE	; #49
+			FDB	S_SAVE_32_VOICE		; #50
+			FDB	S_VERIFY_2		; #51
+			FDB	S_LOAD_32_VOICE		; #52
+			FDB	S_LOAD_1_VOICE		; #53
+			FDB	S_SAVE_24_PERFRM	; #54
+			FDB	S_VERIFY_24_PERFRM	; #55
+			FDB	S_LOAD_24_PERFRM	; #56
+			FDB	S_LOAD_1_PERFRM		; #57
+			FDB	S_SAVE_SETUP		; #58
+			FDB	S_VERIFY_SETUP		; #59
+			FDB	S_LOAD_SETUP		; #60
+			FDB	S_DELAY_TIME		; #61
+			FDB	S_PITCH_SHIFT		; #62
+			FDB	S_FEEDBACK		; #63
+			FDB	S_LEVEL			; #64
+			FDB	S_SELECT		; #65
+			FDB	S_DIRECTION		; #66
+			FDB	S_PAN_RANGE		; #67
+			FDB	S_KEY_ON_NOTE		; #68
+			FDB	S_OCTAVE		; #69
+			FDB	S_INIT_OCTAVE		; #70
+			FDB	S_EDIT_FULL_KBD		; #71
+			FDB	S_INIT_FULL_KBD		; #72
 
 S_MEM_STR		FCC	"Mem Str	?"
 			FCB	$00
@@ -5832,12 +5854,12 @@ F_AFC9			LDX	#PFM_EDIT_NAME
 
 ;-------
 
-F_AFD8			JSR	GET_VOICE_PTR
+PUT_VOICE_NAME		JSR	GET_VOICE_PTR
 			LDAB	#77
 
 ;-------	fallthrough
 
-SHOW_NAMEX		ABX
+PUT_NAME_X		ABX
 			CLRB
 1			PSHB
 			LDAB	,X
@@ -5881,46 +5903,49 @@ F_AFED			TST	M7788
 
 			LDAB	M7774
 			JSR	JMPOFF1
-			FCB	13F - *
+			FCB	13F - *			; case 0 .. 1 (no-op)
 			FCB	$02
-			FCB	C_B048 - *
+			FCB	C_B048 - *		; case 2
 			FCB	$03
-			FCB	C_B04D - *
+			FCB	C_B04D - *		; case 3
 			FCB	$04
-			FCB	C_B052 - *
+			FCB	C_B052 - *		; case 4
 			FCB	$05
-			FCB	13F - *
+			FCB	13F - *			; case 5 .. 6 (no-op)
 			FCB	$07
-			FCB	C_B057 - *
+			FCB	C_B057 - *		; case 7
 			FCB	$08
-			FCB	13F - *
+			FCB	13F - *			; case 8 (no-op)
 			FCB	$09
-			FCB	C_B057 - *
+			FCB	C_B057 - *		; case 9
 			FCB	$0A
-			FCB	C_B05C - *
+			FCB	C_B05C - *		; case 10
 			FCB	$0B
-			FCB	13F - *
+			FCB	13F - *			; default (no-op)
 			FCB	$00
 
-C_B048			LDX	#S_LFO_EDIT
+C_B048			LDX	#S_LFO_EDIT		; case 2
 			BRA	12F
-C_B04D			LDX	#S_SENS_EDIT
+C_B04D			LDX	#S_SENS_EDIT		; case 3
 			BRA	12F
-C_B052			LDX	#S_FREQ
+C_B052			LDX	#S_FREQ			; case 4
 			BRA	11F
-C_B057			LDX	#S_1_2_3_4
+C_B057			LDX	#S_1_2_3_4		; case 7, 9
 			BRA	12F
-C_B05C			LDX	#S_FUNCTION
+C_B05C			LDX	#S_FUNCTION		; case 10
 			BRA	12F
-11			JSR	PUTSTRX
-			LDX	#$4F50
-			STX	LCD_BUFFER + 13
-			LDAA	OPERATOR_NUM
-			ANDA	#$03
-			ADDA	#$31
-			STAA	LCD_BUFFER + 15
-			BRA	13F
+
+11			JSR	PUTSTRX			; display "OP"
+			LDX	#('O' << 8) + 'P'	; -
+			STX	LCD_BUFFER + 13		; -
+			LDAA	OPERATOR_NUM		; convert Op number to ASCII
+			ANDA	#%00000011		; -
+			ADDA	#'1'			; -
+			STAA	LCD_BUFFER + 15		; save to top-right character
+			BRA	13F			; done
+
 12			JSR	PUTSTRX
+
 13			RTS
 
 ;-------
@@ -6003,8 +6028,8 @@ C_B0E5			ASLB
 11			LDX	#LCD_BUFFER + 13
 			STX	DPTR
 			LDAB	M7789
-			ADDB	#$3C
-			JSR	F_B43F
+			ADDB	#60
+			JSR	SHOW_NOTE
 			BRA	13F
 12			JSR	F_B47B
 13			RTS
@@ -6094,7 +6119,7 @@ C_B1A4			LDX	#LCD_BUFFER + 5
 			CLRA
 8			JSR	GET_VOICE_PTR_A
 			LDAB	#77
-			JSR	SHOW_NAMEX
+			JSR	PUT_NAME_X
 9			RTS
 
 DVEC_B1BA		FDB     S_ERFORMANCE_EDIT
@@ -6125,7 +6150,7 @@ F_B1CE			LDX	#S_P_UT
 			BEQ	3F
 			LDX	#S_INIT__
 			JSR	PUTSTRX
-2			LDAB	M777E
+2			LDAB	MENU_VALUE
 			ASLB
 			LDX	#DVEC_STD_PFM_NAMES
 			ABX
@@ -6515,7 +6540,7 @@ F_B408			LDAB	#$40
 
 ;-------
 
-F_B432			LDX	#S_ON
+SHOW_ON_OFF		LDX	#S_ON
 			TSTA
 			BNE	1F
 			LDX	#S_OFF
@@ -6523,40 +6548,52 @@ F_B432			LDX	#S_ON
 			RTS
 
 ;-------
-
-F_B43F			PSHB
-			JSR	SET_CG_NEGATIVE
-			PULB
-			LDX	DPTR
-			LDAA	#$2D
-1			INCA
-			SUBB	#$0C
-			BCC	1B
-			CMPA	#$30
-			BCC	2F
-			SUBA	#$2E
-2			STAA	$02,X
-			ADDB	#$0C
-			ASLB
-			PSHX
-			LDX	#S_SHARPS
-			ABX
-			LDD	,X
-			PULX
-			STD	,X
-			RTS
+;
+; converts B (a note number) from 0.. to the range C-2 upwards and
+; store in DPTR in the form "C#n" where n can be a -2 or -1 character
+; defined in the LCD.
+;
+; when used with a transpose value 0 .. 48 this gives a range of C-2 to C+2
+;
+; adding 60 converts to an absolute note name, albeit using the Yamaha
+; convention of using C3 to denote middle C (instead of C4)
+;
+; adding 36 gives a range starting from C1, i.e. the note that would be
+; played given a -24 .. +24 transposition from middle C (manual p. 22)
+;
+SHOW_NOTE		PSHB				; save B
+			JSR	SET_CG_NEGATIVE		; set CGCHARS 0 and 1 to "-2" and "-1"
+			PULB				; restore B
+			LDX	DPTR			; X <- DPTR
+			LDAA	#$2D			; A <- 45 (ASCII '-')
+1			INCA				; A <- A + 1
+			SUBB	#12			; B <- B - 12
+			BCC	1B			; B positive?  go around
+			CMPA	#'0'			; compare to ASCII '0'
+			BCC	2F			; >= 0, skip
+			SUBA	#$2E			; A <- A - 46 ($2E .. $2F -> $0 .. $1)
+2			STAA	$02,X			; save A to X + 2
+			ADDB	#12			; B <- B + 12 (now positive again)
+			ASLB				; B <- B + 2
+			PSHX				; save X
+			LDX	#S_SHARPS		; lookup note string B
+			ABX				; -
+			LDD	,X			; [A, B] <- @X
+			PULX				; restore X
+			STD	,X			; save [A, B] to X
+			RTS				; done
 
 ;-------
 
-F_B463			SUBA	#$40
+PUT_DEC_NN_OFFSET64	SUBA	#$40
 
 ;-------	fallthrough
 
-F_B465			BHI	1F
+PUT_DEC_NN_SIGN		BHI	1F
 			BMI	2F
-			LDAB	#$20
+			LDAB	#' '
 			BRA	3F
-1			LDAB	#$2B
+1			LDAB	#'+'
 			BRA	3F
 2			NEGA
 			LDAB	#'-'

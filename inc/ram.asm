@@ -31,6 +31,7 @@ MIDI_RX_DATA_1		EQU	$00BE			; first MIDI data byte received
 MIDI_RX_DATA_COUNT	EQU	$00C4			; how many data bytes received
 MIDI_TX_CRC		EQU	$00C5			; rolling MIDI TX SysEx CRC
 MIDI_RX_CRC		EQU	$00C6			; rolling MIDI RX SysEx CRC
+SYSEX_INDEX		EQU	$00C7			; entry count within TX sysex bulk dumps
 MIDI_RX_ERR		EQU	$00CA			; non-zero if MIDI RX error
 
 ;-------
@@ -172,11 +173,16 @@ OP_ENABLE_END		EQU	OP_ENABLE + 4		;
 
 OPERATOR_NUM		EQU	$777B			; current operator number
 
+MENU_VALUE		EQU	$777E			; value selected in menus
+
 VOICE_NUM		EQU	$778B			; current voice number
 
 PFM_EDITED		EQU	$7791			; Performance data changed
 VOICE_EDITED		EQU	$7792			; Voice data changed
 VOICE_COMPARE		EQU	$7793			; Voice compare mode
+
+OPZ_E0_REG_COPY		EQU	$77CE			; values of OPZ registers $E0 .. $FF
+OPZ_C0_REG_COPY		EQU	$77EE			; values of OPZ registers $C0 .. $DF
 
 INST_MODULATION		EQU	$7D53			; CC modulation (8 bytes)
 INST_BREATH		EQU	$7D5B			; CC breath (8 bytes)
