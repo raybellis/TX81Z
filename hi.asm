@@ -7939,7 +7939,7 @@ SETUP_TRANSMIT		LDAB	MENU_VALUE
 			BEQ	2F
 			CMPB	#$04
 			BEQ	2F
-			JSR	DELAY_30_x_4500
+			JSR	DELAY_300MS
 2			RTS
 
 D_BC0E			FDB	SEND_SYSEX_S1_S2_E0_E1
@@ -9056,7 +9056,7 @@ F_C407			LDAA	M7772
 
 ;-------
 
-LCD_INIT		LDAA	#$38			; A <- LCD Mode Set
+LCD_INIT		LDAA	#%00111000		; A <- LCD Mode Set
 			LDX	#$0000
 1			DEX				; wait a bit
 			BNE	1B			; -
@@ -9072,13 +9072,13 @@ LCD_INIT		LDAA	#$38			; A <- LCD Mode Set
 			JSR	LCD_WAIT		; wait for LCD busy to clear
 			STAA	LCD_CMD			; and once more for luck...
 			JSR	LCD_WAIT		; and wait for LCD busy to clear
-			LDAA	#$0C
+			LDAA	#$0C			; cursor off, blink off
 			STAA	LCD_CMD
 			JSR	LCD_WAIT
-			LDAA	#$01
+			LDAA	#$01			; clear screen
 			STAA	LCD_CMD
 			JSR	LCD_WAIT
-			LDAA	#$06
+			LDAA	#$06			; entry mode set
 			STAA	LCD_CMD
 
 			LDAA	#$20			; erase the off screen LCD buffer
@@ -9180,7 +9180,7 @@ LCD_INIT		LDAA	#$38			; A <- LCD Mode Set
 			CMPB	#$20
 			BNE	13B
 			LDAB	#$FF
-			JSR	DELAY_B_x_4500
+			JSR	DELAY_10MS_X_B		; delay 2.55s
 20			JSR	LCD_CLR
 			RTS
 
@@ -9758,12 +9758,14 @@ C_C9E6			LDAA	M778C
 			BNE	10F
 			LDAA	#$C4
 			BRA	11F
+
 10			ADDA	#$80
-11			JSR	LCD_WAIT
+
+11			JSR	LCD_WAIT		; set cursor position
 			STAA	LCD_CMD
-			LDAA	#$0D
-12			JSR	LCD_WAIT
-			STAA	LCD_CMD
+			LDAA	#$0D			; cursor off, blink on
+12			JSR	LCD_WAIT		; -
+			STAA	LCD_CMD			; -
 			RTS
 
 C_CA00			CMPA	#$01
@@ -9773,6 +9775,7 @@ C_CA00			CMPA	#$01
 			LDAA	M778C
 			BEQ	19F
 			BRA	10B
+
 13			CMPB	#$01
 			BEQ	16F
 14			LDAA	M778C
@@ -9780,21 +9783,26 @@ C_CA00			CMPA	#$01
 			BCS	15F
 			SUBA	#$03
 			BRA	10B
+
 15			LDAB	#$03
 			MUL
 			ADDB	#$C6
 			TBA
 			BRA	11B
+
 16			LDAA	M778C
 			BEQ	18F
 			CMPA	#$05
 			BCS	17F
 			SUBA	#$04
 			BRA	10B
+
 17			DECA
 			BRA	15B
+
 18			LDAA	#$C4
 			BRA	11B
+
 19			LDAA	#$CE
 			BRA	11B
 
@@ -9870,7 +9878,7 @@ C_CAB2			LDAA	M778C
 			BNE	30B
 35			JSR	LCD_WAIT
 			STAA	LCD_CMD
-			LDAA	#$0E
+			LDAA	#$0E			; LCD command D:on, C:on, B:off
 			JMP	12B
 
 C_CADA			LDAA	M778C
@@ -9916,7 +9924,7 @@ C_CB0C			CMPB	#$1B
 			LDAA	#$C0
 			TST	M778C
 			BEQ	47F
-			LDAA	#$CF
+			LDAA	#$CF			; position at last screen position
 			BRA	47F
 46			LDAA	#$C6
 			TST	M778C
@@ -11033,9 +11041,9 @@ F_D326			JSR	HI_CALL_00
 F_D33D			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			CLR	>M005A
-			LDAB	#$0C
-			JSR	LCD_WAIT
-			STAB	LCD_CMD
+			LDAB	#$0C			; cursor off, blink off
+			JSR	LCD_WAIT		; -
+			STAB	LCD_CMD			; -
 			CLR	>M00CC
 			JSR	SEND_USER_BANK
 			JSR	F_C95A
@@ -11047,9 +11055,9 @@ F_D33D			JSR	HI_CALL_00
 F_D35B			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			CLR	>M005A
-			LDAB	#$0C
-			JSR	LCD_WAIT
-			STAB	LCD_CMD
+			LDAB	#$0C			; cursor off, blink off
+			JSR	LCD_WAIT		; -
+			STAB	LCD_CMD			; -
 			CLR	>M00CC
 			LDAB	M00C9
 			SUBB	#$78
@@ -11790,9 +11798,9 @@ F_D883			JSR	F_C95A
 			LDX	#S_MIDI_RECEIVED
 
 4			JSR	LCD_OUT
-			LDAA	#$0C
-			JSR	LCD_WAIT
-			STAA	LCD_CMD
+			LDAA	#$0C			; cursor off, blink off
+			JSR	LCD_WAIT		; -
+			STAA	LCD_CMD			; -
 			LDAA	#$01
 			STAA	M0057
 			RTS
@@ -11841,7 +11849,7 @@ F_D8DD			STAA	MIDI_RX_DATA_1
 			CMPB	#$4C
 			BCC	2F
 			JSR	F_DF29
-			RTS				; merge these
+			RTS				; ##OPT## merge these
 2			RTS
 3			CMPB	#$57
 			BCS	4F
@@ -13477,7 +13485,7 @@ S_SYSEX_SYS2		FCB	$7E,$00,$41
 ; send microtune Octave (MCRTE0) and full keyboard (MCRTE1)
 ;
 SEND_SYSEX_E0_E1	JSR	SEND_SYSEX_MCRTE0
-			JSR	DELAY_30_x_4500
+			JSR	DELAY_300MS
 			JSR	SEND_SYSEX_MCRTE1
 			RTS
 
@@ -13486,11 +13494,11 @@ SEND_SYSEX_E0_E1	JSR	SEND_SYSEX_MCRTE0
 ; send program change table (SYS1), effect data (SYS2) + microtuning data
 ;
 SEND_SYSEX_S1_S2_E0_E1	JSR	SEND_SYSEX_SYS1
-			JSR	DELAY_30_x_4500
+			JSR	DELAY_300MS
 			JSR	SEND_SYSEX_SYS2
-			JSR	DELAY_30_x_4500
+			JSR	DELAY_300MS
 			JSR	SEND_SYSEX_MCRTE0	; ##OPT## jump to SEND_SYSEX_E0_E1
-			JSR	DELAY_30_x_4500
+			JSR	DELAY_300MS
 			JSR	SEND_SYSEX_MCRTE1
 			RTS
 
@@ -13535,9 +13543,9 @@ SHOW_RX_ERR		JSR	F_E6CE
 1			LDX	#S_MIDI_DATA_ERROR
 2			JSR	PUTSTRX
 			JSR	LCD_UPDATE
-			LDAA	#$0C
-			JSR	LCD_WAIT
-			STAA	LCD_CMD
+			LDAA	#$0C			; cursor off, blink off
+			JSR	LCD_WAIT		; -
+			STAA	LCD_CMD			; -
 			CLR	>MIDI_RX_ERR
 			LDAA	#$01
 			STAA	M0056
@@ -14770,17 +14778,7 @@ S_VERSION		FCC	"V1.6  03-Feb-88 "
 
 ;-------
 
-DELAY_30_x_4500		LDAB	#30
-
-;-------	fallthrough
-
-DELAY_B_x_4500
-0			LDX	#4500
-1			DEX
-			BNE	1B
-			DECB
-			BNE	0B
-			RTS
+			INCLUDE	"inc/delay.asm"
 
 ;-------
 ;

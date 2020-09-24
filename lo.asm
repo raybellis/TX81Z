@@ -2746,7 +2746,7 @@ LO_CALL_02		LDAA	#$00
 			BNE	2F
 			LDAA	#$04
 			STAA	M7772
-			JSR	DELAY_30_x_4500
+			JSR	DELAY_300MS
 			LDAA	#$04
 			STAA	M00D8
 			CLR	>M00D9
@@ -2823,7 +2823,7 @@ F_9604			PSHA
 1001			JSR	READ_SWITCHES
 			CMPB	#$01
 			BNE	1001B
-			JSR	DELAY_30_x_4500
+			JSR	DELAY_300MS
 			RTS
 
 ;-------
@@ -2929,6 +2929,8 @@ F_96C4			CLR	M7773
 			CLR	SYS_MIDTCH
 			CLR	SYS_NOTESW
 			CLR	SYS_AT
+
+			; create stippled CGCHAR
 			LDAB	#$40
 			LDAA	#$0A
 1			COMA
@@ -2939,6 +2941,7 @@ F_96C4			CLR	M7773
 			INCB
 			CMPB	#$48
 			BNE	1B
+
 			RTS
 
 ;-------
@@ -3045,8 +3048,8 @@ F_978D			LDAB	#$0A
 			JSR	MIDI_SEND
 			INCB
 			BRA	2B
-3			LDAB	#$01
-			JSR	DELAY_B_x_4500
+3			LDAB	#1			; delay 10ms
+			JSR	DELAY_10MS_X_B		; -
 			LDX	#S_TX81Z
 			STX	SPTR
 			LDX	#MIDI_RXBUF
@@ -3192,24 +3195,14 @@ F_9893			LDAA	M00D9
 			BCC	1000F
 			INCA
 			STAA	M00D9
-			BRA	DELAY_30_x_4500
+			BRA	DELAY_300MS
 2			LDAA	#$FF
 			CLRB
 			BRA	1B
 
-;-------	fallthrough
+;-------
 
-DELAY_30_x_4500		LDAB	#30
-
-;-------	fallthrough
-
-DELAY_B_x_4500
-0			LDX	#4500
-1			DEX
-			BNE	1B
-			DECB
-			BNE	0B
-1000			RTS
+			INCLUDE	"inc/delay.asm"
 
 ;-------
 
@@ -3227,8 +3220,8 @@ TEST_LEDS		TST	>M00D9
 			STAA	PORT6
 			LSRA
 			PSHB
-			LDAB	#30
-			JSR	DELAY_B_x_4500
+			LDAB	#30			; delay 300ms
+			JSR	DELAY_10MS_X_B		; -
 			PULB
 			INCB
 			CMPB	#4
@@ -3534,6 +3527,7 @@ _PUT_DEC_DIV		STAB	M00AC			; save divisor
 ;-------
 ;
 ; printf "%02d", D / 100
+; (i.e. omits 10s and 1s)
 ;
 PUT_DEC_NN__		CLR	>M00AB			; 1000's count
 			CLR	>M00AC			;  100's count
@@ -3609,7 +3603,7 @@ PUT_DEC_NNNNN		PSHA				; save A
 
 ;-------
 ;
-; printf "%2d.%02d", D / 100, D % 100
+; printf "%2d.%02d", X / 100, X % 100
 ;
 PUT_DEC_NN_NN		PSHX				; save X
 			XGDX				; X <-> D
@@ -4318,14 +4312,14 @@ CALL_SHOW		CMPB	#32
 T_SHOW_FUNCS		FDB     LCD_UPDATE		; #00
 			FDB     SHOW_PTR_NN		; #01
 			FDB     SHOW_PTR_ON_OFF		; #02
-			FDB     F_A1E0			; #03
-			FDB     F_A2AC			; #04
+			FDB     SHOW_FREQUENCY		; #03
+			FDB     SHOW_PER_OPERATOR	; #04
 			FDB     SHOW_MIDDLE_C		; #05
 			FDB     SHOW_MASTER_TUNE	; #06
 			FDB     SHOW_MONO_POLY		; #07
 			FDB     SHOW_PORTA_MODE		; #08
 			FDB     SHOW_LFO_MODE		; #09
-			FDB     F_A3E4			; #10
+			FDB     SHOW_AMS		; #10
 			FDB     SHOW_MIDI_CHAN		; #11
 			FDB     SHOW_PITCH_SHIFT	; #12
 			FDB     SHOW_NOTESW		; #13
@@ -4336,7 +4330,7 @@ T_SHOW_FUNCS		FDB     LCD_UPDATE		; #00
 			FDB     SHOW_FIXFREQ		; #18
 			FDB     F_A4DE			; #19
 			FDB     F_A4DA			; #20
-			FDB     F_A600			; #21
+			FDB     SHOW_VOLUME		; #21
 			FDB     SHOW_ASSIGN_MODE	; #22
 			FDB     SHOW_FX_TYPE		; #23
 			FDB     SHOW_REVERB_RATE	; #24
@@ -4373,40 +4367,58 @@ SHOW_PTR_ON_OFF	LDAB	#':'
 			JMP	LCD_UPDATE
 
 ;-------
-
-F_A1E0			LDAB	OPERATOR_NUM		; get per-op ACED pointer
+;
+; X pointing to voice data
+;
+SHOW_FREQUENCY		LDAB	OPERATOR_NUM		; get per-op ACED pointer
 			LDAA	#$05			; -
 			JSR	GET_OP_PTR_BA		; -
 			TST	$57,X			; check fixed mode flag
-			BEQ	1F
+			BEQ	1F			; if zero, branch
 			JMP	13F
-1			PSHX
-			LDX	#S_RATIO
-			JSR	PUTSTRX
-			LDAB	#'='
-			JSR	PUTCHAR
-			JSR	GET_OPERATOR_PTR
+
+			;
+			; ratio mode
+			;
+1			PSHX				; save X (VCED)
+			LDX	#S_RATIO		; display "RATIO="
+			JSR	PUTSTRX			; -
+			LDAB	#'='			; -
+			JSR	PUTCHAR			; -
+			JSR	GET_OPERATOR_PTR	; X <- per-op VCED data
 			LDAB	$0B,X			; B <- coarse frequency
-			LDX	#D_B4EA
-			ABX
-			LDAB	,X
-			TBA
-			ANDB	#$03
-			LDX	#D_A2A8
-			ABX
-			LDAB	,X
-			PULX
-			ANDA	#$3C
-			BNE	2F
-			LDAA	#$08
-			BRA	3F
-2			ASLA
-			ASLA
-3			ADDA	$59,X
-			CMPB	#$8D
-			BNE	8F
-			TST	$59,X
-			BNE	8F
+
+			LDX	#D_B4EA			; remap B
+			ABX				; -
+			LDAB	,X			; -
+			TBA				; A <- B
+
+			ANDB	#%00000011		; get bottom 2 bits of B
+			LDX	#D_A2A8			; get new B from table
+			ABX				; -
+			LDAB	,X			; -
+
+			PULX				; restore X (per-op ACED data)
+			ANDA	#%00111100		; get the other bits of A
+			BNE	2F			; non-zero?  branch
+
+			LDAA	#$08			; A <- 8
+			BRA	3F			; skip the multiply
+
+2			ASLA				; A <- A * 4
+			ASLA				; (now in top nybble)
+
+3			ADDA	$59,X			; add fine tune setting (in bottom nybble)
+			CMPB	#$8D			; is B = 141 ?
+			BNE	8F			; no?  branch...
+
+			TST	$59,X			; test the fine tune setting
+			BNE	8F			; non-zero?  branch...
+
+			;
+			; here follows some sort of calculation adjustment logic
+			; that I can't be bothered to decypher..
+			;
 			CMPA	#$30
 			BCS	8F
 			CMPA	#$50
@@ -4433,55 +4445,61 @@ F_A1E0			LDAB	OPERATOR_NUM		; get per-op ACED pointer
 7			MUL
 			ADDD	#$0040
 			BRA	9F
-8			MUL
-9			LSRD
-			LSRD
-			LSRD
-			LSRD
-			XGDX
-			CPX	#$0046
-			BEQ	10F
-			CPX	#$0056
-			BNE	11F
-10			INX
+8			MUL				; D <- A * B
+9			LSRD				; D <- D / 16
+			LSRD				; -
+			LSRD				; -
+			LSRD				; -
+			XGDX				; X <-> D
+			CPX	#$0046			; is X = 70?
+			BEQ	10F			; yes?  branch to increment
+
+			CPX	#$0056			; is X = 56?
+			BNE	11F			; no?   branch to output
+
+10			INX				; X <- X + 1
 11			JSR	PUT_DEC_NN_NN
 12			JMP	LCD_UPDATE
-13			PSHX
-			LDX	#S_FIX
-			JSR	PUTSTRX
-			LDAB	#'='
-			JSR	PUTCHAR
-			JSR	GET_OPERATOR_PTR
+
+			;
+			; fixed mode
+			;
+13			PSHX				; save X (VCED)
+			LDX	#S_FIX			; output "FIX="
+			JSR	PUTSTRX			; -
+			LDAB	#'='			; -
+			JSR	PUTCHAR			; -
+			JSR	GET_OPERATOR_PTR	; X <- operator VCED
 			LDAB	$0B,X			; B <- coarse frequency
-			ANDB	#%00111100
-			BNE	14F
-			LDAB	#$08
-			BRA	15F
-14			ASLB
-			ASLB
-15			PULX
-			ADDB	$59,X
-			PSHB
-			CLRA
-			LDAB	$58,X
-			XGDX
-			PULB
-			CLRA
-			CPX	#0
-			BEQ	17F
-16			ASLD
-			DEX
-			BNE	16B
-17			JSR	PUT_DEC_NNNNN
-			LDD	#('H' << 8) + 'z'
-			STD	LCD_BOTTOM + 14
-			BRA	12B
+			ANDB	#%00111100		; mask middle bits
+			BNE	14F			; not zero, skip to multiply
+			LDAB	#$08			; B <- 8
+			BRA	15F			; skip multiply
+14			ASLB				; B <- B * 4 (now in top nybble)
+			ASLB				; -
+15			PULX				; restore X (VCED)
+			ADDB	$59,X			; B <- B + fine tune
+			PSHB				; save B
+			CLRA				; A <- 0
+			LDAB	$58,X			; B <- fix range
+			XGDX				; X <-> D
+			PULB				; restore B
+			CLRA				; A <- 0
+			CPX	#0			; is X zero?
+			BEQ	17F			; yes?  skip loop
+16			ASLD				; D <- D * 2
+			DEX				; X <- X - 1
+			BNE	16B			; not zero?  go around
+17			JSR	PUT_DEC_NNNNN		; show D with 5 digits
+			LDD	#('H' << 8) + 'z'	; show "Hz"
+			STD	LCD_BOTTOM + 14		; -
+			BRA	12B			; -
 
 D_A2A8			FCB	$64,$8D,$9D,$AD
 
 ;-------
 
-F_A2AC			LDAB	M7774
+SHOW_PER_OPERATOR	LDAB	M7774
 			CMPB	#$05
 			BNE	1F
 			LDX	#LCD_BUFFER + 4
@@ -4523,7 +4541,7 @@ F_A2AC			LDAB	M7774
 			BRA	10F
 8			CMPB	#$0C
 			BNE	9F
-			BSR	F_A351
+			BSR	PUT_DEC_N_SIGN
 			BRA	11F
 9			CMPB	#$5A
 			BNE	10F
@@ -4563,22 +4581,25 @@ D_A341			FCB	$01,$00,$03,$02,'-',$00,'-',$02
 			FCB	'-',$04,'-',$05,'-',$06,'-',$07
 
 ;-------
-
-F_A351			LDAB	#' '
-			JSR	PUTCHAR
-			SUBA	#$03
-			BHI	1F
-			BMI	2F
-			CLRB
-			JSR	PUT_DEC_NN
-			BRA	4F
-1			LDAB	#'+'
-			BRA	3F
-2			NEGA
-			LDAB	#'-'
-3			JSR	PUTCHAR
-			JSR	PUTDIGIT
-4			RTS
+;
+; output a small number in the range -3 ..
+; including a leading + sign for positive numbers
+;
+PUT_DEC_N_SIGN		LDAB	#' '			; output " "
+			JSR	PUTCHAR			; -
+			SUBA	#3			; A <- A - 3
+			BHI	1F			; positive?  branch
+			BMI	2F			; negative?  branch
+			CLRB				; no leading zero in falling call
+			JSR	PUT_DEC_NN		; output " 0"
+			BRA	4F			; done ##OPT## use JMP on previous line
+1			LDAB	#'+'			; get ready to output "+"
+			BRA	3F			; go to output
+2			NEGA				; negate A
+			LDAB	#'-'			; get ready to output "-"
+3			JSR	PUTCHAR			; show the sign
+			JSR	PUTDIGIT		; show the digit
+4			RTS				; done ##OPT## use JMP on previous line
 
 ;-------
 
@@ -4658,35 +4679,37 @@ SHOW_LFO_MODE		JSR	PUT_EQ_LOOKUP_PTR
 
 ;-------
 
-F_A3E4			LDAB	#'='
-			JSR	PUTCHAR
-			LDX	#LCD_BOTTOM + 4
-			STX	DPTR
-			CLRB
-1			PSHB
-			LDX	#D_OPERATOR_MAP
-			ABX
-			LDAB	,X
-			LDAA	#$0D
-			MUL
-			ADDB	#$08
-			LDX	M7784
-			ABX
-			TST	,X
-			BNE	2F
-			LDX	#S__OF
-			BRA	3F
-2			LDX	#S__ON
-3			JSR	PUTSTRX
-			PULB
-			INCB
-			CMPB	#$04
-			BNE	1B
-			LDX	M7784
-			LDAA	$3D,X
-			LDX	#LCD_BOTTOM + 4
-			STX	DPTR
-			JSR	PUTDIGIT
+SHOW_AMS		LDAB	#'='			; output '='
+			JSR	PUTCHAR			; -
+			LDX	#LCD_BOTTOM + 4		; move to 5th char of bottom line
+			STX	DPTR			; -
+			CLRB				; B <- 0 (operator number)
+
+1			PSHB				; save B
+			LDX	#D_OPERATOR_MAP		; B <- internal operator order
+			ABX				; -
+			LDAB	,X			; -
+			LDAA	#13			; A <- 13
+			MUL				; D <- B * 13
+			ADDB	#$08			; D <- D + 8
+			LDX	M7784			; X <- pointer to voice
+			ABX				; X <- pointer to OP[n] / AME
+			TST	,X			; read AME value
+			BNE	2F			; not-zero?  branch
+			LDX	#S__OF			; show "of"
+			BRA	3F			; -
+2			LDX	#S__ON			; or show "on"
+3			JSR	PUTSTRX			; -
+			PULB				; restore B
+			INCB				; B <- B + 1
+			CMPB	#$04			; is B = 4 ?
+			BNE	1B			; no?  go around
+
+			LDX	M7784			; X <- pointer to voice
+			LDAA	61,X			; A <- @(X + 61) = voice AMS
+			LDX	#LCD_BOTTOM + 4		; show AMS value
+			STX	DPTR			; -
+			JSR	PUTDIGIT		; -
 1000			JMP	LCD_UPDATE
 
 ;--------
@@ -4960,17 +4983,17 @@ PUT_SP_STAR_SP		LDAB	#1
 
 ;-------
 
-F_A600			TST	>M00A3
+SHOW_VOLUME		TST	>M00A3
 			BNE	1F
-			JSR	F_B408
+			JSR	SET_CGCHAR_VBAR
 1			LDAB	M778C
 			CMPB	#$04
 			BCC	2F
-			LDAB	#$7E
+			LDAB	#CH_RIGHT
 			STAB	LCD_BOTTOM + 15
 			LDX	#PFM_EDIT_BUF
 			BRA	3F
-2			LDAB	#$7F
+2			LDAB	#CH_LEFT
 			JSR	PUTCHAR
 			LDX	#PFM_EDIT_INST_4
 3			LDAB	#$04
@@ -6457,7 +6480,7 @@ LCD_DO_CMD_DATA 	JSR	LCD_WAIT
 
 F_B3B5			TST	>M00A3
 			BNE	1F
-			JSR	F_B3E9
+			JSR	SET_CGCHAR_HBAR
 1			LDAA	M776D
 			COMA
 			LSRA
@@ -6485,57 +6508,76 @@ F_B3B5			TST	>M00A3
 6			RTS
 
 ;-------
+;
+; Create CGCHARs needed for a horizontal bar graph
+;
+SET_CGCHAR_HBAR		LDAB	#$40			; B <- $40 (CGCHAR 0, row 0)
+			LDAA	#%00100000		; A <- 
+1			PSHB				; save B
+			ANDB	#%00000111		; B <- pixel row number
+			BNE	2F			; not zero? skip
 
-F_B3E9			LDAB	#$40
-			LDAA	#$20
-1			PSHB
-			ANDB	#$07
-			BNE	2F
-			LSRA
-			ORAA	#$10
-2			CMPB	#$07
-			PULB
-			BNE	3F
-			PSHA
-			CLRA
-			BRA	4F
-3			PSHA
-4			BSR	LCD_DO_CMD_DATA
-			PULA
-			INCB
-			CMPB	#$68
-			BNE	1B
+			LSRA				; right shift the pixels
+			ORAA	#%00010000		; set left most pixel
+
+2			CMPB	#$07			; check if B is 7
+			PULB				; restore B
+
+							; ##OPT## could push before the branch
+
+			BNE	3F			; if (previous B) not 7, branch
+
+			PSHA				; save A
+			CLRA				; A <- 0 (bottom row has no pixels)
+			BRA	4F			; skip the next push
+
+3			PSHA				; save A
+
+4			BSR	LCD_DO_CMD_DATA		; send pixel row to LCD
+			PULA				; restore A
+			INCB				; B <- B + 1
+			CMPB	#$68			; is B end of CGCHAR 4?
+			BNE	1B			; no?  go around.
 			RTS
 
 ;-------
+;
+; Create CGCHARs needed for vertical bar graphs
+;
+SET_CGCHAR_VBAR		LDAB	#$40			; B <- $40 (CGCHAR 0, row 0)
 
-F_B408			LDAB	#$40
-1			PSHB
-			COMB
-			ANDB	#$38
-			LSRB
-			LSRB
-			LSRB
-			DECB
-			STAB	M00AB
-			PULB
-			CLRA
-2			PSHA
-			CMPA	#$07
-			BEQ	3F
-			CMPA	M00AB
-			BCC	4F
-3			CLRA
-			BRA	5F
-4			LDAA	#$1F
-5			BSR	LCD_DO_CMD_DATA
-			INCB
-			PULA
-			INCA
-			CMPA	#$08
-			BNE	2B
-			CMPB	#$78
-			BNE	1B
+1			PSHB				; save B
+			COMB				; B <- !B
+			ANDB	#%00111000		; get 7 - CGCHAR num in bottom 3 bits
+			LSRB				; -
+			LSRB				; -
+			LSRB				; -
+			DECB				; and one less
+			STAB	M00AB			; save for later
+			PULB				; restore B
+			CLRA				; A <- 0 (row number)
+
+2			PSHA				; save A
+			CMPA	#$07			; is A = 7 ?
+			BEQ	3F			; yes? branch
+
+			CMPA	M00AB			; is A = saved calculated char number?
+			BCC	4F			; >= ? skip
+
+3			CLRA				; A <- 0 (clear all pixels)
+			BRA	5F			; skip to setup
+
+4			LDAA	#%00011111		; A <- $1F (set all pixels)
+
+5			BSR	LCD_DO_CMD_DATA		; send pixel row to LCD
+			INCB				; B <- B + 1 (CGCHAR address)
+			PULA				; restore A
+			INCA				; A <- A + 1
+			CMPA	#$08			; is A = 8?
+			BNE	2B			; no, go to next row
+
+			CMPB	#$78			; is B = $78?
+			BNE	1B			; no, go to next char
 			RTS
 
 ;-------
