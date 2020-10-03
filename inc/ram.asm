@@ -28,10 +28,18 @@ PTR_RX_TAIL		EQU	$00BA			; pointer for next MIDI RX
 MIDI_TX_CMD		EQU	$00BC			; last MIDI command sent
 MIDI_RX_CMD		EQU	$00BD			; last MIDI command received
 MIDI_RX_DATA_1		EQU	$00BE			; first MIDI data byte received
+
+SYSEX_CHAN		EQU	$00BF			; header bytes from RX sysex
+SYSEX_OP		EQU	$00C0			; -
+SYSEX_B3		EQU	$00C1			; -
+SYSEX_B4		EQU	$00C2			; -
+SYSEX_B5		EQU	$00C3			; -
+
 MIDI_RX_DATA_COUNT	EQU	$00C4			; how many data bytes received
 MIDI_TX_CRC		EQU	$00C5			; rolling MIDI TX SysEx CRC
 MIDI_RX_CRC		EQU	$00C6			; rolling MIDI RX SysEx CRC
 SYSEX_INDEX		EQU	$00C7			; entry count within TX sysex bulk dumps
+SYSEX_MODE		EQU	$00C9			; type of SysEx RX being handled
 MIDI_RX_ERR		EQU	$00CA			; non-zero if MIDI RX error
 
 ;-------

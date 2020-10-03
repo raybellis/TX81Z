@@ -86,13 +86,8 @@ M00AF			EQU	$00AF
 M00B0			EQU	$00B0
 M00B2			EQU	$00B2
 M00B3			EQU	$00B3
-M00BF			EQU	$00BF
-M00C0			EQU	$00C0
-M00C1			EQU	$00C1
-M00C2			EQU	$00C2
-M00C3			EQU	$00C3
+
 M00C8			EQU	$00C8
-M00C9			EQU	$00C9
 M00CB			EQU	$00CB
 M00CC			EQU	$00CC
 M00CE			EQU	$00CE
@@ -240,8 +235,8 @@ M7FB2			EQU	$7FB2
 			ORG	$8000
 
 hdlr_RST		BANK_HI			; ensure we remain in the HI bank
-			LDAA	#LED4|LED3|LED2|LED1|BANKSEL
-			STAA	DDR6		; set P63-P67 to outputs
+			LDAA	#LEDS|BANKSEL	; set P63-P67 to outputs
+			STAA	DDR6		; -
 			BANK_HI			; make sure we're really in the HI bank
 			JMP	RESET		; jump to real reset routine
 
@@ -309,7 +304,7 @@ RESET			; disable interrupts
 			JSR	OPZ_INIT
 
 			; clear CPU RAM from $40 - $ff
-			LDX	#XROM
+			LDX	#$0040
 			LDAB	#$C0
 			CLRA
 1			STAA	,X
@@ -320,13 +315,13 @@ RESET			; disable interrupts
 			LDAA	#$FF
 			STAA	NOTE_NUMBER_STOP
 			JSR	MIDI_INIT
-			JSR	LCD_INIT
+			JSR	SYS_INIT
 			JSR	F_C548
 			LDAA	M7772
 			ANDA	#$04
 			BEQ	2F
-			JSR	F_B820
-			JSR	LO_CALL_08
+			JSR	LOAD_INSTRUMENTS
+			JSR	SET_ALL_RANGES
 2			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			JSR	F_91FE
@@ -358,37 +353,37 @@ RESET			; disable interrupts
 ;
 ; vector of entry points exposed to the other ROM bank
 ;
-XROM_VEC		FDB	HI_CALL_00
-			FDB	HI_CALL_01
-			FDB	HI_CALL_02
-			FDB	HI_CALL_03
-			FDB	HI_CALL_04		; no-op
-			FDB	HI_CALL_05
-			FDB	HI_CALL_06		; no-op
-			FDB	MIDI_INIT_RX
-			FDB	MIDI_INIT
-			FDB	HI_CALL_09
-			FDB	HI_CALL_0A		; no-op
-			FDB	MIDI_SEND_SENSE
-			FDB	MIDI_SEND
-			FDB	HI_CALL_0D		; no-op
-			FDB	SEND_SYSEX_VMEM_HDR
-			FDB	HI_CALL_0F
-			FDB	SEND_SYSEX_END
-			FDB	CALC_EF2R_VALUE
-			FDB	CLEAR_ACED
-			FDB	HI_CALL_13
-			FDB	HI_CALL_14
-			FDB	HI_CALL_15
-			FDB	HI_CALL_16
-			FDB	READ_SWITCHES
-			FDB	HI_CALL_18
-			FDB	HI_CALL_19
-			FDB	HI_CALL_1A
-			FDB	HI_CALL_1B
-			FDB	NOTE_STOP
-			FDB	NOTE_START
-XROM_VEC2		FDB	hdlr_RST
+XROM_VEC		FDB	HI_CALL_00		; #00
+			FDB	HI_CALL_01		; #01
+			FDB	HI_CALL_02		; #02
+			FDB	HI_CALL_03		; #03
+			FDB	HI_CALL_04		; #04 - no-op
+			FDB	HI_CALL_05		; #05
+			FDB	HI_CALL_06		; #06 - no-op
+			FDB	MIDI_INIT_RX		; #07
+			FDB	MIDI_INIT		; #08
+			FDB	HI_CALL_09		; #09
+			FDB	HI_CALL_0A		; #10 - no-op
+			FDB	MIDI_SEND_SENSE		; #11
+			FDB	MIDI_SEND		; #12
+			FDB	HI_CALL_0D		; #13 - no-op
+			FDB	SEND_SYSEX_VMEM_HDR	; #14
+			FDB	HI_CALL_0F		; #15
+			FDB	SEND_SYSEX_END		; #16
+			FDB	CALC_EF2R_VALUE		; #17
+			FDB	CLEAR_ACED		; #18
+			FDB	HI_CALL_13		; #19
+			FDB	HI_CALL_14		; #20
+			FDB	HI_CALL_15		; #21
+			FDB	HI_CALL_16		; #22
+			FDB	READ_SWITCHES		; #23
+			FDB	HI_CALL_18		; #24
+			FDB	HI_CALL_19		; #25
+			FDB	HI_CALL_1A		; #26
+			FDB	HI_CALL_1B		; #27
+			FDB	NOTE_STOP		; #28
+			FDB	NOTE_START		; #29
+XROM_VEC2		FDB	hdlr_RST		; #30
 
 ;-------
 ;
@@ -6102,9 +6097,9 @@ C_AE50			CMPB	#$0B
 
 ;-------
 ;
-; invokes low bank function 6, but saves X to DPTR first
+; invokes low bank function 6 (SAVE_VOICE) but saves X to DPTR first
 ;
-LO_CALL_06		STX	DPTR
+SAVE_VOICE_X		STX	DPTR
 			LDAB	#6
 			STAB	XROM
 			JSR	XROM_CALL
@@ -6112,7 +6107,7 @@ LO_CALL_06		STX	DPTR
 
 ;-------
 ;
-; invokes low bank function 0, but saves X to DPTR first
+; invokes low bank function 0 (LOAD_VOICE) but saves X to DPTR first
 ;
 
 LOAD_VOICE_X		STX	DPTR
@@ -6123,21 +6118,21 @@ LOAD_VOICE_X		STX	DPTR
 
 ;-------
 
-LO_CALL_08		LDAB	#$08
+SET_ALL_RANGES		LDAB	#$08
 			STAB	XROM
 			JSR	XROM_CALL
 			RTS
 
 ;-------
 
-SET_NAME_RANGE		LDAB	#$0A
+SET_PCED_RANGE		LDAB	#$0A
 			STAB	XROM
 			JSR	XROM_CALL
 			RTS
 
 ;-------
 
-SET_ALL_RANGES		LDAB	#$09
+SET_NAME_RANGE		LDAB	#$09
 			STAB	XROM
 			JSR	XROM_CALL
 			RTS
@@ -6152,7 +6147,7 @@ LO_CALL_07		STX	DPTR
 
 ;-------
 
-LO_CALL_05		STX	DPTR
+LOAD_PFM_X		STX	DPTR
 			LDAB	#$05
 			STAB	XROM
 			JSR	XROM_CALL
@@ -6490,7 +6485,7 @@ C_B179			LDAA	#$06
 			LDX	#VCED
 			STX	SPTR
 			LDX	#M69C1
-			JSR	LO_CALL_06
+			JSR	SAVE_VOICE_X
 			TST	SYS_CMBIN
 			BNE	1F
 			LDAB	#$01
@@ -7315,7 +7310,7 @@ F_B774			AIM	#~ECMI,TCSR3
 			LDX	#VCED
 			STX	SPTR
 			LDX	#M6A19
-			JSR	LO_CALL_06
+			JSR	SAVE_VOICE_X
 			BRA	5F
 
 F_B784			JSR	MIDI_SEND_PGM_CNG
@@ -7336,7 +7331,7 @@ F_B7A2			STX	SPTR
 			AIM	#~ECMI,TCSR3
 			LDX	#VCED
 			JSR	LOAD_VOICE_X
-			JSR	LO_CALL_08
+			JSR	SET_ALL_RANGES
 			JSR	F_E178
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
@@ -7355,7 +7350,7 @@ F_B7C3			PSHB
 			BNE	F_B7D6
 			TST	PFM_EDITED
 			BNE	F_B7D6
-			BRA	1F			; could be RTS
+			BRA	1F			; ##OPT## - could be RTS
 
 ;-------
 
@@ -7366,12 +7361,12 @@ F_B7D6			AIM	#~ECMI,TCSR3
 			STX	SPTR
 			AIM	#~ECMI,TCSR3
 			LDX	#PFM_EDIT_BUF
-			JSR	LO_CALL_05
+			JSR	LOAD_PFM_X
 
 ;-------	fallthrough
 
 HI_CALL_13		JSR	SEND_SYSEX_PCED
-			JSR	SET_NAME_RANGE
+			JSR	SET_PCED_RANGE
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			CLR	>M005A
@@ -7383,8 +7378,8 @@ HI_CALL_13		JSR	SEND_SYSEX_PCED
 ;-------
 
 F_B805			AIM	#~ECMI,TCSR3
-			BSR	F_B820
-			JSR	LO_CALL_08
+			BSR	LOAD_INSTRUMENTS
+			JSR	SET_ALL_RANGES
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			JSR	F_91FE
@@ -7395,23 +7390,25 @@ F_B805			AIM	#~ECMI,TCSR3
 
 ;-------
 
-F_B820			CLRB
-1			PSHB
-			LDX	#PFM_EDIT_BUF
-			LDAA	#12
-			MUL
-			ABX
+LOAD_INSTRUMENTS	CLRB				; B <- 0 (instrument number)
+
+1			PSHB				; save B
+			LDX	#PFM_EDIT_BUF		; X <- PCED
+			LDAA	#12			; A <- 12
+			MUL				; D <- B * 12
+			ABX				; X <- X + B
 			LDAB	$02,X			; A <- voice number LSB
-			JSR	GET_PVOICE_PTR_B
-			STX	SPTR
-			PULA
-			PSHA
-			JSR	GET_VOICE_PTR_A
-			JSR	LOAD_VOICE_X
-			PULB
-			INCB
-			CMPB	#$08
-			BNE	1B
+			JSR	GET_PVOICE_PTR_B	; X <- compressed voice data
+			STX	SPTR			; SPTR <- X
+			PULA				; restore instrument number into A
+			PSHA				; save it again
+			JSR	GET_VOICE_PTR_A		; get destination pointer for instr. A
+			JSR	LOAD_VOICE_X		; load the voice
+			PULB				; restore instrument number into B
+			INCB				; B <- B + 1
+			CMPB	#8			; is it 8?
+			BNE	1B			; no?  go around...
+
 			RTS
 
 ;-------
@@ -7423,7 +7420,7 @@ F_B83F			LDAB	M7795
 			LDX	#VCED
 			STX	SPTR
 			JSR	GET_PVOICE_PTR
-			JSR	LO_CALL_06
+			JSR	SAVE_VOICE_X
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			JSR	F_91FE
@@ -7524,7 +7521,7 @@ F_B90E			AIM	#~ECMI,TCSR3
 			STX	SPTR
 			LDX	#VCED + 110
 			JSR	MEMCPYX
-			JSR	LO_CALL_08
+			JSR	SET_ALL_RANGES
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			JSR	F_91FE
@@ -7950,14 +7947,14 @@ D_BC0E			FDB	SEND_SYSEX_S1_S2_E0_E1
 
 ;-------
 
-VOICE_TRANSMIT		TST	MENU_VALUE
-			BEQ	1F
-			LDAB	#3
-			STAB	XROM
-			JSR	XROM_CALL		; invoke SEND_PRESET_BANK (from low bank)
-			BRA	2F
-1			JSR	SEND_USER_BANK
-2			RTS
+VOICE_TRANSMIT		TST	MENU_VALUE		; look at menu value
+			BEQ	1F			; if 0, skip
+			LDAB	#3			; otherwise invoke SEND_PRESET_BANK
+			STAB	XROM			; (from low bank)
+			JSR	XROM_CALL		; -
+			BRA	2F			; and skip
+1			JSR	SEND_USER_BANK		; otherwise send the user bank
+2			RTS				; -
 
 ;-------
 
@@ -8882,7 +8879,7 @@ HI_CALL_19		TST	VOICE_EDITED
 			LDX	#VCED
 			STX	SPTR
 			LDX	#M6A19
-			JSR	LO_CALL_06
+			JSR	SAVE_VOICE_X
 1			RTS
 2			STAB	M7773
 			BRA	1B
@@ -8896,7 +8893,7 @@ HI_CALL_1B		LDAB	M7773
 			STX	SPTR
 			LDX	#VCED
 			JSR	LOAD_VOICE_X
-			JSR	LO_CALL_08
+			JSR	SET_ALL_RANGES
 			JSR	HI_CALL_05
 			LDD	#$0101			; enable all operators
 			STD	OP_ENABLE		; -
@@ -9056,7 +9053,7 @@ F_C407			LDAA	M7772
 
 ;-------
 
-LCD_INIT		LDAA	#%00111000		; A <- LCD Mode Set
+SYS_INIT		LDAA	#%00111000		; A <- LCD Mode Set
 			LDX	#$0000
 1			DEX				; wait a bit
 			BNE	1B			; -
@@ -9269,7 +9266,7 @@ F_C548			CLR	M7F99
 			BCC	16F
 15			LDAA	#$3C
 			STAA	M7777
-16			JSR	LO_CALL_08
+16			JSR	SET_ALL_RANGES
 			LDAA	M7774
 			TST	>M00A6
 			BEQ	17F
@@ -9673,7 +9670,7 @@ F_C95A			AIM	#~ECMI,TCSR3
 			JSR	F_C8E9
 			LDAB	#$0B
 			STAB	>XROM
-			JSR	XROM_CALL		; invoke SET_PCED_RANGE (from low bank)
+			JSR	XROM_CALL		; invoke LO_CALL_0B
 			RTS
 
 ;-------
@@ -9990,19 +9987,19 @@ POLL			TST	POLL_ENABLE		; polling gets disabled sometimes
 							; start of SysEx handling
 9			AIM	#~ECMI,TCSR3		; disable timer 2 interrupts
 			LDAB	#$01
-			STAB	M00B3			; sysex flag?
+			STAB	M00B3			;
 			BRA	POLL			; go around
 
 10			LDAA	#EOX
 			BRA	7B
 
-11			LDAB	MIDI_RX_CMD
-			CMPB	#SYX
-			BCS	12F
+11			LDAB	MIDI_RX_CMD		; was the last command SYX (or higher)?
+			CMPB	#SYX			; -
+			BCS	12F			; -
 			BHI	POLL			; go around
-			TST	SYS_SYSAVL
-			BEQ	10B
-			JMP	C_D0C8
+			TST	SYS_SYSAVL		; is sysex enabled?
+			BEQ	10B			; no? end sysex
+			JMP	SYSEX_NEXT		; process sysex
 
 12			LSRB				; rotate command nybble to bottom half
 			LSRB				; -
@@ -10600,7 +10597,7 @@ RX_CC_PAN		AIM	#~ECMI,TCSR3
 			BRA	5F
 4			LDAA	#$03
 5			LDX	#PFM_EDIT_INST_0 + 9	; out assign
-			CLR	>M00C0
+			CLR	>SYSEX_OP
 6			LSRB
 			BCS	7F
 			BEQ	9F
@@ -10610,13 +10607,13 @@ RX_CC_PAN		AIM	#~ECMI,TCSR3
 			CMPA	,X
 			BEQ	8F
 			STAA	,X
-			STAA	M00C0
+			STAA	SYSEX_OP
 8			PSHB
 			LDAB	#$0C
 			ABX
 			PULB
 			BRA	6B
-9			TST	>M00C0
+9			TST	>SYSEX_OP
 			BEQ	10F
 			JSR	F_95E5
 			LDAA	#$01
@@ -10697,7 +10694,7 @@ F_D06A			PSHB
 			STAB	M009F
 			LDAB	#$0C
 			STAB	XROM
-			JSR	XROM_CALL		; invoke LO_CALL_0C (from low bank)
+			JSR	XROM_CALL		; invoke SET_VCED_RANGE
 			JSR	F_94C9
 			OIM	#EOCI1,TCSR1
 			OIM	#ECMI,TCSR3
@@ -10734,259 +10731,292 @@ F_D099			LDAA	TCSR1
 
 ;-------
 
-C_D0C8			LDAB	MIDI_RX_DATA_COUNT
-			CMPB	#$FA
-			BEQ	2F
-			BCC	3F
-			CMPB	#$0F
-			BCC	1F
-			LDX	#D_D0DD
-			ASLB
-			ABX
-			LDX	,X
-			JMP	,X
+SYSEX_NEXT		LDAB	MIDI_RX_DATA_COUNT	; B <- rx count
+			CMPB	#$FA			; is it 250?
+			BEQ	2F			; EQ?  branch
+			BCC	3F			; GE?  branch
+			CMPB	#15			; is it 15?
+			BCC	1F			; GE?  branch
+			LDX	#T_SYSEX_JUMP		; call into jump table
+			ASLB				; -
+			ABX				; -
+			LDX	,X			; -
+			JMP	,X			; -
 
-D_D0DD			FDB	C_D10B
-			FDB	C_D11A
-			FDB	C_D148
-			FDB	C_D191
-			FDB	C_D1A7
-			FDB	C_D207
-			FDB	C_D256
-			FDB	C_D296
-			FDB	C_D296
-			FDB	C_D296
-			FDB	C_D296
-			FDB	C_D296
-			FDB	C_D296
-			FDB	C_D2D6
-			FDB	C_D2D6
+T_SYSEX_JUMP		FDB	SYSEX_CHK_MFR		; #00
+			FDB	SYSEX_CHK_CHAN		; #01
+			FDB	SYSEX_CHK_OP		; #02
+			FDB	SYSEX_CHK_B3		; #03
+			FDB	SYSEX_CHK_B4		; #04
+			FDB	SYSEX_CHK_B5		; #05
+			FDB	C_D256			; #06
+			FDB	C_D296			; #07
+			FDB	C_D296			; #08
+			FDB	C_D296			; #09
+			FDB	C_D296			; #10
+			FDB	C_D296			; #11
+			FDB	C_D296			; #12
+			FDB	C_D2D6			; #13
+			FDB	C_D2D6			; #14
 
-1			JMP	C_D304
-2			JMP	C_D320
-3			JMP	C_D104
+1			JMP	SYSEX_END
+2			JMP	SYSEX_BULK_DATA
+3			JMP	SYSEX_RESET		; ##OPT:jump_next##
 
 ;-------
 
-C_D104			LDAA	#EOX
+SYSEX_RESET		LDAA	#EOX
 			STAA	MIDI_RX_CMD
 			JMP	POLL
 
 ;-------
 
-C_D10B			STAA	MIDI_RX_DATA_1
-			CMPA	#$43
+SYSEX_CHK_MFR		STAA	MIDI_RX_DATA_1
+			CMPA	#MFR_YAMAHA
 			BNE	1F
 			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
-1			JMP	C_D104
+1			JMP	SYSEX_RESET
 
 ;-------
 
-C_D11A			TAB
-			ANDA	#$F0
-			STAA	M00BF
-			CMPB	#$10
-			BCS	1F
-			CMPB	#$20
-			BCS	2F
-			CMPB	#$30
-			BCS	2F
-			BRA	4F
-1			LDAA	#$01
-			STAA	M00B2
-2			LDAA	SYS_MIDBCH
-			CMPA	#$10
-			BEQ	3F
-			ANDB	#$0F
-			CMPB	SYS_MIDBCH
-			BNE	4F
-3			INC	>MIDI_RX_DATA_COUNT
-			JMP	POLL
-4			JMP	C_D104
+SYSEX_CHK_CHAN		TAB				; B <- A
+			ANDA	#$F0			; save top nybble
+			STAA	SYSEX_CHAN			; to memory
+			CMPB	#$10			; A < $10, branch
+			BCS	1F			; -
+			CMPB	#$20			; ##OPT## A < $20, branch
+			BCS	2F			; -
+			CMPB	#$30			; ##OPT## A < $30, branch
+			BCS	2F			; -
+			BRA	4F			; ##OPT## jump to abort
+1			LDAA	#$01			; M00B2 <- 1 (loading)
+			STAA	M00B2			; -
+2			LDAA	SYS_MIDBCH		; check for Omni mode
+			CMPA	#$10			; -
+			BEQ	3F			; yes?  carry on with processing
+			ANDB	#$0F			; get MIDI channel
+			CMPB	SYS_MIDBCH		; does it match the basic channel?
+			BNE	4F			; no?  jump to reset
+3			INC	>MIDI_RX_DATA_COUNT	; increase RX count
+			JMP	POLL			; go around
+4			JMP	SYSEX_RESET
 
 ;-------
 
-C_D148			STAA	M00C0
-			LDAB	M00BF
-			CMPB	#$10
-			BCS	3F
-			BEQ	4F
-			CMPA	#$03
-			BNE	1F
-			JSR	F_D326
-			JMP	C_D104
-1			CMPA	#$04
-			BNE	2F
-			JSR	F_D33D
-			JMP	C_D104
-2			CMPA	#$7E
-			BEQ	5F
-			JMP	C_D104
-3			CMPA	#$03
-			BEQ	5F
-			CMPA	#$04
-			BEQ	5F
-			CMPA	#$7E
-			BEQ	5F
-			JMP	C_D104
-4			CMPA	#$10
-			BEQ	5F
-			CMPA	#$12
-			BEQ	5F
-			CMPA	#$13
-			BEQ	5F
-			JMP	C_D104
-5			INC	>MIDI_RX_DATA_COUNT
-			JMP	POLL
+SYSEX_CHK_OP		STAA	SYSEX_OP		; save byte
+			LDAB	SYSEX_CHAN		; get channel byte top nybble
+			CMPB	#$10			; 
+			BCS	3F			; < $10 - go 3F (bulk dump)
+			BEQ	4F			; = $10 - go 4F (param change)
+
+			CMPA	#$03			; compare with 3
+			BNE	1F			; no?  branch...
+			JSR	F_D326			; handle VCED request
+			JMP	SYSEX_RESET		; abort
+
+1			CMPA	#$04			; compare with 4
+			BNE	2F			; no?  branch...
+			JSR	F_D33D			; handle VMEM request
+			JMP	SYSEX_RESET		; abort
+
+2			CMPA	#$7E			; compare with $7E
+			BEQ	5F			; extended message - jump to carry on
+			JMP	SYSEX_RESET		; abort
+
+3			CMPA	#$03			; $03, $04, $7E are OK
+			BEQ	5F			;
+			CMPA	#$04			;
+			BEQ	5F			;
+			CMPA	#$7E			;
+			BEQ	5F			;
+			JMP	SYSEX_RESET		; otherwise abort
+
+4			CMPA	#$10			; $10, $12 and $13 are OK
+			BEQ	5F			;
+			CMPA	#$12			;
+			BEQ	5F			;
+			CMPA	#$13			;
+			BEQ	5F			;
+			JMP	SYSEX_RESET		; otherwise abort
+
+5			INC	>MIDI_RX_DATA_COUNT	; get more data
+			JMP	POLL			; -
 
 ;-------
 
-C_D191			STAA	M00C1
-			LDAB	M00BF
-			CMPB	#$20
-			BCS	1F
-			JSR	F_D3A7
-			BCC	1F
-			JMP	C_D104
-1			INC	>MIDI_RX_DATA_COUNT
-			JMP	POLL
+SYSEX_CHK_B3		STAA	SYSEX_B3		; save for later
+			LDAB	SYSEX_CHAN		; look at sysex chan byte
+			CMPB	#$20			; compare to $20
+			BCS	1F			; less?  jump to carry on
+			JSR	SYSEX_PARSE		; check message
+			BCC	1F			; C clear?  jump to carry on
+			JMP	SYSEX_RESET		; end message
+
+1			INC	>MIDI_RX_DATA_COUNT	; get more data
+			JMP	POLL			; -
 
 ;-------
 
-C_D1A7			STAA	M00C2
-			LDAB	M00BF
-			CMPB	#$10
-			BCS	4F
-			BEQ	2F
-			JSR	F_D3A7
-			BCC	1F
-			JMP	C_D104
-1			INC	>MIDI_RX_DATA_COUNT
-			JMP	POLL
-2			LDAB	M00C0
+SYSEX_CHK_B4		STAA	SYSEX_B4		; save for later
+			LDAB	SYSEX_CHAN		; look at sysex chan byte
+			CMPB	#$10			; compare to $10
+			BCS	4F			; less?  jump to 4F
+			BEQ	2F			; equal?  jump to 2F
+			JSR	SYSEX_PARSE		; check message
+			BCC	1F			; C clear?  jump to carry on
+			JMP	SYSEX_RESET		; end message
+
+1			INC	>MIDI_RX_DATA_COUNT	; get more data
+			JMP	POLL			; -
+
+2			LDAB	SYSEX_OP
 			CMPB	#$10
 			BNE	3F
-			LDAA	M00C1
+			LDAA	SYSEX_B3
 			CMPA	#$7B
 			BCS	3F
 			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
+
 3			JSR	F_D8DD
-			JMP	C_D104
+			JMP	SYSEX_RESET
+
 4			TST	SYS_SYSAVL
 			BEQ	5F
-			LDAB	M00C0
+			LDAB	SYSEX_OP
 			CMPB	#$03
 			BEQ	6F
 			CMPB	#$04
 			BEQ	7F
-			BRA	8F			; could've jumped to 8F - 6
-5			JMP	C_D104
+			BRA	9F			; ##OPT## could've jumped to 8F or 1B
+5			JMP	SYSEX_RESET
+
 6			JSR	F_D480
 			BCS	5B
 			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
 7			JSR	F_D4A1
 			BCS	5B
-			INC	>MIDI_RX_DATA_COUNT
-			JMP	POLL
+
 8			INC	>MIDI_RX_DATA_COUNT
+			JMP	POLL
+
+9			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
 
 ;-------
 
-C_D207			STAA	>M00C3
-			LDAB	M00BF
+SYSEX_CHK_B5		STAA	>SYSEX_B5
+			LDAB	SYSEX_CHAN
 			CMPB	#$10
 			BCS	4F
 			BEQ	2F
-			JSR	F_D3A7
+			JSR	SYSEX_PARSE
 			BCC	1F
-			JMP	C_D104
+			JMP	SYSEX_RESET
+
 1			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
-2			LDAB	M00C1
+
+2			LDAB	SYSEX_B3
 			CMPB	#$7D
-			BCC	3F
+			BCC	3F			##OPT## jump to 1B, omit 3F
 			JSR	F_D8DD
-			JMP	C_D104
+			JMP	SYSEX_RESET
+
 3			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
-4			LDAB	M00C0
+
+4			LDAB	SYSEX_OP
 			CMPB	#$03
 			BEQ	6F
 			CMPB	#$04
 			BEQ	7F
 			JSR	F_D3A1
-			BCC	5F
-			JMP	C_D104
+			BCC	5F			##OPT## jump to 1B, omit 5F
+			JMP	SYSEX_RESET
+
 5			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
+
 6			JSR	F_D520
 			JMP	POLL
+
 7			JSR	F_D547
 			JMP	POLL
 
 ;-------
 
-C_D256			LDAB	M00BF
+C_D256			LDAB	SYSEX_CHAN
 			CMPB	#$10
 			BCS	3F
 			BEQ	2F
-			JSR	F_D3A7
+			JSR	SYSEX_PARSE
 			BCC	1F
-			JMP	C_D104
+			JMP	SYSEX_RESET
+
 1			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
+
 2			JSR	F_D8DD
-			JMP	C_D104
-3			LDAB	M00C0
+			JMP	SYSEX_RESET
+
+3			LDAB	SYSEX_OP
 			CMPB	#$03
 			BEQ	5F
 			CMPB	#$04
 			BEQ	6F
 			JSR	F_D3A1
 			BCC	4F
-			JMP	C_D104
+			JMP	SYSEX_RESET
+
 4			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
+
 5			JSR	F_D520
 			JMP	POLL
+
 6			JSR	F_D547
 			JMP	POLL
 
 ;-------
 
-C_D296			LDAB	M00BF
+C_D296			LDAB	SYSEX_CHAN
 			CMPB	#$10
 			BCS	3F
-			JSR	F_D3A7
+			JSR	SYSEX_PARSE
 			BVS	2F
 			BCC	1F
-			JMP	C_D104
+			JMP	SYSEX_RESET
+
 1			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
+
 2			JSR	F_D35B
-			JMP	C_D104
-3			LDAB	M00C0
+			JMP	SYSEX_RESET
+
+3			LDAB	SYSEX_OP
 			CMPB	#$03
 			BEQ	5F
 			CMPB	#$04
 			BEQ	6F
 			JSR	F_D3A1
 			BCC	4F
-			JMP	C_D104
+			JMP	SYSEX_RESET
+
 4			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
+
 5			JSR	F_D520
 			JMP	POLL
+
 6			JSR	F_D547
 			JMP	POLL
 
 ;-------
 
-C_D2D6			LDAB	M00C0
+C_D2D6			LDAB	SYSEX_OP
 			CMPB	#$03
 			BEQ	3F
 			CMPB	#$04
@@ -10994,35 +11024,41 @@ C_D2D6			LDAB	M00C0
 			JSR	F_D3A1
 			BVS	1F
 			BCC	2F
-			JMP	C_D104
+			JMP	SYSEX_RESET
+
 1			JSR	F_D4C5
 			BCC	2F
-			JMP	C_D104
+			JMP	SYSEX_RESET
+
 2			INC	>MIDI_RX_DATA_COUNT
 			JMP	POLL
+
 3			JSR	F_D520
 			JMP	POLL
+
 4			JSR	F_D547
 			JMP	POLL
 
 ;-------
 
-C_D304			LDAB	M00C0
+SYSEX_END		LDAB	SYSEX_OP
 			CMPB	#$03
 			BEQ	1F
 			CMPB	#$04
 			BEQ	2F
-			JSR	F_D593
+			JSR	SYSEX_BULK_DISPATCH
 			JMP	POLL
+
 1			JSR	F_D520
 			JMP	POLL
+
 2			JSR	F_D547
 			JMP	POLL
 
 ;-------
 
-C_D320			JSR	F_D730
-			JMP	C_D104
+SYSEX_BULK_DATA		JSR	F_D730
+			JMP	SYSEX_RESET
 
 ;-------
 
@@ -11059,7 +11095,7 @@ F_D35B			JSR	HI_CALL_00
 			JSR	LCD_WAIT		; -
 			STAB	LCD_CMD			; -
 			CLR	>M00CC
-			LDAB	M00C9
+			LDAB	SYSEX_MODE
 			SUBB	#$78
 			ASLB
 			LDX	#D_D383
@@ -11070,14 +11106,14 @@ F_D35B			JSR	HI_CALL_00
 			JSR	F_C972
 			RTS
 
-D_D383			FDB	SEND_SYSEX_MCRTE0
-			FDB	SEND_SYSEX_MCRTE1
-			FDB	SEND_SYSEX_SYS0
-			FDB	SEND_SYSEX_SYS1
-			FDB	SEND_SYSEX_SYS2
-			FDB	SEND_SYSEX_PCED
-			FDB	SEND_SYSEX_PMEM
-			FDB	F_D393
+D_D383			FDB	SEND_SYSEX_MCRTE0	; $78
+			FDB	SEND_SYSEX_MCRTE1	; $79
+			FDB	SEND_SYSEX_SYS0		; $7A
+			FDB	SEND_SYSEX_SYS1		; $7B
+			FDB	SEND_SYSEX_SYS2		; $7C
+			FDB	SEND_SYSEX_PCED		; $7D
+			FDB	SEND_SYSEX_PMEM		; $7E
+			FDB	F_D393			; $7F - ACED + VCED
 
 ;-------
 
@@ -11094,149 +11130,202 @@ F_D3A1			LDAB	MIDI_RX_DATA_COUNT
 			SUBB	#$05
 			BRA	1F
 
-F_D3A7			LDAB	MIDI_RX_DATA_COUNT
-			SUBB	#$03
-1			CMPB	#$04
-			BCS	2F
-			BEQ	4F
-			CMPB	#$08
-			BCS	7F
-			BEQ	11F
-			BCC	12F
-2			LDX	#S_LM
-			ABX
-			CMPA	,X
-			BNE	3F
-			CLC
-			CLV
-			RTS
-3			SEC
-			CLV
-			RTS
-4			CMPA	#$38
-			BNE	5F
-			CLR	>M00C9
-			CLC
-			CLV
-			RTS
-5			CMPA	#$4D
-			BNE	6F
-			STAA	M00C9
-			CLC
-			CLV
-			RTS
-6			SEC
-			CLV
-			RTS
-7			TST	>M00C9
-			BNE	9F
-			LDX	#S_976
-			SUBB	#$05
-			ABX
-			CMPA	,X
-			BNE	8F
-			CLC
-			CLV
-			RTS
-8			SEC
-			CLV
-			RTS
-9			LDX	#S_CRT
-			SUBB	#$05
-			ABX
-			CMPA	,X
-			BNE	10F
-			CLC
-			CLV
-			RTS
-10			SEC
-			CLV
-			RTS
-11			STAA	MIDI_RX_DATA_1
-			CLC
-			CLV
-			RTS
-12			TAB
-			LDAA	MIDI_RX_DATA_1
-			XGDX
-			TST	>M00C9
-			BNE	19F
-			CPX	#$5330
-			BNE	13F
-			LDAA	#$7A
-			STAA	M00C9
-			CLC
-			SEV
-			RTS
-13			CPX	#$5331
-			BNE	14F
-			LDAA	#$7B
-			STAA	M00C9
-			CLC
-			SEV
-			RTS
-14			CPX	#$5332
-			BNE	15F
-			LDAA	#$7C
-			STAA	M00C9
-			CLC
-			SEV
-			RTS
-15			CPX	#$5045
-			BNE	16F
-			LDAA	#$7D
-			STAA	M00C9
-			CLC
-			SEV
-			RTS
-16			CPX	#$504D
-			BNE	17F
-			LDAA	#$7E
-			STAA	M00C9
-			CLC
-			SEV
-			RTS
-17			CPX	#$4145
-			BNE	18F
-			LDAA	#$7F
-			STAA	M00C9
-			CLC
-			SEV
-			RTS
-18			SEC
-			CLV
-			RTS
-19			CPX	#$4530
-			BNE	20F
-			LDAA	#$78
-			STAA	M00C9
-			CLC
-			SEV
-			RTS
-20			CPX	#$4531
-			BNE	21F
-			LDAA	#$79
-			STAA	M00C9
-			CLC
-			SEV
-			RTS
-21			SEC
-			CLV
-			RTS
+;-------	fallthrough
 
-S_LM			FCC	"LM  "
+SYSEX_PARSE		LDAB	MIDI_RX_DATA_COUNT	; take sysex count (excl. initial $F0)
+			SUBB	#$03			; less three
+1			CMPB	#$04			; is it four (started at 7) ?
+			BCS	2F			; LT?  go to 2F
+			BEQ	4F			; EQ?  go to 4F
+
+			CMPB	#$08			; is it 8 (started at 11) ?
+			BCS	7F			; LT?  go to 7F
+			BEQ	11F			; EQ?  go to 11F
+			BCC	12F			; GE?  go to 12F ##OPT## could be BRA
+
+			;
+			; MIDI_RX_DATA_COUNT = 3 .. 6
+			;
+2			LDX	#S_LM__			; compare to Bth char of "LM  "
+			ABX				;
+			CMPA	,X			;
+			BNE	3F			; not equal?  go to 3F
+			CLC				; equal - clear C and V, and done
+			CLV				; -
+			RTS				; -
+
+3			SEC				; not equal - set C, clear V, and done
+			CLV				; -
+			RTS				; -
+
+			;
+			; MIDI_RX_DATA_COUNT = 7
+			;
+4			CMPA	#'8'			; is the received byte '8' ?
+			BNE	5F			; no?  go to 5F
+			CLR	>SYSEX_MODE		; yes?  mode = 0
+			CLC				; clear C and V, done
+			CLV				; -
+			RTS				; -
+
+5			CMPA	#'M'			; is it 'M' ?
+			BNE	6F			; no?  go to 6F
+			STAA	SYSEX_MODE		; mode = 'M'
+			CLC				; clear C and V, done
+			CLV				; -
+			RTS				; -
+
+6			SEC				; not valid, set C, clear V, done
+			CLV				; -
+			RTS				; -
+
+			;
+			; MIDI_RX_COUNT = 8 .. 10, SYSEX_MODE = 0
+			;
+7			TST	>SYSEX_MODE		; is mode set yet?
+			BNE	9F			; yes - go to 9F
+			LDX	#S_976			; compare with (B + 5)th char of "976"
+			SUBB	#$05			; -
+			ABX				; -
+			CMPA	,X			; -
+			BNE	8F			; no match, go to invalid
+			CLC				; valid, clear C and V, done
+			CLV				; -
+			RTS				; -
+
+8			SEC				; not valid, set C, clear V, done
+			CLV				; -
+			RTS				; -
+
+			;
+			; MIDI_RX_COUNT = 8 .. 10, SYSEX_MODE != 0
+			;
+9			LDX	#S_CRT			; compare with (B + 5)th char of "CRT"
+			SUBB	#$05			; -
+			ABX				; -
+			CMPA	,X			; -
+			BNE	10F			; no match, go to invalid ##OPT##
+			CLC				; valid, clear C and V, done
+			CLV				; -
+			RTS				; -
+
+10			SEC				; not valid, set C, clear V, done
+			CLV				; -
+			RTS				; -
+
+			;
+			; MIDI_RX_COUNT = 11
+			;
+11			STAA	MIDI_RX_DATA_1		; save for later
+			CLC				; -
+			CLV				; -
+			RTS				; -
+
+			;
+			; MIDI_RX_COUNT = 12+
+			;
+12			TAB				; B <- A
+			LDAA	MIDI_RX_DATA_1		; A <- previously saved data (offset 11)
+			XGDX				; X <-> D
+			TST	>SYSEX_MODE		; is mode set? ("CRT" messages)
+			BNE	19F			; yes, go to 19F
+
+			;
+			; recognise "LM  8976xx" messages
+			;
+			CPX	#('S' << 8) + '0'	; compare with "S0"
+			BNE	13F			; no?  branch
+			LDAA	#$7A			; mode <- $7A
+			STAA	SYSEX_MODE		; -
+			CLC				; clear C, set V, done
+			SEV				; -
+			RTS				; -
+
+13			CPX	#('S' << 8) + '1'	; compare with "S1"
+			BNE	14F			; no?  branch
+			LDAA	#$7B			; mode <- $7B
+			STAA	SYSEX_MODE		; -
+			CLC				; clear C, set V, done
+			SEV				; -
+			RTS				; -
+
+14			CPX	#('S' << 8) + '2'	; compare with "S2"
+			BNE	15F			; no?  branch
+			LDAA	#$7C			; mode <- $7B
+			STAA	SYSEX_MODE		; -
+			CLC				; clear C, set V, done
+			SEV				; -
+			RTS				; -
+
+15			CPX	#('P' << 8) + 'E'	; compare with "PE"
+			BNE	16F			; no?  branch
+			LDAA	#$7D			; mode <- $7D
+			STAA	SYSEX_MODE		; -
+			CLC				; clear C, set V, done
+			SEV				; -
+			RTS				; -
+
+16			CPX	#('P' << 8) + 'M'	; compare with "PM"
+			BNE	17F			; no?  branch
+			LDAA	#$7E			; mode <- $7E
+			STAA	SYSEX_MODE		; -
+			CLC				; clear C, set V, done
+			SEV				; -
+			RTS				; -
+
+17			CPX	#('A' << 8) + 'E'	; compare with "AE"
+			BNE	18F			; no?  branch
+			LDAA	#$7F			; mode <- $7F
+			STAA	SYSEX_MODE		; -
+			CLC				; clear C, set V, done
+			SEV				; -
+			RTS				; -
+
+18			SEC				; set C, clear V, done
+			CLV				; -
+			RTS				; -
+
+			;
+			; recognise "LM  MCRTEx" messages
+			;
+19			CPX	#('E' << 8) + '0'	; compare with "E0"
+			BNE	20F			; no?  branch
+			LDAA	#$78			; mode <- $78
+			STAA	SYSEX_MODE		; -
+			CLC				; clear C, set V, done
+			SEV				; -
+			RTS				; -
+
+20			CPX	#('E' << 8) + '1'	; compare with "E1"
+			BNE	21F			; no?  branch
+			LDAA	#$79			; mode <- $79
+			STAA	SYSEX_MODE		; -
+			CLC				; clear C, set V, done
+			SEV				; -
+			RTS				; -
+
+			;
+			; no match found
+			;
+21			SEC				; set C, clear V, done
+			CLV				; -
+			RTS				; -
+
+S_LM__			FCC	"LM  "
 S_976			FCC	"976"
 S_CRT			FCC	"CRT"
 
 ;-------
-
-F_D480			TST	>M00C1
-			BNE	2F
-			LDAA	M00C2
-			CMPA	#$5D
-			BNE	2F
-			LDAA	#$03
-			STAA	M00C9
+;
+; sysex VCED receive
+;
+F_D480			TST	>SYSEX_B3		; check data size MSB (0)
+			BNE	2F			; -
+			LDAA	SYSEX_B4		; check data size LSB ($59)
+			CMPA	#$5D			; -
+			BNE	2F			; -
+			LDAA	#$03			; set sysex mode to 3
+			STAA	SYSEX_MODE		; -
 			TST	>M00DF
 			BNE	1F
 			LDAB	M7773
@@ -11251,16 +11340,16 @@ F_D480			TST	>M00C1
 
 F_D4A1			TST	SYS_MLOCK
 			BEQ	1F
-			JSR	F_D879
+			JSR	ERR_MEM_PROTECT
 			BRA	2F
-1			LDAA	M00C1
+1			LDAA	SYSEX_B3
 			DECA
 			CMPA	#$20
 			BCC	2F
-			TST	>M00C2
+			TST	>SYSEX_B4
 			BNE	2F
 			LDAA	#$04
-			STAA	M00C9
+			STAA	SYSEX_MODE
 			CLR	>M00C8
 			CLR	>MIDI_RX_CRC
 			CLC
@@ -11270,7 +11359,7 @@ F_D4A1			TST	SYS_MLOCK
 
 ;-------
 
-F_D4C5			LDAB	M00C9
+F_D4C5			LDAB	SYSEX_MODE
 			CMPB	#$7F
 			BEQ	1F
 			CMPB	#$7D
@@ -11279,7 +11368,7 @@ F_D4C5			LDAB	M00C9
 			BEQ	1F
 			TST	SYS_MLOCK
 			BEQ	1F
-			JSR	F_D879
+			JSR	ERR_MEM_PROTECT
 			SEC
 			RTS
 1			SUBB	#$78
@@ -11287,15 +11376,15 @@ F_D4C5			LDAB	M00C9
 			ABX
 			ASLB
 			ABX
-			LDAA	M00C1
-			LDAB	M00C2
+			LDAA	SYSEX_B3
+			LDAB	SYSEX_B4
 			CMPA	,X
 			BNE	3F
 			CMPB	$01,X
 			BNE	3F
 			LDAA	$02,X
 			STAA	MIDI_RX_CRC
-			LDAB	M00C9
+			LDAB	SYSEX_MODE
 			CMPB	#$7F
 			BNE	2F
 			LDAB	M7773
@@ -11365,7 +11454,7 @@ F_D547			AIM	#~ECMI,TCSR3
 			RTS
 3			INC	>M00C8
 			LDAA	M00C8
-			CMPA	M00C1
+			CMPA	SYSEX_B3
 			BEQ	4F
 			CMPA	#$20
 			BEQ	4F
@@ -11378,29 +11467,29 @@ F_D547			AIM	#~ECMI,TCSR3
 
 ;-------
 
-F_D593			AIM	#~ECMI,TCSR3
+SYSEX_BULK_DISPATCH	AIM	#~ECMI,TCSR3
 			LDAB	#$01
 			STAB	M00B3
-			LDAB	M00C9
+			LDAB	SYSEX_MODE
 			SUBB	#$78
-			LDX	#D_D5A7
+			LDX	#T_BULK_JMPTABLE
 			ASLB
 			ABX
 			LDX	,X
 			JMP	,X
 
-D_D5A7			FDB	C_D5B7
-			FDB	C_D5D7
-			FDB	RECV_SYSEX_SYS0
-			FDB	C_D64B
-			FDB	C_D694
-			FDB	C_D6B4
-			FDB	C_D6D4
-			FDB	C_D710
+T_BULK_JMPTABLE		FDB	RECV_SYSEX_MCRTE0	# $78
+			FDB	RECV_SYSEX_MCRTE1	# $79
+			FDB	RECV_SYSEX_SYS0		# $7A
+			FDB	RECV_SYSEX_SYS1		# $7B
+			FDB	RECV_SYSEX_SYS2		# $7C
+			FDB	RECV_SYSEX_PCED		# $7D
+			FDB	RECV_SYSEX_PMEM		# $7E
+			FDB	RECV_SYSEX_ACED		# $7F
 
 ;-------
 
-C_D5B7			LDAB	MIDI_RX_DATA_COUNT
+RECV_SYSEX_MCRTE0	LDAB	MIDI_RX_DATA_COUNT
 			SUBB	#$0F
 			CMPB	#$18
 			BCC	1F
@@ -11420,7 +11509,7 @@ C_D5B7			LDAB	MIDI_RX_DATA_COUNT
 
 ;-------
 
-C_D5D7			TST	>M00C8
+RECV_SYSEX_MCRTE1	TST	>M00C8
 			BNE	2F
 			LDAB	MIDI_RX_DATA_COUNT
 			SUBB	#$0F
@@ -11485,7 +11574,7 @@ RECV_SYSEX_SYS0		LDAB	MIDI_RX_DATA_COUNT	; B <- receive count
 
 ;-------
 
-C_D64B			LDX	#PROG_CHANGES
+RECV_SYSEX_SYS1		LDX	#PROG_CHANGES
 			LDAB	MIDI_RX_DATA_COUNT
 			SUBB	#$0F
 			ABX
@@ -11525,7 +11614,7 @@ C_D64B			LDX	#PROG_CHANGES
 
 ;-------
 
-C_D694			LDAB	MIDI_RX_DATA_COUNT
+RECV_SYSEX_SYS2		LDAB	MIDI_RX_DATA_COUNT
 			SUBB	#$0F
 			CMPB	#$37
 			BCC	1F
@@ -11547,7 +11636,7 @@ C_D694			LDAB	MIDI_RX_DATA_COUNT
 ;
 ; saves incoming data to performance edit buffer
 ;
-C_D6B4			LDAB	MIDI_RX_DATA_COUNT
+RECV_SYSEX_PCED		LDAB	MIDI_RX_DATA_COUNT
 			SUBB	#$0F
 			CMPB	#110
 			BCC	1F
@@ -11567,7 +11656,7 @@ C_D6B4			LDAB	MIDI_RX_DATA_COUNT
 
 ;-------
 
-C_D6D4			PSHA
+RECV_SYSEX_PMEM		PSHA
 			LDAA	M00C8
 			CMPA	#$18
 			BCS	1F
@@ -11604,7 +11693,7 @@ C_D6D4			PSHA
 
 ;-------
 
-C_D710			LDAB	MIDI_RX_DATA_COUNT
+RECV_SYSEX_ACED		LDAB	MIDI_RX_DATA_COUNT
 			SUBB	#$0F
 			CMPB	#$17
 			BCC	1F
@@ -11634,9 +11723,10 @@ F_D730			CLR	>M00B3
 			ADDA	#$70
 			ANDA	#$7F
 			BEQ	1F
-			JSR	F_D87E
+			JSR	ERR_MIDI_CSUM
 			RTS
-1			LDAB	M00C9
+
+1			LDAB	SYSEX_MODE
 			CMPB	#$03
 			BEQ	2F
 			CMPB	#$04
@@ -11663,7 +11753,7 @@ D_D764			FDB	C_D7D4
 			BNE	6F
 			JSR	CLEAR_ACED
 6			CLR	>M00DF
-			JSR	LO_CALL_08
+			JSR	SET_ALL_RANGES
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			CLR	>M005A
@@ -11673,7 +11763,7 @@ D_D764			FDB	C_D7D4
 			LDX	#VCED
 			STX	SPTR
 			LDX	#M69C1
-			JSR	LO_CALL_06
+			JSR	SAVE_VOICE_X
 			JSR	F_B805
 			BRA	8F
 7			JSR	F_91FE
@@ -11756,7 +11846,7 @@ C_D830			LDAA	#8			; 8 instruments
 			ABX				; jump to next instrument
 			DECA				; -
 			BNE	1B			; -
-			JSR	SET_NAME_RANGE
+			JSR	SET_PCED_RANGE
 			JSR	HI_CALL_00
 			JSR	HI_CALL_01
 			CLR	>M005A
@@ -11788,10 +11878,10 @@ C_D874			LDAA	#$01
 
 ;-------
 
-F_D879			LDX	#S_MEM_PROTECTED
+ERR_MEM_PROTECT		LDX	#S_MEM_PROTECTED
 			BRA	4F
 
-F_D87E			LDX	#S_MIDI_CSUM_ERROR
+ERR_MIDI_CSUM		LDX	#S_MIDI_CSUM_ERROR
 			BRA	4F
 
 F_D883			JSR	F_C95A
@@ -11834,8 +11924,8 @@ CLEAR_ACED		LDX	#ACED
 ;-------
 
 F_D8DD			STAA	MIDI_RX_DATA_1
-			LDAB	M00C1
-			LDAA	M00C0
+			LDAB	SYSEX_B3
+			LDAA	SYSEX_OP
 			CMPA	#$10
 			BEQ	5F
 			CMPA	#$12
@@ -11934,7 +12024,7 @@ C_D989			LDAA	#$01
 			INCB
 			STAB	M7789
 			CLR	M778C
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE9D
 			RTS
 
@@ -11949,7 +12039,7 @@ C_D9A6			LDAA	#$01
 			MUL
 			STAB	M7789
 			CLR	M778C
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE9D
 			RTS
 
@@ -11967,7 +12057,7 @@ C_D9C2			LDAA	#$01
 			STAB	M7789
 			LDAA	#$01
 			STAA	M778C
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE9D
 			RTS
 
@@ -11976,7 +12066,7 @@ C_D9C2			LDAA	#$01
 C_D9E2			CLR	M7788
 			LDAA	#$05
 			STAA	M7774
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE96
 			RTS
 
@@ -11988,7 +12078,7 @@ C_D9F0			LDAA	#$01
 			STAA	M7774
 			LDAA	#$05
 			STAA	M7789
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE9D
 			RTS
 
@@ -12018,7 +12108,7 @@ C_DA05			CMPB	#$13
 			CLR	M778C
 			LDAA	#$0A
 			STAA	M7774
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE9D
 			RTS
 
@@ -12055,7 +12145,7 @@ F_DA3F			PSHB
 			CLR	M7788
 			LDAA	#$08
 			STAA	M7774
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE96
 			RTS
 7			CMPB	#$0C
@@ -12063,7 +12153,7 @@ F_DA3F			PSHB
 			CLR	M7788
 			LDAA	#$06
 			STAA	M7774
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE96
 			RTS
 8			CMPB	#$0B
@@ -12079,7 +12169,7 @@ F_DA3F			PSHB
 			STAB	M7789
 			LDAA	#$01
 			STAA	M778C
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE9D
 			RTS
 9			CMPB	#$08
@@ -12094,7 +12184,7 @@ F_DA3F			PSHB
 			STAA	M7789
 			LDAA	#$01
 			STAA	M7788
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE9D
 			RTS
 11			CMPB	#$5D
@@ -12107,7 +12197,7 @@ F_DA3F			PSHB
 			SUBB	#$34
 			STAB	M7774
 			CLR	M778C
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE96
 12			RTS
 13			CMPB	#$44
@@ -12127,7 +12217,7 @@ F_DA3F			PSHB
 			STAA	M7774
 			LDAA	#$0F
 			STAA	M7789
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE9D
 			RTS
 14			SUBB	#$36
@@ -12141,14 +12231,14 @@ F_DA3F			PSHB
 			LDAA	#$01
 			STAA	M7788
 			CLR	M778C
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE9D
 			RTS
 15			CLR	OP_ENABLE
 			CLR	OP_ENABLE + 1
 			CLR	OP_ENABLE + 2
 			CLR	OP_ENABLE + 3
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			LSRA
 			ROL	OP_ENABLE + 3
 			LSRA
@@ -12201,31 +12291,31 @@ F_DBBD			PSHB
 4			CMPB	#$01
 			BNE	7F
 			PSHB
-			LDAB	M00C2
+			LDAB	SYSEX_B4
 			BNE	5F
 			CLRB
 			BRA	6F
 5			LDAB	#$80
-6			STAB	M00C2
+6			STAB	SYSEX_B4
 			PULB
 7			CMPB	#$02
 			BNE	8F
 			PSHB
-			LDAB	M00C1
+			LDAB	SYSEX_B3
 			LDX	#PFM_EDIT_BUF
 			ABX
 			LDAB	,X
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			ANDB	#$80
 			ABA
-			STAA	M00C2
+			STAA	SYSEX_B4
 			PULB
 8			CLR	M7788
 			LDX	#D_DC18
 			ABX
 			LDAA	,X
 			STAA	M7774
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE96
 			RTS
 
@@ -12260,7 +12350,7 @@ C_DC24			CMPB	#$64
 			LDAA	#$01
 			STAA	M778C
 5			CLR	M7788
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE96
 			RTS
 6			CMPB	#$6E
@@ -12271,13 +12361,13 @@ C_DC24			CMPB	#$64
 			CLR	M7788
 			LDAA	#$35
 			STAA	M7774
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			JSR	F_DE96
 			RTS
 
 ;-------
 
-F_DC7F			LDAB	M00C2
+F_DC7F			LDAB	SYSEX_B4
 			CMPB	#$1B
 			BCS	1F
 			RTS
@@ -12303,7 +12393,7 @@ F_DC7F			LDAB	M00C2
 			LDAA	#$17
 			STAA	M7774
 5			CLR	M7788
-			LDAA	>M00C3
+			LDAA	>SYSEX_B5
 			JSR	F_DE96
 			RTS
 6			DECB
@@ -12315,7 +12405,7 @@ F_DC7F			LDAB	M00C2
 			ABX
 			LDAA	,X
 			STAA	M7789
-			LDAA	>M00C3
+			LDAA	>SYSEX_B5
 			JSR	F_DE9D
 			RTS
 
@@ -12329,7 +12419,7 @@ C_DCE2			SUBB	#$0B
 			CLR	M7788
 			LDAA	#$1F
 			STAA	M7774
-			LDAA	>M00C3
+			LDAA	>SYSEX_B5
 			JSR	F_DE96
 			RTS
 
@@ -12343,9 +12433,9 @@ F_DCF6			JSR	F_DDD7
 			CLR	M778C
 			LDAA	#$0C
 			STAA	M7789
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			STAA	M778A
-			LDAA	>M00C3
+			LDAA	>SYSEX_B5
 			LDAB	MIDI_RX_DATA_1
 			ASLB
 			LSRD
@@ -12355,12 +12445,12 @@ F_DCF6			JSR	F_DDD7
 
 ;-------
 
-F_DD1C			LDAB	M00C2
+F_DD1C			LDAB	SYSEX_B4
 			CMPB	#$37
 			BCS	1F
 			RTS
 1			JSR	F_DDD7
-			LDAB	M00C2
+			LDAB	SYSEX_B4
 			CMPB	#$07
 			BCC	2F
 			LDAA	#$01
@@ -12373,7 +12463,7 @@ F_DD1C			LDAB	M00C2
 			LDAA	$01,X
 			STAA	M7789
 			CLR	M778C
-			LDAA	>M00C3
+			LDAA	>SYSEX_B5
 			JSR	F_DE9D
 			RTS
 
@@ -12394,14 +12484,14 @@ M_DD4A			FCB	$19,$00,$19,$01,$19,$02,$19,$03
 4			ADDB	#$04
 			STAA	M7789
 			STAB	M778C
-			LDAA	>M00C3
+			LDAA	>SYSEX_B5
 			JSR	F_DEC9
 			RTS
 
 ;-------
 
 F_DD7E			JSR	F_DDD7
-			LDAB	M00C2
+			LDAB	SYSEX_B4
 			CMPB	#$0C
 			BCS	1F
 			RTS
@@ -12412,7 +12502,7 @@ F_DD7E			JSR	F_DDD7
 			CLR	M7789
 			STAB	M778A
 			CLR	M778C
-			LDAA	>M00C3
+			LDAA	>SYSEX_B5
 			JSR	F_DEC9
 			LDAA	#$01
 			STAA	M778C
@@ -12429,10 +12519,10 @@ F_DDAC			JSR	F_DDD7
 			STAA	M7774
 			LDAA	#$02
 			STAA	M7789
-			LDAA	M00C2
+			LDAA	SYSEX_B4
 			STAA	M778A
 			CLR	M778C
-			LDAA	>M00C3
+			LDAA	>SYSEX_B5
 			JSR	F_DEC9
 			LDAA	#$01
 			STAA	M778C
@@ -12641,8 +12731,8 @@ F_DF0D			PSHA
 ;-------
 
 F_DF29			CLR	>M00CC
-			LDAA	M00C2
-			LDAB	M00C1
+			LDAA	SYSEX_B4
+			LDAB	SYSEX_B3
 			CMPB	#$41
 			BEQ	6F
 			CMPB	#$49
@@ -12945,7 +13035,7 @@ S_TRANSMITTING		FCC	"Transmitting!!  "
 F_E16B			TST	SYS_SYSAVL
 			BEQ	3F
 			TST	>M00CC
-			BNE	3F
+			BNE	3F			; -> RTS
 			JMP	8F
 
 ;-------
@@ -12954,7 +13044,7 @@ F_E178			TST	SYS_SYSAVL
 			BEQ	3F
 			TST	>M00CC
 			BEQ	4F
-3			JMP	15F			; -> RTS
+3			JMP	15F			; ##OPT:rts##
 
 4			CLRB
 5			LDX	#S_SYSEX_SCED

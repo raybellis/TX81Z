@@ -22,8 +22,6 @@ BANK			TEXT	LO
 
 ;------- CPU RAM
 
-M0051			EQU	$0051
-M0052			EQU	$0052
 M0056			EQU	$0056
 M0058			EQU	$0058
 M005A			EQU	$005A
@@ -106,8 +104,8 @@ M7FE0			EQU	$7FE0
 			ORG	$8000
 
 hdlr_RST		BANK_HI				; attempt to select HI bank
-			LDAA	#LED4|LED3|LED2|LED1|BANKSEL
-			STAA	DDR6			; set P63 - P67 as outputs
+			LDAA	#LEDS|BANKSEL		; set P63 - P67 as outputs
+			STAA	DDR6			; -
 			BANK_HI				; attempt to select HI bank (again)
 			NOP
 			NOP
@@ -162,19 +160,19 @@ XROM_VEC2		FDB	hdlr_RST
 
 ; XROM jump table
 
-XROM_VEC		FDB	LOAD_VOICE
-			FDB	LO_CALL_01
-			FDB	LO_CALL_02
-			FDB	SEND_PRESET_BANK
-			FDB	LO_CALL_04
-			FDB	LO_CALL_05
-			FDB	LO_CALL_06
-			FDB	LO_CALL_08
-			FDB	SET_ALL_RANGES
-			FDB	SET_NAME_RANGE
-			FDB	SET_PCED_RANGE
-			FDB	LO_CALL_0C
-			FDB	SET_VCED_RANGE
+XROM_VEC		FDB	LOAD_VOICE		; #0
+			FDB	LO_CALL_01		; #1
+			FDB	LO_CALL_02		; #2
+			FDB	SEND_PRESET_BANK	; #3
+			FDB	LO_CALL_04		; #4
+			FDB	LOAD_PFM		; #5
+			FDB	SAVE_VOICE		; #6
+			FDB	SAVE_PFM		; #7
+			FDB	SET_ALL_RANGES		; #8
+			FDB	SET_NAME_RANGE		; #9
+			FDB	SET_PCED_RANGE		; #10
+			FDB	LO_CALL_0B		; #11
+			FDB	SET_VCED_RANGE		; #12
 
 ;-------
 ;
@@ -431,7 +429,7 @@ LOAD_VOICE		LDAB	#4			; B <- 4 (operator count)
 ;
 ; probably voice save (VCED / ACED) to VMEM (TBC)
 ;
-LO_CALL_06		LDAB	#$04
+SAVE_VOICE		LDAB	#$04
 1			PSHB
 			LDAB	#$06
 			JSR	MEMCPY
@@ -585,7 +583,7 @@ LO_CALL_06		LDAB	#$04
 ;
 ; probably LOAD_PFM
 ;
-LO_CALL_05		LDAB	#$08
+LOAD_PFM		LDAB	#$08
 1			PSHB
 			LDX	SPTR
 			LDAA	,X
@@ -692,7 +690,7 @@ LO_CALL_05		LDAB	#$08
 ;
 ; probably SAVE_PFM
 ;
-LO_CALL_08		LDAB	#$08
+SAVE_PFM		LDAB	#$08
 1			PSHB
 			LDX	SPTR
 			LDAA	$09,X
@@ -1006,7 +1004,7 @@ LO_CALL_04		LDAA	#$01
 			AIM	#~ECMI,TCSR3
 			LDX	#PFM_EDIT_BUF
 			STX	DPTR
-			JSR	LO_CALL_05
+			JSR	LOAD_PFM
 			JSR	HI_CALL_13
 			JSR	HI_CALL_14
 			RTS
@@ -1783,7 +1781,7 @@ F_8D3E			JSR	LCD_CLR_BOTTOM
 			STX	SPTR
 			LDX	#PFM_EDIT_BUF
 			STX	DPTR
-			JSR	LO_CALL_05
+			JSR	LOAD_PFM
 			JSR	SET_PCED_RANGE
 			LDAA	#$01
 			STAA	PFM_EDITED
@@ -2729,6 +2727,7 @@ F_951E			CLRB
 
 LO_CALL_02		LDAA	#$00
 			STAA	M7772
+
 			CLR	POLL_ENABLE
 			LDD	#$0101			; enable all operators
 			STD	OP_ENABLE		;
@@ -2772,7 +2771,7 @@ LO_CALL_02		LDAA	#$00
 			LDAA	#$04
 			STAA	M0058
 			LDAA	#$45
-			STAA	M0052
+			STAA	NOTE_NUMBER
 			LDAA	#$30
 			STAA	M00F1
 			LDAB	#$00
@@ -2801,7 +2800,7 @@ LO_CALL_02		LDAA	#$00
 			LDAA	#$04
 			STAA	M0058
 			LDAA	#$45
-			STAA	M0051
+			STAA	NOTE_NUMBER_STOP
 			LDAB	#$00
 			JSR	NOTE_STOP
 			OIM	#EOCI1,TCSR1
@@ -3228,7 +3227,7 @@ TEST_LEDS		TST	>M00D9
 			BEQ	1B
 			CMPB	#8
 			BNE	2B
-			LDAA	#LED4|LED3|LED2|LED1
+			LDAA	#LEDS
 			ANDA	#~BANKSEL
 			STAA	PORT6
 3			RTS
@@ -3676,7 +3675,7 @@ PUT_SPACES		LDAA	#' '
 
 ;-------
 
-LO_CALL_0C		TST	>M0056
+LO_CALL_0B		TST	>M0056
 			BNE	3F
 			JSR	LCD_CLR
 			STX	DPTR
@@ -3884,7 +3883,7 @@ C_9E9E			LDX	#LCD_BUFFER + 1
 			LDAA	M776D
 			COMA
 			LSRA
-			JSR	F_B4D6
+			JSR	MULTIPLY_200		; ##OPT:inline##
 			CLRB
 			JSR	PUT_DEC_NN
 			JMP	LCD_UPDATE
@@ -4880,8 +4879,10 @@ F_A4DE			CLRB
 
 C_A532			JSR	PUT_DEC_NNN
 			JMP	29F
-C_A538			JSR	F_AF91
+
+C_A538			JSR	SHOW_VOICE_NUM
 			JMP	29F
+
 C_A53E			CMPA	#$10
 			BNE	11F
 			LDX	#S_OMN
@@ -5009,7 +5010,7 @@ SHOW_VOLUME		TST	>M00A3
 			PULX
 			LDAA	$08,X
 			PSHX
-			JSR	F_B4DE
+			JSR	MULTIPLY_38		; ##OPT:inline##
 			CMPA	#$08
 			BCC	7F
 			TSTA
@@ -5823,33 +5824,34 @@ S_PFM_POLY4		FCC	"poly4"
 
 F_AF7D			LDAB	M7772
 			ANDB	#$04
-			BEQ	F_AF91
+			BEQ	SHOW_VOICE_NUM
 			CMPA	#$18
 			BCS	1F
 			CLRA
 1			LDAB	#'F'
 			JSR	PUTCHAR
 			INCA
-			BRA	C_AFAA
+			BRA	4F
 
 ;-------
 
-F_AF91			CMPA	#$A0
-			BCS	1F
-			CLRA
-1			LDAB	#$49
-			SUBA	#$20
-			BMI	3F
-			LDAB	#'A'
-2			SUBA	#$20
-			BMI	3F
-			INCB
-			BRA	2B
-3			JSR	PUTCHAR
-			ADDA	#$21
-C_AFAA			LDAB	#$01
-			JSR	PUT_DEC_NN
-			RTS
+SHOW_VOICE_NUM		CMPA	#$A0			; is A = 160?
+			BCS	1F			; less?  skip
+			CLRA				; A <- 0
+1			LDAB	#'I'			; B <- "I" (bank name)
+			SUBA	#32			; A <- A - 32
+			BMI	3F			; <0 ? go to output
+			LDAB	#'A'			; B <- "A"
+2			SUBA	#32			; A <- A - 32
+			BMI	3F			; <0 ? go to output
+			INCB				; B <- B + 1
+			BRA	2B			; go around
+3			JSR	PUTCHAR			; show bank name
+			ADDA	#$21			; make positive again (1 offset)
+
+4			LDAB	#$01			; force leading zero
+			JSR	PUT_DEC_NN		; show number
+			RTS				; done
 
 ;-------
 
@@ -6480,11 +6482,11 @@ LCD_DO_CMD_DATA 	JSR	LCD_WAIT
 
 F_B3B5			TST	>M00A3
 			BNE	1F
-			JSR	SET_CGCHAR_HBAR
+			JSR	SET_CGCHAR_HBAR		; enable horizontal bar font
 1			LDAA	M776D
 			COMA
 			LSRA
-			JSR	F_B4DA
+			JSR	MULTIPLY_142		; ##OPT:inline##
 			CLRB
 2			SUBA	#$05
 			BMI	3F
@@ -6692,19 +6694,19 @@ S_FULL			FCC	"Full"
 
 ;-------
 
-F_B4D6			LDAB	#200
+MULTIPLY_200		LDAB	#200
 			MUL
 			RTS
 
 ;-------
 
-F_B4DA			LDAB	#142
+MULTIPLY_142		LDAB	#142
 			MUL
 			RTS
 
 ;-------
 
-F_B4DE			LDAB	#38
+MULTIPLY_38		LDAB	#38
 			MUL
 			RTS
 

@@ -103,6 +103,7 @@ LED1			EQU	%00010000	; P64 - LED 1 (Cursor)
 LED2			EQU	%00100000	; P65 - LED 2 (Play / Perform)
 LED3			EQU	%01000000	; P66 - LED 3 (Edit / Compare)
 LED4			EQU	%10000000	; P67 - LED 4 (Utility)
+LEDS			EQU	%11110000	; P64 .. P67 - all LEDs
 
 ; PORT5
 						; P50 - IRQ1
